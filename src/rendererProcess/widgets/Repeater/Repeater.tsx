@@ -14,6 +14,11 @@ import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { type_tdl } from "../../../common/GlobalVariables";
 
+export type type_Repeater_widget = {
+    widgetKey: string;
+    macro: [string, string][]; // this macro is for this Repeater widget only, not the macro for the whole display
+};
+
 export type type_Repeater_tdl = {
     type: string;
     widgetKey: string;
@@ -23,16 +28,14 @@ export type type_Repeater_tdl = {
     channelNames: string[];
     groupNames: string[];
     rules: type_rules_tdl;
-    // itemNames: string[];
-    // itemBackgroundColors: string[];
-    widgetKeys: string[];
-    macros: [string, string][][]; // this macro is for this Repeater widget only, not the macro for the whole display
+    widgets: type_Repeater_widget[],
 };
 
 export class Repeater extends BaseWidget {
 
-    _widgetKeys: string[];
-    _tabMacros: [string, string][][] = [];
+    // _widgetKeys: string[];
+    // _tabMacros: [string, string][][] = [];
+    private _widgets: type_Repeater_widget[] = [];
 
     constructor(widgetTdl: type_Repeater_tdl) {
         super(widgetTdl);
@@ -40,8 +43,9 @@ export class Repeater extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
-        this._tabMacros = structuredClone(widgetTdl["macros"]);
+        this._widgets = structuredClone(widgetTdl["widgets"]);
+        // this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
+        // this._tabMacros = structuredClone(widgetTdl["macros"]);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -144,9 +148,9 @@ export class Repeater extends BaseWidget {
      * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
      */
     serializeMacros = () => {
-        const macros = this.getTabMacros();
         let result: string = "";
-        for (const rowMacros of macros) {
+        for (const widget of this.getWidgets()) {
+            const rowMacros = widget["macro"];
             const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
             result = result + rowMacrosStr + "\n";
         }
@@ -177,7 +181,8 @@ export class Repeater extends BaseWidget {
             this.updateGroup();
             if (this.isSelected()) {
                 // deselect all insider widgets
-                for (let widgetKey of this.getWidgetKeys()) {
+                for (let widget of this.getWidgets()) {
+                    const widgetKey = widget["widgetKey"];
                     try {
                         const widget = g_widgets1.getWidget2(widgetKey);
                         if (widget instanceof BaseWidget) {
@@ -194,7 +199,8 @@ export class Repeater extends BaseWidget {
         // when the Group widget is being moved, select all its child widgets in all Groups
         if (g_widgets1.getRendererWindowStatusStr().includes("movingWidget")) {
             if (this.isSelected()) {
-                for (let widgetKey of this.getWidgetKeys()) {
+                for (let widget of this.getWidgets()) {
+                    const widgetKey = widget["widgetKey"];
                     try {
                         const widget = g_widgets1.getWidget2(widgetKey);
                         if (widget instanceof BaseWidget) {
@@ -259,7 +265,8 @@ export class Repeater extends BaseWidget {
         this._updateCoverage(false);
         // (5)
         // for (let widgetKey of this.getWidgetKeys()[this.getSelectedGroup()]) {
-        for (let widgetKey of this.getWidgetKeys()) {
+        for (let widget of this.getWidgets()) {
+            const widgetKey = widget["widgetKey"];
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
@@ -282,7 +289,7 @@ export class Repeater extends BaseWidget {
 
     // only modify data, nothing about selection
     private _updateCoverage = (doFlush: boolean) => {
-        this.getWidgetKeys().length = 0;
+        this.getWidgets().length = 0;
 
         let selectionChanged = false;
 
@@ -313,7 +320,12 @@ export class Repeater extends BaseWidget {
             if (isInside) {
                 // exclude the Repeater widget itself
                 if (widget.getWidgetKey() !== this.getWidgetKey()) {
-                    this.getWidgetKeys().push(widget.getWidgetKey());
+                    const widgetWidgetKey = widget.getWidgetKey();
+                    // this.getWidgetKeys().push(widget.getWidgetKey());
+                    this.getWidgets().push({
+                        widgetKey: widgetWidgetKey,
+                        macro: [],
+                    })
                 }
             }
         }
@@ -332,50 +344,12 @@ export class Repeater extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
-
 
 
     copyTemplateWidgetsTdls = () => {
         const result: Record<string, any>[] = [];
-        const widgetKeys = this.getWidgetKeys();
+        const widgetKeys = this.getWidgetWidgetKeys();
 
         if (widgetKeys !== undefined && widgetKeys.length > 0) {
             for (let widgetKey of widgetKeys) {
@@ -478,7 +452,7 @@ export class Repeater extends BaseWidget {
         tdl["Canvas"] = canvsWidgetTdl;
 
         // create widgets Tdl
-        for (let ii = 0; ii < this.getTabMacros().length; ii++) {
+        for (let ii = 0; ii < this.getWidgets().length; ii++) {
             for (const widgetTdlOriginal of templateWidgetsTdls) {
 
                 const widgetTdl = structuredClone(widgetTdlOriginal);
@@ -499,8 +473,10 @@ export class Repeater extends BaseWidget {
                     throw new Error(errMsg);
                 }
 
-                if (this.getTabMacros()[ii] !== undefined) {
-                    const macros = [...this.getTabMacros()[ii], ...this.getAllMacros()];
+                const widgetMacro = this.getWidgetMacro(ii);
+                if (widgetMacro !== undefined) {
+
+                    const macros = [...widgetMacro, ...this.getAllMacros()];
 
                     if (macros !== undefined && macros.length > 0) {
 
@@ -532,7 +508,8 @@ export class Repeater extends BaseWidget {
 
                                 if (action["type"] === "OpenDisplay") {
                                     action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
-                                    action["externalMacros"] = [...this.getTabMacros()[ii], ...action["externalMacros"]];
+                                    const widgetMacro = this.getWidgetMacro(ii);
+                                    action["externalMacros"] = [...(widgetMacro === undefined ? [] : widgetMacro), ...action["externalMacros"]];
                                 } else if (action["type"] === "WritePV") {
                                     action["channelName"] = BaseWidget.expandChannelName(action["channelName"], macros, true);
                                     action["channelValue"] = BaseWidget.expandChannelName(action["channelValue"], macros, true);
@@ -593,14 +570,6 @@ export class Repeater extends BaseWidget {
     }
 
 
-    // ----------------------- styles -----------------------
-
-    // defined in super class
-    // _resizerStyle
-    // _resizerStyles
-    // StyledToolTipText
-    // StyledToolTip
-
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = (): Record<string, any> => {
@@ -653,9 +622,7 @@ export class Repeater extends BaseWidget {
             channelNames: [],
             groupNames: [],
             rules: [],
-
-            widgetKeys: [],
-            macros: [],
+            widgets: [],
         };
         defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
         return structuredClone(defaultTdl);
@@ -666,24 +633,64 @@ export class Repeater extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["widgetKeys"] = structuredClone(this.getWidgetKeys());
-        result["macros"] = structuredClone(this.getTabMacros());
+        result["widgets"] = structuredClone(this.getWidgets());
         return result;
     }
 
     // --------------------- getters -------------------------
 
-    getWidgetKeys = () => {
-        return this._widgetKeys;
+    getWidgets = () => {
+        return this._widgets;
     };
 
-    getTabMacros = () => {
-        return this._tabMacros;
+    getWidget = (index: number): type_Repeater_widget | undefined => {
+        return this.getWidgets()[index];
     }
 
-    setTabMacros = (newMacros: [string, string][][]) => {
-        this._tabMacros = newMacros;
+    getWidgetWidgetKey = (index: number) => {
+        const widget = this.getWidget(index);
+        if (widget === undefined) {
+            return undefined;
+        } else {
+            return widget["widgetKey"];
+        }
     }
+
+    getWidgetMacro = (index: number) => {
+        const widget = this.getWidget(index);
+        if (widget === undefined) {
+            return undefined;
+        } else {
+            return widget["macro"];
+        }
+    }
+
+    setWidgetMacro = (index: number, macro: [string, string][]) => {
+        const widget = this.getWidget(index);
+        if (widget === undefined) {
+            return;
+        } else {
+            widget["macro"] = structuredClone(macro);
+        }
+    }
+
+    setWidgetWidgetKey = (index: number, widgetKey: string) => {
+        const widget = this.getWidget(index);
+        if (widget === undefined) {
+            return;
+        } else {
+            widget["widgetKey"] = widgetKey;
+        }
+    }
+
+    getWidgetWidgetKeys = () => {
+        const result: string[] = [];
+        for (const widget of this.getWidgets()) {
+            result.push(widget["widgetKey"]);
+        }
+        return result;
+    }
+
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
@@ -695,16 +702,16 @@ export class Repeater extends BaseWidget {
     jobsAsEditingModeBegins(): void {
         super.jobsAsEditingModeBegins();
         this.removeDynamicWidgets();
-        if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetKeys());
+        if (this.getWidgetWidgetKey(0) !== undefined) {
+            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetWidgetKeys());
         }
     }
 
     jobsAsOperatingModeBegins(): void {
         super.jobsAsOperatingModeBegins();
         this.createDynamicWidgets();
-        if (this.getWidgetKeys()[0] !== undefined) {
-            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetKeys());
+        if (this.getWidgetWidgetKey(0) !== undefined) {
+            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetWidgetKeys());
         }
     }
 }

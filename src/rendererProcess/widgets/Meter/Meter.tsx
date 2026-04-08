@@ -1,26 +1,15 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { MeterSidebar } from "./MeterSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { MeterRule } from "./MeterRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
 import { ChannelSeverity } from "../../channel/TcaChannel";
 import { refineTicks, calcTicks } from "../../../common/GlobalMethods";
-
-export type type_Meter_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultMeterTdl, type_Meter_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Meter extends BaseWidget {
 
@@ -514,92 +503,12 @@ export class Meter extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Meter_tdl = {
-            type: "Meter",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 100,
-                height: 100,
-                // overall background color
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // font in the bottom channel value area
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // border, it is different from the "alarmBorder" below
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // channel display on bottom
-                showPvValue: true,
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // PV
-                usePvLimits: true,
-                minPvValue: 0,
-                maxPvValue: 100,
-                useLogScale: false,
-                // dial
-                angleRange: 275, // dial arc angle range
-                dialColor: "rgba(0,0,0,1)", // dial arc and ticks color
-                dialPercentage: 90, // dial height percentage
-                dialThickness: 5, // dial arc thickness
-                // pointer
-                pointerColor: "rgba(0,200,0,1)",
-                // fillColorMinor: "rgba(255, 150, 100, 1)",
-                // fillColorMajor: "rgba(255,0,0,1)",
-                // fillColorInvalid: "rgba(200,0,200,1)",
-
-                pointerLengthPercentage: 75, // pointer length percentage
-                pointerThickness: 5,
-                // label on dial
-                labelPositionPercentage: 85, // tick label relative position
-                // dialFontColor: "rgba(0,0,0,1)",
-                // dialFontFamily: "Liberation Sans",
-                // dialFontSize: 14,
-                // dialFontStyle: "normal",
-                // dialFontWeight: "normal",
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                // new
-                numTickIntervals: 5,
-                alarmText: false,
-                alarmPointer: false,
-                alarmDial: false,
-                alarmBackground: false,
-                alarmBorder: true,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Meter_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultMeterTdl.type);
+        return structuredClone({
+            ...defaultMeterTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Meter.generateDefaultTdl;

@@ -3,7 +3,6 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { TerminalSidebar } from "./TerminalSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import * as xterm from "@xterm/xterm";
@@ -15,18 +14,7 @@ import { FitAddon } from "@xterm/addon-fit";
 // import { parse } from "mathjs";
 import { TerminalIos } from "./TerminalIos";
 import { Log } from "../../../common/Log";
-
-
-export type type_Terminal_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultTerminalTdl, type_Terminal_tdl } from "../../../common/types/type_widget_tdl";
 
 type type_Terminal_command = {
     execute: (...input: any[]) => any;
@@ -1952,59 +1940,12 @@ export class Terminal extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Terminal_tdl = {
-            type: "Terminal",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: "Courier Prime",
-                fontSize: 14,
-                fontStyle: "normal",
-                fontWeight: "normal",
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // actually "alarm outline"
-                alarmBorder: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Terminal_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultTerminalTdl.type);
+        return structuredClone({
+            ...defaultTerminalTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Terminal.generateDefaultTdl;

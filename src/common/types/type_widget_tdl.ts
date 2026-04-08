@@ -229,6 +229,123 @@ export const defaultEmbeddedDisplayTdl: type_EmbeddedDisplay_tdl = {
     displays: [],
 };
 
+// ======================== Group TDL Schema ========================
+
+export const type_Group_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Group_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    selectedGroup: "number",
+    tabPosition: "string",
+    tabWidth: "number",
+    tabHeight: "number",
+    tabSelectedColor: "string",
+    tabDefaultColor: "string",
+    showTab: "boolean",
+    showBox: "boolean",
+} as const satisfies TypeSchema;
+
+export const type_Group_item_tdl_schema = {
+    name: "string",
+    backgroundColor: "string",
+    widgetKeys: "string[]",
+} as const satisfies TypeSchema;
+
+export const type_Group_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Group_style_tdl_schema,
+    text: type_Group_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    items: { arrayOf: type_Group_item_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Group_style_tdl = Mutable<InferType<typeof type_Group_style_tdl_schema>>;
+export type type_Group_text_tdl = Mutable<InferType<typeof type_Group_text_tdl_schema>>;
+export type type_Group_item_tdl = Mutable<InferType<typeof type_Group_item_tdl_schema>>;
+export type type_Group_tdl = Omit<Mutable<InferType<typeof type_Group_tdl_schema>>, "items"> & {
+    items: type_Group_item_tdl[];
+};
+
+export const defaultGroupTdl: type_Group_tdl = {
+    type: "Group",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(240, 240, 240, 0)",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 1,
+        borderColor: "rgba(0, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        selectedGroup: 0,
+        tabPosition: "top",
+        tabWidth: 100,
+        tabHeight: 20,
+        tabSelectedColor: "rgba(180,180,180,1)",
+        tabDefaultColor: "rgba(220,220,220,1)",
+        showTab: true,
+        showBox: false,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    items: [{
+        name: "Group-1",
+        backgroundColor: "rgba(255,255,255,1)",
+        widgetKeys: [],
+    }],
+};
+
 // ======================== Polyline TDL Schema ========================
 
 export const type_Polyline_text_tdl_schema = {
@@ -569,6 +686,462 @@ export const defaultTankTdl: type_Tank_tdl = {
         alarmBorder: true,
         alarmBackground: false,
         alarmLevel: "MINOR",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== Meter TDL Schema ========================
+
+export const type_Meter_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Meter_text_tdl_schema = {
+    showPvValue: "boolean",
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    usePvLimits: "boolean",
+    minPvValue: "number",
+    maxPvValue: "number",
+    useLogScale: "boolean",
+    angleRange: "number",
+    dialColor: "string",
+    dialPercentage: "number",
+    dialThickness: "number",
+    pointerColor: "string",
+    pointerLengthPercentage: "number",
+    pointerThickness: "number",
+    labelPositionPercentage: "number",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    numTickIntervals: "number",
+    alarmText: "boolean",
+    alarmPointer: "boolean",
+    alarmDial: "boolean",
+    alarmBackground: "boolean",
+    alarmBorder: "boolean",
+    alarmLevel: "string",
+} as const satisfies TypeSchema;
+
+export const type_Meter_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Meter_style_tdl_schema,
+    text: type_Meter_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Meter_style_tdl = Mutable<InferType<typeof type_Meter_style_tdl_schema>>;
+export type type_Meter_text_tdl = Mutable<InferType<typeof type_Meter_text_tdl_schema>>;
+export type type_Meter_tdl = Mutable<InferType<typeof type_Meter_tdl_schema>>;
+
+export const defaultMeterTdl: type_Meter_tdl = {
+    type: "Meter",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: undefined,
+    },
+    text: {
+        showPvValue: true,
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        usePvLimits: true,
+        minPvValue: 0,
+        maxPvValue: 100,
+        useLogScale: false,
+        angleRange: 275,
+        dialColor: "rgba(0,0,0,1)",
+        dialPercentage: 90,
+        dialThickness: 5,
+        pointerColor: "rgba(0,200,0,1)",
+        pointerLengthPercentage: 75,
+        pointerThickness: 5,
+        labelPositionPercentage: 85,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        numTickIntervals: 5,
+        alarmText: false,
+        alarmPointer: false,
+        alarmDial: false,
+        alarmBackground: false,
+        alarmBorder: true,
+        alarmLevel: "MINOR",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== Thermometer TDL Schema ========================
+
+export const type_Thermometer_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Thermometer_text_tdl_schema = {
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    usePvLimits: "boolean",
+    minPvValue: "number",
+    maxPvValue: "number",
+    useLogScale: "boolean",
+    fillColor: "string",
+    containerColor: "string",
+    showLabels: "boolean",
+    bulbDiameter: "number",
+    tubeWidth: "number",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    numTickIntervals: "number",
+    compactScale: "boolean",
+    displayScale: type_scale_tdl_schema,
+    alarmContainer: "boolean",
+    alarmFill: "boolean",
+    alarmText: "boolean",
+    alarmBorder: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+} as const satisfies TypeSchema;
+
+export const type_Thermometer_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Thermometer_style_tdl_schema,
+    text: type_Thermometer_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Thermometer_style_tdl = Mutable<InferType<typeof type_Thermometer_style_tdl_schema>>;
+export type type_Thermometer_text_tdl = Omit<Mutable<InferType<typeof type_Thermometer_text_tdl_schema>>, "displayScale"> & {
+    displayScale: type_scale_tdl;
+};
+export type type_Thermometer_tdl = Omit<Mutable<InferType<typeof type_Thermometer_tdl_schema>>, "text"> & {
+    text: type_Thermometer_text_tdl;
+};
+
+export const defaultThermometerTdl: type_Thermometer_tdl = {
+    type: "Thermometer",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+    },
+    text: {
+        wrapWord: false,
+        showUnit: true,
+        usePvLimits: false,
+        minPvValue: 0,
+        maxPvValue: 100,
+        useLogScale: false,
+        fillColor: "rgba(60,255,60,1)",
+        containerColor: "rgba(210,210,210,1)",
+        showLabels: true,
+        bulbDiameter: 30,
+        tubeWidth: 15,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        numTickIntervals: 5,
+        compactScale: false,
+        displayScale: "Linear",
+        alarmContainer: false,
+        alarmFill: false,
+        alarmText: false,
+        alarmBorder: true,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== Spinner TDL Schema ========================
+
+export const type_Spinner_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Spinner_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    stepSize: "number",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    alarmBorder: "boolean",
+    alarmText: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+    confirmOnWrite: "boolean",
+    confirmOnWriteUsePassword: "boolean",
+    confirmOnWritePassword: "string",
+    highlightBackgroundColor: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Spinner_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Spinner_style_tdl_schema,
+    text: type_Spinner_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Spinner_style_tdl = Mutable<InferType<typeof type_Spinner_style_tdl_schema>>;
+export type type_Spinner_text_tdl = Mutable<InferType<typeof type_Spinner_text_tdl_schema>>;
+export type type_Spinner_tdl = Mutable<InferType<typeof type_Spinner_tdl_schema>>;
+
+export const defaultSpinnerTdl: type_Spinner_tdl = {
+    type: "Spinner",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(128, 255, 255, 1)",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        stepSize: 1,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        alarmBorder: true,
+        alarmText: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+        confirmOnWrite: false,
+        confirmOnWriteUsePassword: false,
+        confirmOnWritePassword: "",
+        highlightBackgroundColor: undefined,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== ThumbWheel TDL Schema ========================
+
+export const type_ThumbWheel_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_ThumbWheel_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    stepSize: "number",
+    invisibleInOperation: "boolean",
+    highlightBackgroundColor: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_ThumbWheel_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_ThumbWheel_style_tdl_schema,
+    text: type_ThumbWheel_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_ThumbWheel_style_tdl = Mutable<InferType<typeof type_ThumbWheel_style_tdl_schema>>;
+export type type_ThumbWheel_text_tdl = Mutable<InferType<typeof type_ThumbWheel_text_tdl_schema>>;
+export type type_ThumbWheel_tdl = Mutable<InferType<typeof type_ThumbWheel_tdl_schema>>;
+
+export const defaultThumbWheelTdl: type_ThumbWheel_tdl = {
+    type: "ThumbWheel",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(128, 255, 255, 1)",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        alarmBorder: true,
+        stepSize: 1,
+        invisibleInOperation: false,
+        highlightBackgroundColor: undefined,
     },
     channelNames: [],
     groupNames: [],
@@ -1149,6 +1722,104 @@ export const defaultTextEntryTdl: type_TextEntry_tdl = {
         confirmOnWrite: false,
         confirmOnWriteUsePassword: false,
         confirmOnWritePassword: "",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== Table TDL Schema ========================
+
+export const type_Table_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Table_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    alarmBorder: "boolean",
+    alarmText: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+} as const satisfies TypeSchema;
+
+export const type_Table_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Table_style_tdl_schema,
+    text: type_Table_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Table_style_tdl = Mutable<InferType<typeof type_Table_style_tdl_schema>>;
+export type type_Table_text_tdl = Mutable<InferType<typeof type_Table_text_tdl_schema>>;
+export type type_Table_tdl = Mutable<InferType<typeof type_Table_tdl_schema>>;
+
+export const defaultTableTdl: type_Table_tdl = {
+    type: "Table",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        alarmBorder: true,
+        alarmText: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
     },
     channelNames: [],
     groupNames: [],
@@ -2151,6 +2822,330 @@ export const defaultDataViewerTdl: type_DataViewer_tdl = {
     yAxes: [],
 };
 
+// ======================== ProfilesViewer TDL Schema ========================
+
+export const type_ProfilesViewer_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    boxSizing: ["string", "undefined"],
+    overflow: ["string", "undefined"],
+    outlineStyle: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+} as const satisfies TypeSchema;
+
+export const type_ProfilesViewer_text_tdl_schema = {} as const satisfies TypeSchema;
+
+export const type_ProfilesViewer_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_ProfilesViewer_style_tdl_schema,
+    text: type_ProfilesViewer_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_ProfilesViewer_style_tdl = Mutable<InferType<typeof type_ProfilesViewer_style_tdl_schema>>;
+export type type_ProfilesViewer_text_tdl = Record<string, any>;
+export type type_ProfilesViewer_tdl = Omit<Mutable<InferType<typeof type_ProfilesViewer_tdl_schema>>, "text"> & {
+    text: type_ProfilesViewer_text_tdl;
+};
+
+export const defaultProfilesViewerTdl: type_ProfilesViewer_tdl = {
+    type: "ProfilesViewer",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        overflow: "scroll",
+        outlineStyle: "none",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+    },
+    text: {},
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== TdlViewer TDL Schema ========================
+
+export const type_TdlViewer_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    boxSizing: ["string", "undefined"],
+    overflow: ["string", "undefined"],
+    outlineStyle: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+} as const satisfies TypeSchema;
+
+export const type_TdlViewer_text_tdl_schema = {} as const satisfies TypeSchema;
+
+export const type_TdlViewer_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_TdlViewer_style_tdl_schema,
+    text: type_TdlViewer_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_TdlViewer_style_tdl = Mutable<InferType<typeof type_TdlViewer_style_tdl_schema>>;
+export type type_TdlViewer_text_tdl = Record<string, any>;
+export type type_TdlViewer_tdl = Omit<Mutable<InferType<typeof type_TdlViewer_tdl_schema>>, "text"> & {
+    text: type_TdlViewer_text_tdl;
+};
+
+export const defaultTdlViewerTdl: type_TdlViewer_tdl = {
+    type: "TdlViewer",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        overflow: "scroll",
+        outlineStyle: "none",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+    },
+    text: {},
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== Terminal TDL Schema ========================
+
+export const type_Terminal_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Terminal_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+} as const satisfies TypeSchema;
+
+export const type_Terminal_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Terminal_style_tdl_schema,
+    text: type_Terminal_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Terminal_style_tdl = Mutable<InferType<typeof type_Terminal_style_tdl_schema>>;
+export type type_Terminal_text_tdl = Mutable<InferType<typeof type_Terminal_text_tdl_schema>>;
+export type type_Terminal_tdl = Mutable<InferType<typeof type_Terminal_tdl_schema>>;
+
+export const defaultTerminalTdl: type_Terminal_tdl = {
+    type: "Terminal",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: "100%",
+        height: "100%",
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: "Courier Prime",
+        fontSize: 14,
+        fontStyle: "normal",
+        fontWeight: "normal",
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        alarmBorder: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== SeqGraph TDL Schema ========================
+
+export const type_SeqGraph_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_SeqGraph_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    seqContent: "string",
+    seqFileContent: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_SeqGraph_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_SeqGraph_style_tdl_schema,
+    text: type_SeqGraph_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    macros: type_macros_tdl_schema,
+} as const satisfies TypeSchema;
+
+export type type_SeqGraph_style_tdl = Mutable<InferType<typeof type_SeqGraph_style_tdl_schema>>;
+export type type_SeqGraph_text_tdl = Mutable<InferType<typeof type_SeqGraph_text_tdl_schema>>;
+export type type_SeqGraph_tdl = Omit<Mutable<InferType<typeof type_SeqGraph_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+
+export const defaultSeqGraphTdl: type_SeqGraph_tdl = {
+    type: "SeqGraph",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        alarmBorder: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        seqContent: "",
+        seqFileContent: undefined,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    macros: [],
+};
+
 // ======================== XYPlot TDL Schema ========================
 
 export const type_XYPlot_ticksInfo_schema = {
@@ -2506,6 +3501,594 @@ export const defaultChannelGraphTdl: type_ChannelGraph_tdl = {
         invisibleInOperation: false,
         format: "default",
         scale: 0,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== CaSnooper TDL Schema ========================
+
+export const type_CaSnooper_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: "string",
+    padding: ["string", "number", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_CaSnooper_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    highlightBackgroundColor: "string",
+    overflowVisible: "boolean",
+    channelPropertyNames: "string[]",
+    EPICS_CA_SERVER_PORT: "number",
+} as const satisfies TypeSchema;
+
+export const type_CaSnooper_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_CaSnooper_style_tdl_schema,
+    text: type_CaSnooper_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    macros: type_macros_tdl_schema,
+} as const satisfies TypeSchema;
+
+export type type_CaSnooper_style_tdl = Mutable<InferType<typeof type_CaSnooper_style_tdl_schema>>;
+export type type_CaSnooper_text_tdl = Mutable<InferType<typeof type_CaSnooper_text_tdl_schema>>;
+export type type_CaSnooper_tdl = Omit<Mutable<InferType<typeof type_CaSnooper_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+
+export const defaultCaSnooperTdl: type_CaSnooper_tdl = {
+    type: "CaSnooper",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
+        padding: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+        overflowVisible: true,
+        channelPropertyNames: [],
+        EPICS_CA_SERVER_PORT: 5064,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    macros: [],
+};
+
+// ======================== Casw TDL Schema ========================
+
+export const type_Casw_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: "string",
+    padding: ["string", "number", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Casw_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    highlightBackgroundColor: "string",
+    overflowVisible: "boolean",
+    channelPropertyNames: "string[]",
+    EPICS_CA_REPEATER_PORT: "number",
+} as const satisfies TypeSchema;
+
+export const type_Casw_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Casw_style_tdl_schema,
+    text: type_Casw_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    macros: type_macros_tdl_schema,
+} as const satisfies TypeSchema;
+
+export type type_Casw_style_tdl = Mutable<InferType<typeof type_Casw_style_tdl_schema>>;
+export type type_Casw_text_tdl = Mutable<InferType<typeof type_Casw_text_tdl_schema>>;
+export type type_Casw_tdl = Omit<Mutable<InferType<typeof type_Casw_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+
+export const defaultCaswTdl: type_Casw_tdl = {
+    type: "Casw",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: "content-box",
+        padding: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+        overflowVisible: true,
+        channelPropertyNames: [],
+        EPICS_CA_REPEATER_PORT: 5065,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    macros: [],
+};
+
+// ======================== FileBrowser TDL Schema ========================
+
+export const type_FileBrowser_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+} as const satisfies TypeSchema;
+
+export const type_FileBrowser_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    alarmBorder: "boolean",
+    alarmText: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+    path: "string",
+    permission: "string",
+    modal: "boolean",
+} as const satisfies TypeSchema;
+
+export const type_FileBrowser_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_FileBrowser_style_tdl_schema,
+    text: type_FileBrowser_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_FileBrowser_style_tdl = Mutable<InferType<typeof type_FileBrowser_style_tdl_schema>>;
+export type type_FileBrowser_text_tdl = Mutable<InferType<typeof type_FileBrowser_text_tdl_schema>>;
+export type type_FileBrowser_tdl = Mutable<InferType<typeof type_FileBrowser_tdl_schema>>;
+
+export const defaultFileBrowserTdl: type_FileBrowser_tdl = {
+    type: "FileBrowser",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(240, 240, 240, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        alarmBorder: true,
+        alarmText: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+        path: "",
+        permission: "WRITE",
+        modal: false,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== FileConverter TDL Schema ========================
+
+export const type_FileConverter_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+    padding: ["string", "number", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_FileConverter_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    highlightBackgroundColor: "string",
+    overflowVisible: "boolean",
+    channelPropertyNames: "string[]",
+    EPICS_CA_SERVER_PORT: "number",
+} as const satisfies TypeSchema;
+
+export const type_FileConverter_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_FileConverter_style_tdl_schema,
+    text: type_FileConverter_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    macros: type_macros_tdl_schema,
+} as const satisfies TypeSchema;
+
+export type type_FileConverter_style_tdl = Mutable<InferType<typeof type_FileConverter_style_tdl_schema>>;
+export type type_FileConverter_text_tdl = Mutable<InferType<typeof type_FileConverter_text_tdl_schema>>;
+export type type_FileConverter_tdl = Omit<Mutable<InferType<typeof type_FileConverter_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+
+export const defaultFileConverterTdl: type_FileConverter_tdl = {
+    type: "FileConverter",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+        padding: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+        overflowVisible: true,
+        channelPropertyNames: [],
+        EPICS_CA_SERVER_PORT: 5064,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    macros: [],
+};
+
+// ======================== PvMonitor TDL Schema ========================
+
+export const type_PvMonitor_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+    padding: ["string", "number", "undefined"],
+    paddingRight: ["string", "number", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_PvMonitor_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    maxLineNum: "number",
+} as const satisfies TypeSchema;
+
+export const type_PvMonitor_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_PvMonitor_style_tdl_schema,
+    text: type_PvMonitor_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_PvMonitor_style_tdl = Mutable<InferType<typeof type_PvMonitor_style_tdl_schema>>;
+export type type_PvMonitor_text_tdl = Mutable<InferType<typeof type_PvMonitor_text_tdl_schema>>;
+export type type_PvMonitor_tdl = Mutable<InferType<typeof type_PvMonitor_tdl_schema>>;
+
+export const defaultPvMonitorTdl: type_PvMonitor_tdl = {
+    type: "PvMonitor",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 1,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: undefined,
+        padding: undefined,
+        paddingRight: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        alarmBorder: false,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        maxLineNum: 5000,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+// ======================== LogViewer TDL Schema ========================
+
+export const type_LogViewer_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+    padding: ["string", "number", "undefined"],
+    paddingRight: ["string", "number", "undefined"],
+    overflow: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_LogViewer_text_tdl_schema = {
+    maxLineNum: "number",
+    alarmBorder: ["boolean", "undefined"],
+    usePvLimits: ["boolean", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_LogViewer_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_LogViewer_style_tdl_schema,
+    text: type_LogViewer_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_LogViewer_style_tdl = Mutable<InferType<typeof type_LogViewer_style_tdl_schema>>;
+export type type_LogViewer_text_tdl = Mutable<InferType<typeof type_LogViewer_text_tdl_schema>>;
+export type type_LogViewer_tdl = Mutable<InferType<typeof type_LogViewer_tdl_schema>>;
+
+export const defaultLogViewerTdl: type_LogViewer_tdl = {
+    type: "LogViewer",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "border-box",
+        padding: undefined,
+        paddingRight: undefined,
+        overflow: "scroll",
+    },
+    text: {
+        maxLineNum: 5000,
+        alarmBorder: undefined,
+        usePvLimits: undefined,
     },
     channelNames: [],
     groupNames: [],

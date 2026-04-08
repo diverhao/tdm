@@ -2,20 +2,9 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-
-export type type_TdlViewer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultTdlViewerTdl, type_TdlViewer_tdl } from "../../../common/types/type_widget_tdl";
 
 export class TdlViewer extends BaseWidget {
     constructor(widgetTdl: type_TdlViewer_tdl) {
@@ -421,42 +410,12 @@ export class TdlViewer extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-        const defaultTdl: type_TdlViewer_tdl = {
-            type: "TdlViewer",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: "100%",
-                height: "100%",
-                boxSizing: "border-box",
-                overflow: "scroll",
-                outlineStyle: "none",
-                // outlineWidth: 1,
-                // outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-            },
-            // the ElementBody style
-            text: {},
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_TdlViewer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultTdlViewerTdl.type);
+        return structuredClone({
+            ...defaultTdlViewerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = TdlViewer.generateDefaultTdl;

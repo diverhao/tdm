@@ -2,23 +2,12 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { DataViewer } from "../DataViewer/DataViewer";
 import { Log } from "../../../common/Log";
-
-export type type_ProfilesViewer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultProfilesViewerTdl, type_ProfilesViewer_tdl } from "../../../common/types/type_widget_tdl";
 
 export class ProfilesViewer extends BaseWidget {
     showProcessInfo = false;
@@ -1197,45 +1186,12 @@ export class ProfilesViewer extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ProfilesViewer_tdl = {
-            type: "ProfilesViewer",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: "100%",
-                height: "100%",
-                boxSizing: "border-box",
-                overflow: "scroll",
-                outlineStyle: "none",
-                // do not use outline in full screen widget, it will cause an extra horizontal scroll bar on bottom
-                // outlineWidth: 1,
-                // outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-            },
-            // the ElementBody style
-            text: {},
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_ProfilesViewer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultProfilesViewerTdl.type);
+        return structuredClone({
+            ...defaultProfilesViewerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = ProfilesViewer.generateDefaultTdl;

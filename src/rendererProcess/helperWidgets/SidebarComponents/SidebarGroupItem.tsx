@@ -29,7 +29,7 @@ export class SidebarGroupItem {
 
     _Element = () => {
         const mainWidget = this.getMainWidget();
-        const [itemName, setItemName] = React.useState(mainWidget.getItemNames()[this.getIndex()]);
+        const [itemName, setItemName] = React.useState(mainWidget.getItemName(this.getIndex()));
 
         return (
             <this._BlockBody>
@@ -112,7 +112,7 @@ export class SidebarGroupItem {
                             }}
                             // must use enter to change the value
                             onBlur={(event) => {
-                                const orig = mainWidget.getItemNames()[this.getIndex()];
+                                const orig = mainWidget.getItemName(this.getIndex());
                                 if (orig !== itemName) {
                                     setItemName(orig);
                                 }
@@ -130,7 +130,7 @@ export class SidebarGroupItem {
                     }}
                 >
                     <Collapsible
-                        rgbColorStr={`${mainWidget.getItemBackgroundColors()[this.getIndex()]}`}
+                        rgbColorStr={`${mainWidget.getItemBackgroundColor(this.getIndex())}`}
                         updateFromSidebar={(
                             event: React.SyntheticEvent | null | undefined,
                             propertyName: string,
@@ -151,11 +151,11 @@ export class SidebarGroupItem {
         }
 
         const mainWidget = this.getMainWidget();
-        const oldVal = mainWidget.getItemNames()[this.getIndex()];
+        const oldVal = mainWidget.getItemName(this.getIndex());
         if (propertyValue === oldVal) {
             return;
         } else {
-            mainWidget.getItemNames()[this.getIndex()] = `${propertyValue}`;
+            mainWidget.setItemName(this.getIndex(), `${propertyValue}`);
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -174,11 +174,11 @@ export class SidebarGroupItem {
 
         const mainWidget = this.getMainWidget();
         const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
-        const oldVal = `${mainWidget.getItemBackgroundColors()[this.getIndex()]}`;
+        const oldVal = `${mainWidget.getItemBackgroundColor(this.getIndex())}`;
         if (newVal === oldVal) {
             return;
         } else {
-            mainWidget.getItemBackgroundColors()[this.getIndex()] = newVal;
+            mainWidget.setItemBackgroundColor(this.getIndex(), newVal);
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -300,27 +300,31 @@ export class SidebarGroupItem {
             event.preventDefault();
         }
         const mainWidget = this.getMainWidget();
-        if (mainWidget.getItemNames().length <= 1 && mainWidget.getWidgetKey().includes("Group")) {
+        if (!(mainWidget instanceof Group)) {
             return;
         }
 
         // console.log("==++++>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
         const thisIndex = this.getIndex();
 
-        mainWidget.getItemNames().splice(thisIndex, 1);
+        // mainWidget.getItemNames().splice(thisIndex, 1);
 
-        mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
+        // mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
 
         // remove all widgets
-        for (let widgetKey of mainWidget.getWidgetKeys()[thisIndex]) {
-            g_widgets1.removeWidget(widgetKey, true, false);
+        const widgetKeys = mainWidget.getItemWidgetKeys(thisIndex);
+        if (widgetKeys !== undefined) {
+            for (let widgetKey of widgetKeys) {
+                g_widgets1.removeWidget(widgetKey, true, false);
+            }
         }
         g_widgets1.updateSidebar(false);
 
-        mainWidget.getWidgetKeys().splice(thisIndex, 1);
+        // mainWidget.getWidgetKeys().splice(thisIndex, 1);
+        mainWidget.getItems().splice(thisIndex, 1);
 
         this.getItems().getMembers().splice(thisIndex, 1);
-        for (let ii = thisIndex; ii < mainWidget.getItemNames().length; ii++) {
+        for (let ii = thisIndex; ii < mainWidget.getItems().length; ii++) {
             const item = this.getItems().getMembers()[ii];
             item.setIndex(ii);
         }
@@ -347,7 +351,7 @@ export class SidebarGroupItem {
 
     getElement = () => {
         const mainWidget = this.getMainWidget();
-        return <this._Element key={`${mainWidget.getItemNames()[this.getIndex()]}-${this.getIndex()}`}></this._Element>;
+        return <this._Element key={`${mainWidget.getItemName(this.getIndex())}-${this.getIndex()}`}></this._Element>;
     };
 
     getIndex = () => {

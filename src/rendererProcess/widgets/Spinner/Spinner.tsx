@@ -4,23 +4,12 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { SpinnerSidebar } from "./SpinnerSidebar";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { SpinnerRule } from "./SpinnerRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-
-export type type_Spinner_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultSpinnerTdl, type_Spinner_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Spinner extends BaseWidget {
     showSettings: boolean = false;
@@ -616,63 +605,12 @@ export class Spinner extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_Spinner_tdl = {
-            type: "Spinner",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(128, 255, 255, 1)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                stepSize: 1,
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                alarmBorder: true,
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                confirmOnWrite: false,
-                confirmOnWriteUsePassword: false,
-                confirmOnWritePassword: "",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Spinner_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultSpinnerTdl.type);
+        return structuredClone({
+            ...defaultSpinnerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Spinner.generateDefaultTdl;

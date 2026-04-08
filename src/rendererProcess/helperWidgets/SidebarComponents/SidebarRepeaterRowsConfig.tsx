@@ -36,7 +36,10 @@ export class SidebarRepeaterRowsConfig extends SidebarComponent {
                                 `Each row in below input box represents a row in the Repeater. The macros should be in form of SYS=RNG, SUBSYS=BPM`,
                                 (macrosStr: string) => {
                                     const macros = mainWidget.deserializeMacros(macrosStr);
-                                    mainWidget.setTabMacros(macros);
+                                    const len = Math.min(macros.length, mainWidget.getWidgets().length);
+                                    for (let ii = 0; ii < len; ii++) {
+                                        mainWidget.setWidgetMacro(ii, macros[ii]);
+                                    }
                                     this.updateWidget(undefined);
                                 }
                             )

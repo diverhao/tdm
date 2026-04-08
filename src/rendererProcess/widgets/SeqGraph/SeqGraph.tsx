@@ -3,7 +3,6 @@ import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { v4 as uuidv4 } from "uuid";
 import { DataSet } from "vis-data";
@@ -15,20 +14,7 @@ import { SeqGraphSidebar } from "./SeqGraphSidebar";
 import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
 import { parseSeq } from "./SeqParser";
-
-export type type_SeqGraph_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    macros: [string, string][];
-    // recordTypes: Record<string, any>;
-    // menus: Record<string, any>;
-};
+import { defaultSeqGraphTdl, type_SeqGraph_tdl } from "../../../common/types/type_widget_tdl";
 
 export enum colors {
     NO_ALARM = "rgba(25, 218, 0, 0)",
@@ -1640,64 +1626,12 @@ ss volt_check {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_SeqGraph_tdl = {
-            type: "SeqGraph",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // actually "alarm outline"
-                alarmBorder: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                seqContent: "",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            macros: [],
-            // recordTypes: {},
-            // menus: {},
-
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_SeqGraph_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultSeqGraphTdl.type);
+        return structuredClone({
+            ...defaultSeqGraphTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = SeqGraph.generateDefaultTdl;

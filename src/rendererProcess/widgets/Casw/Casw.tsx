@@ -3,7 +3,6 @@ import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVar
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
@@ -12,6 +11,7 @@ import { convertDateObjToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
+import { defaultCaswTdl, type_Casw_tdl } from "../../../common/types/type_widget_tdl";
 
 export type type_CaProtoRsrvIsUpData = {
     msSinceEpoch: number,
@@ -19,18 +19,6 @@ export type type_CaProtoRsrvIsUpData = {
     ip: string, // source IP address
     port: number, // source port
 }
-
-export type type_Casw_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    groupNames: string[];
-    rules: type_rules_tdl;
-    macros: [string, string][];
-    channelNames: string[];
-};
 
 export class Casw extends BaseWidget {
     // -------------------------------------------
@@ -1005,56 +993,12 @@ export class Casw extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_Casw_tdl = {
-            type: "Casw",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                overflowVisible: true,
-                channelPropertyNames: [],
-                EPICS_CA_SERVER_PORT: 5064,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            macros: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Casw_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultCaswTdl.type);
+        return structuredClone({
+            ...defaultCaswTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Casw.generateDefaultTdl;

@@ -3,7 +3,6 @@ import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVar
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
@@ -12,6 +11,8 @@ import { convertDateObjToString, countDuplicates } from "../../../common/GlobalM
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
+import { defaultCaSnooperTdl, type_CaSnooper_tdl } from "../../../common/types/type_widget_tdl";
+import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,
@@ -20,40 +21,11 @@ export type type_CaProtoSearchData = {
     port: number, // source port
 }
 
-export type type_CaSnooper_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    groupNames: string[];
-    rules: type_rules_tdl;
-    macros: [string, string][];
-    channelNames: string[];
-};
-
 export class CaSnooper extends BaseWidget {
-    // -------------------------------------------
 
     _macros: [string, string][] = [];
     _table: Table;
-
-    setMacros = (newMacros: [string, string][]) => {
-        this._macros = newMacros;
-    };
-
-    getMacros = () => {
-        return this._macros;
-    };
-
     _CaProtoSearchData: type_CaProtoSearchData[] = [];
-    getCaProtoSearchData = () => {
-        return this._CaProtoSearchData;
-    }
-    clearCaProtoSearchData = () => {
-        this.getCaProtoSearchData().length = 0;
-    }
-
     bufferSize: number = 10000;
     readonly maxBufferSize: number = 100000;
 
@@ -81,116 +53,22 @@ export class CaSnooper extends BaseWidget {
     _ElementTableHeaderResizer: ({ columnIndex }: any) => React.JSX.Element;
     _ElementTableLineMemo: React.MemoExoticComponent<(input: any) => React.JSX.Element>;
 
-    startCaSnooperServer = () => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const ipcManager = displayWindowClient.getIpcManager();
-        ipcManager.sendFromRendererProcess("ca-snooper-command", {
-            command: "start",
-            displayWindowId: displayWindowClient.getWindowId(),
-            widgetKey: this.getWidgetKey(),
-        })
-    }
+    tableRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
+    countsRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
+
+    filterTimeRange: [number, number] = [0, 0];
+    filteredPort = "";
+    filteredIp = "";
+    filteredChannelName = "";
+
 
     dataProcessingIndex = 0;
     histogramDataX: number[] = [];
     histogramDataY: number[] = [];
 
-    processData = () => {
+    _filteredCaProtoSearchData: boolean[] = [];
 
-        const timeNow = Date.now();
-        let currentIndex = 0;
-
-        this.statsInLastNSeconds = {
-            channelNames: {},
-            srcIps: {},
-            udpClients: {},
-        };
-
-        if (this.getCaProtoSearchData().length > 0) {
-            // histogram data for plot
-            const timeOldest = this.getCaProtoSearchData()[0]["msSinceEpoch"];
-            const oldexIndex = Math.ceil((timeOldest - timeNow) / 1000);
-
-            const resultX = [];
-            const resultY = [];
-            for (let ii = oldexIndex; ii <= 0; ii++) {
-                resultX.push(ii);
-                resultY.push(0);
-            }
-
-            for (let ii = 0; ii < this.getCaProtoSearchData().length; ii++) {
-
-                // counts during last N seconds
-                const data = this.getCaProtoSearchData()[ii];
-                const time = data["msSinceEpoch"];
-                const filtered = this.getFilteredProtoSearchData()[ii];
-
-                if (timeNow - time < this.statsNsec * 1000 && filtered) {
-                    const channelName = data["channelName"];
-                    const srcIp = data["ip"];
-                    const udpClient = data["ip"] + ":" + `${data["port"]}`;
-                    if (this.statsInLastNSeconds["channelNames"][channelName] === undefined) {
-                        this.statsInLastNSeconds["channelNames"][channelName] = 1;
-                    } else {
-                        this.statsInLastNSeconds["channelNames"][channelName] = this.statsInLastNSeconds["channelNames"][channelName] + 1;
-                    }
-                    if (this.statsInLastNSeconds["srcIps"][srcIp] === undefined) {
-                        this.statsInLastNSeconds["srcIps"][srcIp] = 1;
-                    } else {
-                        this.statsInLastNSeconds["srcIps"][srcIp] = this.statsInLastNSeconds["srcIps"][srcIp] + 1;
-                    }
-                    if (this.statsInLastNSeconds["udpClients"][udpClient] === undefined) {
-                        this.statsInLastNSeconds["udpClients"][udpClient] = 1;
-                    } else {
-                        this.statsInLastNSeconds["udpClients"][udpClient] = this.statsInLastNSeconds["udpClients"][udpClient] + 1;
-                    }
-                }
-
-                // histogram
-                if (!filtered) {
-                    continue;
-                } else {
-                    currentIndex = resultY.length + Math.ceil((time - timeNow) / 1000) - 1;
-                    resultY[currentIndex] = resultY[currentIndex] + 1;
-                }
-            }
-
-            this.histogramDataX = resultX;
-            this.histogramDataY = resultY;
-        }
-    }
-
-
-
-    stopCaSnooperServer = () => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const ipcManager = displayWindowClient.getIpcManager();
-        ipcManager.sendFromRendererProcess("ca-snooper-command", {
-            command: "stop",
-            displayWindowId: displayWindowClient.getWindowId(),
-            widgetKey: this.getWidgetKey(),
-        })
-    }
-
-    handleNewData = (newData: any) => {
-        this.getCaProtoSearchData().push(...newData);
-        // buffer size
-        if (this.getCaProtoSearchData().length > this.bufferSize) {
-            this.getCaProtoSearchData().splice(0, this.getCaProtoSearchData().length - this.bufferSize);
-        }
-
-        this.filterData(newData);
-
-        this.lastSecondCount = this.lastSecondCount + newData.length;
-
-        this.forceUpdateTable();
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        g_flushWidgets();
-    }
-
-    getTable = () => {
-        return this._table;
-    }
+    DataViewerMoved: boolean = false;
 
     constructor(widgetTdl: type_CaSnooper_tdl) {
         super(widgetTdl);
@@ -206,8 +84,6 @@ export class CaSnooper extends BaseWidget {
         this._ElementTableLine = this.getTable().getElementTableLine();
         this._ElementTableLineMemo = this.getTable().getElementTableLineMemo();
         this._ElementTableHeaderResizer = this.getTable().getElementTableHeaderResizer();
-        // no sidebar
-        // this._sidebar = new PvTableSidebar(this);
 
         setInterval(() => {
             this.processData();
@@ -237,55 +113,8 @@ export class CaSnooper extends BaseWidget {
         })
     }
 
-    _filteredCaProtoSearchData: boolean[] = [];
-
-    getFilteredProtoSearchData = () => {
-        return this._filteredCaProtoSearchData;
-    }
-
-    resetFilteredProtoSearchData = () => {
-        this.getFilteredProtoSearchData().length = 0;
-        this.filterData(this.getCaProtoSearchData());
-    }
-
-
-    filterData = (newData: type_CaProtoSearchData[]) => {
-        for (let ii = 0; ii < newData.length; ii++) {
-            const element = newData[ii];
-            // const channelFiltered = element["channelName"] === this.filteredChannelName || this.filteredChannelName === "";
-            // this.filteredChannelName can be separated by spaces for multiple match
-            let channelFiltered = false;
-            if (this.filteredChannelName.trim() === "") {
-                channelFiltered = true;
-            } else {
-                const filteredChannelNames = this.filteredChannelName.trim().split(/\s+/);
-                for (let filteredChannelName of filteredChannelNames) {
-                    if (element["channelName"].toLocaleLowerCase().includes(filteredChannelName)) {
-                        channelFiltered = true;
-                        break;
-                    }
-                }
-            }
-
-            const ipFiltered = element["ip"] === this.filteredIp || this.filteredIp === "";
-            const portFiltered = `${element["port"]}` === this.filteredPort || this.filteredPort === "";
-            if (channelFiltered && ipFiltered && portFiltered) {
-                this.getFilteredProtoSearchData().push(true);
-            } else {
-                this.getFilteredProtoSearchData().push(false);
-            }
-        }
-    }
-
-    filterTimeRange: [number, number] = [0, 0];
-    filteredPort = "";
-    filteredIp = "";
-    filteredChannelName = "";
-
-
     // ------------------------------ elements ---------------------------------
 
-    // concretize abstract method
     _ElementRaw = () => {
         // guard the widget from double rendering
         this.widgetBeingRendered = true;
@@ -298,25 +127,16 @@ export class CaSnooper extends BaseWidget {
 
         return (
             <ErrorBoundary style={this.getStyle()} widgetKey={this.getWidgetKey()}>
-                <>
-                    <this._ElementBody></this._ElementBody>
-                    {this.showSidebar() ? this.getSidebar()?.getElement() : null}
-                </>
+                <div style={{ ...this.getElementBodyRawStyle() }}>
+                    <this._ElementArea></this._ElementArea>
+                    {this.showResizers() ? <this._ElementResizer /> : null}
+                </div>
+                {this.showSidebar() ? this.getSidebar()?.getElement() : null}
             </ErrorBoundary>
         );
     };
 
-    _ElementBodyRaw = (): React.JSX.Element => {
-        return (
-            <div style={{ ...this.getElementBodyRawStyle() }}>
-                <this._ElementArea></this._ElementArea>
-                {this.showResizers() ? <this._ElementResizer /> : null}
-            </div>
-        );
-    };
-
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementAreaRaw = (): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -326,19 +146,8 @@ export class CaSnooper extends BaseWidget {
                     left: 0,
                     width: "100%",
                     height: "100%",
-                    // userSelect: "none",
-                    // different from regular widget
-                    // overflow: this.getText().overflowVisible ? "visible" : "hidden",
-                    // overflow: "scroll",
-                    // overflow: "scroll",
-                    // overflow: "scroll",
                     flexDirection: "column",
-                    // fontSize: "30px",
-                    // fontFamily: this.getText().fontFamily,
-                    fontSize: `${this.getStyle().fontSize}px`,
-                    // fontStyle: this.getText().fontStyle,
-                    // contentVisibility: "hidden"
-                    // padding: "20px",
+                    fontSize: this.getStyle().fontSize,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -348,9 +157,8 @@ export class CaSnooper extends BaseWidget {
         );
     };
 
-    DataViewerMoved: boolean = false;
-
-
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     _ElementCaSnooper = () => {
         const [, forceUpdate] = React.useState({});
@@ -850,40 +658,6 @@ export class CaSnooper extends BaseWidget {
         )
     }
 
-    tableRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
-    countsRef: React.RefObject<HTMLDivElement | null> | undefined = undefined;
-
-    resizeDataViewer = () => {
-        // get Table size
-        let width = 0;
-        let height = 0;
-        if (this.tableRef !== undefined && this.tableRef.current !== null) {
-            width = this.tableRef.current.offsetWidth;
-            height = this.tableRef.current.offsetHeight;
-        }
-
-        if (width === 0 || height === 0) {
-            const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
-            if (ElementDataViewerWrapper !== null) {
-                width = ElementDataViewerWrapper.offsetWidth;
-                height = ElementDataViewerWrapper.offsetHeight;
-            }
-        }
-        if (width !== 0 && height !== 0) {
-            for (let widget of g_widgets1.getWidgets2().values()) {
-                if (widget instanceof DataViewer) {
-                    const widgetKey = widget.getWidgetKey();
-                    widget.getStyle()["width"] = width;
-                    widget.getStyle()["height"] = height;
-                    g_widgets1.addToForceUpdateWidgets(widgetKey);
-                    g_flushWidgets()
-                }
-            }
-        }
-
-    }
-
-
 
     _ElementDataTable = () => {
         const tableRef = React.useRef<HTMLDivElement>(null);
@@ -930,14 +704,6 @@ export class CaSnooper extends BaseWidget {
                 overflowY: "auto",
 
             }}>
-            {/* <div
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    overflowY: "scroll",
-                    overflowX: "hidden",
-                }}
-            > */}
             {/* header */}
             <this._ElementTableLine key={`table-header`}>
                 <this._ElementTableCell columnIndex={0} additionalStyle={{ justifyContent: "space-between" }}>
@@ -999,10 +765,32 @@ export class CaSnooper extends BaseWidget {
         )
     }
 
-    mouseEventInsideTable = (ponterX: number, pointerY: number) => {
-        return true;
+
+    // -------------------- helper functions ----------------
+
+    setMacros = (newMacros: [string, string][]) => {
+        this._macros = newMacros;
+    };
+
+    getMacros = () => {
+        return this._macros;
+    };
+    getCaProtoSearchData = () => {
+        return this._CaProtoSearchData;
+    }
+    clearCaProtoSearchData = () => {
+        this.getCaProtoSearchData().length = 0;
     }
 
+    startCaSnooperServer = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        ipcManager.sendFromRendererProcess("ca-snooper-command", {
+            command: "start",
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+        })
+    }
 
     mouseRightButtonDownContextMenuActions: {
         "Copy selected data": any,
@@ -1068,85 +856,183 @@ export class CaSnooper extends BaseWidget {
         };
 
 
+    resizeDataViewer = () => {
+        // get Table size
+        let width = 0;
+        let height = 0;
+        if (this.tableRef !== undefined && this.tableRef.current !== null) {
+            width = this.tableRef.current.offsetWidth;
+            height = this.tableRef.current.offsetHeight;
+        }
 
-    // override
-    getTdlCopy = (newKey: boolean = true): Record<string, any> => {
-        const result = super.getTdlCopy(newKey);
-        // result.fieldNames = this.getStrippedFieldNames();
-        result.macros = structuredClone(this.getMacros());
-        result.channelNames = structuredClone(this.getChannelNamesLevel0());
-        return result;
-    };
+        if (width === 0 || height === 0) {
+            const ElementDataViewerWrapper = document.getElementById("DataViewerWrapper");
+            if (ElementDataViewerWrapper !== null) {
+                width = ElementDataViewerWrapper.offsetWidth;
+                height = ElementDataViewerWrapper.offsetHeight;
+            }
+        }
+        if (width !== 0 && height !== 0) {
+            for (let widget of g_widgets1.getWidgets2().values()) {
+                if (widget instanceof DataViewer) {
+                    const widgetKey = widget.getWidgetKey();
+                    widget.getStyle()["width"] = width;
+                    widget.getStyle()["height"] = height;
+                    g_widgets1.addToForceUpdateWidgets(widgetKey);
+                    g_flushWidgets()
+                }
+            }
+        }
 
-    // concretize abstract method
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+    }
 
-    // -------------------- helper functions ----------------
+    processData = () => {
 
-    _getChannelValue = () => {
-        return this._getFirstChannelValue();
-    };
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-    _getChannelUnit = () => {
-        return this._getFirstChannelUnit();
-    };
+        const timeNow = Date.now();
+        let currentIndex = 0;
+
+        this.statsInLastNSeconds = {
+            channelNames: {},
+            srcIps: {},
+            udpClients: {},
+        };
+
+        if (this.getCaProtoSearchData().length > 0) {
+            // histogram data for plot
+            const timeOldest = this.getCaProtoSearchData()[0]["msSinceEpoch"];
+            const oldexIndex = Math.ceil((timeOldest - timeNow) / 1000);
+
+            const resultX = [];
+            const resultY = [];
+            for (let ii = oldexIndex; ii <= 0; ii++) {
+                resultX.push(ii);
+                resultY.push(0);
+            }
+
+            for (let ii = 0; ii < this.getCaProtoSearchData().length; ii++) {
+
+                // counts during last N seconds
+                const data = this.getCaProtoSearchData()[ii];
+                const time = data["msSinceEpoch"];
+                const filtered = this.getFilteredProtoSearchData()[ii];
+
+                if (timeNow - time < this.statsNsec * 1000 && filtered) {
+                    const channelName = data["channelName"];
+                    const srcIp = data["ip"];
+                    const udpClient = data["ip"] + ":" + `${data["port"]}`;
+                    if (this.statsInLastNSeconds["channelNames"][channelName] === undefined) {
+                        this.statsInLastNSeconds["channelNames"][channelName] = 1;
+                    } else {
+                        this.statsInLastNSeconds["channelNames"][channelName] = this.statsInLastNSeconds["channelNames"][channelName] + 1;
+                    }
+                    if (this.statsInLastNSeconds["srcIps"][srcIp] === undefined) {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = 1;
+                    } else {
+                        this.statsInLastNSeconds["srcIps"][srcIp] = this.statsInLastNSeconds["srcIps"][srcIp] + 1;
+                    }
+                    if (this.statsInLastNSeconds["udpClients"][udpClient] === undefined) {
+                        this.statsInLastNSeconds["udpClients"][udpClient] = 1;
+                    } else {
+                        this.statsInLastNSeconds["udpClients"][udpClient] = this.statsInLastNSeconds["udpClients"][udpClient] + 1;
+                    }
+                }
+
+                // histogram
+                if (!filtered) {
+                    continue;
+                } else {
+                    currentIndex = resultY.length + Math.ceil((time - timeNow) / 1000) - 1;
+                    resultY[currentIndex] = resultY[currentIndex] + 1;
+                }
+            }
+
+            this.histogramDataX = resultX;
+            this.histogramDataY = resultY;
+        }
+    }
+
+    stopCaSnooperServer = () => {
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+        ipcManager.sendFromRendererProcess("ca-snooper-command", {
+            command: "stop",
+            displayWindowId: displayWindowClient.getWindowId(),
+            widgetKey: this.getWidgetKey(),
+        })
+    }
+
+    handleNewData = (newData: IpcEventArgType2["ca-snooper-data"]["data"]) => {
+        this.getCaProtoSearchData().push(...newData);
+        // buffer size
+        if (this.getCaProtoSearchData().length > this.bufferSize) {
+            this.getCaProtoSearchData().splice(0, this.getCaProtoSearchData().length - this.bufferSize);
+        }
+
+        this.filterData(newData);
+
+        this.lastSecondCount = this.lastSecondCount + newData.length;
+
+        this.forceUpdateTable();
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_flushWidgets();
+    }
+
+    getTable = () => {
+        return this._table;
+    }
+
+
+    getFilteredProtoSearchData = () => {
+        return this._filteredCaProtoSearchData;
+    }
+
+    resetFilteredProtoSearchData = () => {
+        this.getFilteredProtoSearchData().length = 0;
+        this.filterData(this.getCaProtoSearchData());
+    }
+
+
+    filterData = (newData: type_CaProtoSearchData[]) => {
+        for (let ii = 0; ii < newData.length; ii++) {
+            const element = newData[ii];
+            // const channelFiltered = element["channelName"] === this.filteredChannelName || this.filteredChannelName === "";
+            // this.filteredChannelName can be separated by spaces for multiple match
+            let channelFiltered = false;
+            if (this.filteredChannelName.trim() === "") {
+                channelFiltered = true;
+            } else {
+                const filteredChannelNames = this.filteredChannelName.trim().split(/\s+/);
+                for (let filteredChannelName of filteredChannelNames) {
+                    if (element["channelName"].toLocaleLowerCase().includes(filteredChannelName)) {
+                        channelFiltered = true;
+                        break;
+                    }
+                }
+            }
+
+            const ipFiltered = element["ip"] === this.filteredIp || this.filteredIp === "";
+            const portFiltered = `${element["port"]}` === this.filteredPort || this.filteredPort === "";
+            if (channelFiltered && ipFiltered && portFiltered) {
+                this.getFilteredProtoSearchData().push(true);
+            } else {
+                this.getFilteredProtoSearchData().push(false);
+            }
+        }
+    }
+
+
+    mouseEventInsideTable = (ponterX: number, pointerY: number) => {
+        return true;
+    }
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_CaSnooper_tdl = {
-            type: "CaSnooper",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(255, 255,255, 1)",
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                overflowVisible: true,
-                channelPropertyNames: [],
-                EPICS_CA_SERVER_PORT: 5064,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            macros: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_CaSnooper_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultCaSnooperTdl.type);
+        return structuredClone({
+            ...defaultCaSnooperTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = CaSnooper.generateDefaultTdl;
@@ -1157,6 +1043,7 @@ export class CaSnooper extends BaseWidget {
         result["text"]["EPICS_CA_SERVER_PORT"] = utilityOptions["EPICS_CA_SERVER_PORT"];
         return result;
     };
+
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

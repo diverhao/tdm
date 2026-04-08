@@ -1,26 +1,14 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { ThermometerSidebar } from "./ThermometerSidebar";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ThermometerRule } from "./ThermometerRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-import { ChannelSeverity } from "../../channel/TcaChannel";
 import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
-
-export type type_Thermometer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultThermometerTdl, type_Thermometer_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Thermometer extends BaseWidget {
 
@@ -522,73 +510,12 @@ export class Thermometer extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_Thermometer_tdl = {
-            type: "Thermometer",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                wrapWord: false,
-                showUnit: true,
-                usePvLimits: false,
-                minPvValue: 0,
-                maxPvValue: 100,
-                useLogScale: false,
-                fillColor: "rgba(60,255,60,1)",
-                // fillColorMinor: "rgba(255, 150, 100, 1)",
-                // fillColorMajor: "rgba(255,0,0,1)",
-                // fillColorInvalid: "rgba(200,0,200,1)",
-                containerColor: "rgba(210,210,210,1)",
-                showLabels: true,
-                bulbDiameter: 30,
-                tubeWidth: 15,
-                invisibleInOperation: false,
-                // decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                numTickIntervals: 5,
-                compactScale: false,
-                displayScale: "Linear", // "Linear" | "Log10"
-                alarmContainer: false,
-                alarmFill: false,
-                alarmText: false,
-                alarmBorder: true,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Thermometer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultThermometerTdl.type);
+        return structuredClone({
+            ...defaultThermometerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl = Thermometer.generateDefaultTdl;

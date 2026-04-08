@@ -5,7 +5,6 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BinaryImageRule } from "./BinaryImageRule";
 import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { defaultBinaryImageTdl, type_BinaryImage_tdl } from "../../../common/types/type_widget_tdl";
 

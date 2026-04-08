@@ -1,34 +1,20 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { GroupSidebar } from "./GroupSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-
-export type type_Group_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemNames: string[];
-    itemBackgroundColors: string[];
-    widgetKeys: string[][];
-};
+import { defaultGroupTdl, type_Group_item_tdl as type_Group_item, type_Group_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Group extends BaseWidget {
 
-    _itemNames: string[];
-    _itemBackgroundColors: string[];
-    _widgetKeys: string[][];
+    // _itemNames: string[];
+    // _itemBackgroundColors: string[];
+    // _widgetKeys: string[][];
+    private _items: type_Group_item[] = [];
 
     _allWidgetKeys: string[] = [];
     _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
@@ -41,9 +27,10 @@ export class Group extends BaseWidget {
 
         this.setSelectedGroup(this.getText()["selectedGroup"]);
 
-        this._itemNames = structuredClone(widgetTdl["itemNames"]);
-        this._itemBackgroundColors = structuredClone(widgetTdl["itemBackgroundColors"]);
-        this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
+        // this._itemNames = structuredClone(widgetTdl["itemNames"]);
+        // this._itemBackgroundColors = structuredClone(widgetTdl["itemBackgroundColors"]);
+        // this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
+        this._items = structuredClone(widgetTdl["items"]);
     }
 
     // ------------------------------ elements ---------------------------------
@@ -143,7 +130,7 @@ export class Group extends BaseWidget {
                     position: "absolute",
                 }}
             >
-                {this.getItemNames().map((itemName: string, index: number) => {
+                {this.getItems().map((item: type_Group_item, index: number) => {
                     return <this._ElementGroup index={index}></this._ElementGroup>;
                 })}
                 {<this._ElementTabs></this._ElementTabs>}
@@ -200,10 +187,11 @@ export class Group extends BaseWidget {
             >
                 {
                     this.getAllText()["showTab"] === false ? null :
-                        this.getItemNames().map((itemName: string, index: number) => {
+                        this.getItems().map((item: type_Group_item, index: number) => {
+                            const itemName = item["name"];
                             return (
                                 <div
-                                    key={`${itemName}-${index}-${this.getItemNames()[index]}`}
+                                    key={`${itemName}-${index}`}
                                     style={{
                                         display: "inline-flex",
                                         justifyContent: this.getText()["horizontalAlign"],
@@ -257,7 +245,11 @@ export class Group extends BaseWidget {
         // tab
         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
         // then selection others, why??
-        for (let widgetKey of this.getWidgetKeys()[index]) {
+        const widgetKeys = this.getItemWidgetKeys(index);
+        if (widgetKeys === undefined) {
+            return;
+        }
+        for (let widgetKey of widgetKeys) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
@@ -318,7 +310,7 @@ export class Group extends BaseWidget {
                     position: "absolute",
                     top: 0,
                     left: 0,
-                    backgroundColor: this.getItemBackgroundColors()[index],
+                    backgroundColor: this.getItemBackgroundColor(index),
                     visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
                     display: "inline-flex",
                     justifyContent: "center",
@@ -348,12 +340,12 @@ export class Group extends BaseWidget {
                                 left: 30,
                                 top: 0,
                                 position: "absolute",
-                                backgroundColor: this.getItemBackgroundColors()[index],
+                                backgroundColor: this.getItemBackgroundColor(index),
                                 paddingLeft: 5,
                                 paddingRight: 5,
                             }}
                         >
-                            {this.getItemNames()[index]}
+                            {this.getItemName(index)}
                         </div>
                         <div
                             style={{
@@ -373,8 +365,12 @@ export class Group extends BaseWidget {
         super._handleMouseDownOnResizer(event, index);
         if (g_widgets1.isEditing()) {
             if (this._tmp_itemBackgroundColor === "rgba(0,0,0,0.14159265358979323846264338327)") {
-                this._tmp_itemBackgroundColor = this.getItemBackgroundColors()[this.getSelectedGroup()];
-                this.getItemBackgroundColors()[this.getSelectedGroup()] = "rgba(0,0,0,0)";
+                const bg = this.getItemBackgroundColor(this.getSelectedGroup());
+                if (bg === undefined) {
+                    return;
+                }
+                this._tmp_itemBackgroundColor = bg;
+                this.setItemBackgroundColor(this.getSelectedGroup(), "rgba(0,0,0,0)");
             }
         }
     }
@@ -382,7 +378,7 @@ export class Group extends BaseWidget {
     _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
         if (g_widgets1.isEditing()) {
-            this.getItemBackgroundColors()[this.getSelectedGroup()] = this._tmp_itemBackgroundColor;
+            this.setItemBackgroundColor(this.getSelectedGroup(), this._tmp_itemBackgroundColor);
             this._tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
             this.updateGroup(this.getSelectedGroup());
             this.selectGroup(this.getSelectedGroup(), true);
@@ -402,7 +398,8 @@ export class Group extends BaseWidget {
         // (1)
         this._updateCoverage(false);
         // (2)
-        for (let widgetKeys of this.getWidgetKeys()) {
+        for (let item of this.getItems()) {
+            const widgetKeys = item["widgetKeys"];
             for (let widgetKey of widgetKeys) {
                 if (!this.getAllWidgetKeys().includes(widgetKey)) {
                     try {
@@ -419,7 +416,7 @@ export class Group extends BaseWidget {
             }
         }
         // (3)
-        this.getWidgetKeys()[this.getSelectedGroup()] = [];
+        this.setItemWidgetKeys(this.getSelectedGroup(), []);
         for (let widgetKey of this.getAllWidgetKeys()) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
@@ -427,7 +424,7 @@ export class Group extends BaseWidget {
                     widget.simpleDeselect(true);
 
                     if (widget.getStyle()["visibility"] === "visible" || widget.getStyle()["visibility"] === undefined) {
-                        this.getWidgetKeys()[this.getSelectedGroup()].push(widgetKey);
+                        this.getItemWidgetKeys(this.getSelectedGroup())?.push(widgetKey);
                         widget.getStyle()["visibility"] = "hidden";
                         g_widgets1.addToForceUpdateWidgets(widgetKey);
                     }
@@ -441,7 +438,11 @@ export class Group extends BaseWidget {
         this.setSelectedGroup(index);
 
         // (5)
-        for (let widgetKey of this.getWidgetKeys()[this.getSelectedGroup()]) {
+        const widgetKeys = this.getItemWidgetKeys(this.getSelectedGroup());
+        if (widgetKeys === undefined) {
+            return;
+        }
+        for (let widgetKey of widgetKeys) {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
@@ -615,61 +616,12 @@ export class Group extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-        const defaultTdl: type_Group_tdl = {
-            type: "Group",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 0)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 1,
-                borderColor: "rgba(0, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                selectedGroup: 0,
-                tabPosition: "top",
-                tabWidth: 100,
-                tabHeight: 20,
-                tabSelectedColor: "rgba(180,180,180,1)",
-                tabDefaultColor: "rgba(220,220,220,1)",
-                showTab: true,
-                showBox: false,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            itemNames: ["Group-1"],
-            itemBackgroundColors: ["rgba(255,255,255,1)"],
-            widgetKeys: [[]],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Group_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultGroupTdl.type);
+        return structuredClone({
+            ...defaultGroupTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Group.generateDefaultTdl;
@@ -677,21 +629,74 @@ export class Group extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["itemNames"] = structuredClone(this.getItemNames());
-        result["itemBackgroundColors"] = structuredClone(this.getItemBackgroundColors());
-        result["widgetKeys"] = structuredClone(this.getWidgetKeys());
+        result["items"] = structuredClone(this.getItems());
         return result;
     }
 
     // --------------------- getters -------------------------
 
-    getItemNames = () => {
-        return this._itemNames;
-    };
+    getItems = () => {
+        return this._items;
+    }
 
-    getItemBackgroundColors = () => {
-        return this._itemBackgroundColors;
-    };
+    getItem = (index: number): type_Group_item | undefined => {
+        return this.getItems()[index];
+    }
+
+    getItemName = (index: number) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return undefined;
+        } else {
+            return item["name"];
+        }
+    }
+
+    setItemName = (index: number, newName: string) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return;
+        } else {
+            item["name"] = newName;
+        }
+    }
+
+    getItemBackgroundColor = (index: number) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return undefined;
+        } else {
+            return item["backgroundColor"];
+        }
+    }
+
+    setItemBackgroundColor = (index: number, newColor: string) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return;
+        } else {
+            item["backgroundColor"] = newColor;
+        }
+    }
+
+    getItemWidgetKeys = (index: number) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return undefined;
+        } else {
+            return item["widgetKeys"];
+        }
+    }
+
+    setItemWidgetKeys = (index: number, newWidgetKeys: string[]) => {
+        const item = this.getItem(index);
+        if (item === undefined) {
+            return;
+        } else {
+            item["widgetKeys"] = newWidgetKeys;
+        }
+    }
+
 
     getAllWidgetKeys = () => {
         return this._allWidgetKeys;
@@ -707,9 +712,6 @@ export class Group extends BaseWidget {
         this.getText()["selectedGroup"] = newIndex;
     };
 
-    getWidgetKeys = () => {
-        return this._widgetKeys;
-    };
 
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {

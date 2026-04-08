@@ -3,24 +3,13 @@ import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVar
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
 import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { type_logData } from "../../../common/IpcEventArgType";
-
-export type type_LogViewer_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultLogViewerTdl, type_LogViewer_tdl } from "../../../common/types/type_widget_tdl";
 
 export class LogViewer extends BaseWidget {
     showProcessInfo = false;
@@ -534,56 +523,12 @@ export class LogViewer extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_LogViewer_tdl = {
-            type: "LogViewer",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 0,
-                top: 0,
-                width: 500,
-                height: 500,
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-
-                boxSizing: "border-box",
-                overflow: "scroll",
-            },
-            // the ElementBody style
-            text: {
-                maxLineNum: 5000,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_LogViewer_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultLogViewerTdl.type);
+        return structuredClone({
+            ...defaultLogViewerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = LogViewer.generateDefaultTdl;
@@ -591,7 +536,10 @@ export class LogViewer extends BaseWidget {
     // static method for generating a widget tdl with external PV name
     static generateWidgetTdl = (utilityOptions: Record<string, any>): type_LogViewer_tdl => {
         const result = this.generateDefaultTdl();
-        result.text = utilityOptions as Record<string, any>;
+        result.text = {
+            ...result.text,
+            ...(utilityOptions as Partial<type_LogViewer_tdl["text"]>),
+        };
         return result;
     };
     

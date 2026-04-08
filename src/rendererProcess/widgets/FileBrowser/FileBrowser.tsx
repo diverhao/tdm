@@ -3,24 +3,12 @@ import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { FileBrowserSidebar } from "./FileBrowserSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
 import { IpcEventArgType2, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
 import { GlobalVariables } from "../../../common/GlobalVariables";
-
-
-export type type_FileBrowser_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultFileBrowserTdl, type_FileBrowser_tdl } from "../../../common/types/type_widget_tdl";
 
 
 enum type_sorting_method {
@@ -1609,65 +1597,12 @@ export class FileBrowser extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_FileBrowser_tdl = {
-            type: "FileBrowser",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(240, 240, 240, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                // actually "alarm outline"
-                alarmBorder: true,
-                alarmText: false,
-                alarmBackground: false,
-                alarmLevel: "MINOR",
-                path: "",
-                permission: "WRITE", // READ, WRITE
-                modal: false,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_FileBrowser_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultFileBrowserTdl.type);
+        return structuredClone({
+            ...defaultFileBrowserTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = FileBrowser.generateDefaultTdl;
@@ -1681,7 +1616,7 @@ export class FileBrowser extends BaseWidget {
         result["text"]["path"] = utilityOptions['path'];
         result["text"]["modal"] = utilityOptions['modal'];
 
-        return result as type_FileBrowser_tdl;
+        return result;
     };
 
     // --------------------- sidebar --------------------------

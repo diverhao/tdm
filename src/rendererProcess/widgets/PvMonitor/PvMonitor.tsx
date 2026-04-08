@@ -8,24 +8,12 @@ import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelecti
 import { PvMonitorSidebar } from "./PvMonitorSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 // import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Table } from "../../helperWidgets/Table/Table";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
-
-
-export type type_PvMonitor_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultPvMonitorTdl, type_PvMonitor_tdl } from "../../../common/types/type_widget_tdl";
 
 type type_data = {
     time: string,
@@ -785,60 +773,12 @@ export class PvMonitor extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_PvMonitor_tdl = {
-            type: "PvMonitor",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            style: {
-                // basics
-                position: "absolute",
-                display: "inline-flex",
-                // dimensions
-                left: 100,
-                top: 100,
-                width: 100,
-                height: 100,
-                backgroundColor: "rgba(255, 255, 255, 1)",
-                // angle
-                transform: "rotate(0deg)",
-                // border, it is different from the "alarmBorder" below,
-                borderStyle: "solid",
-                borderWidth: 1,
-                borderColor: "rgba(0, 0, 0, 1)",
-                // font
-                color: "rgba(0,0,0,1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                // shows when the widget is selected
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-            },
-            text: {
-                // text
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                // actually "alarm outline"
-                alarmBorder: false,
-                invisibleInOperation: false,
-                // default, decimal, exponential, hexadecimal
-                format: "default",
-                // scale, >= 0
-                scale: 0,
-                maxLineNum: 5000,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_PvMonitor_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultPvMonitorTdl.type);
+        return structuredClone({
+            ...defaultPvMonitorTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = PvMonitor.generateDefaultTdl;
@@ -853,7 +793,7 @@ export class PvMonitor extends BaseWidget {
         // result.recordTypesMenus = utilityOptions.recordTypesMenus as Record<string, string[]>;
         // result.recordTypes = utilityOptions.recordTypes as Record<string, any>;
         // result.menus = utilityOptions.menus as Record<string, any>;
-        return result as type_PvMonitor_tdl;
+        return result;
     };
 
     // defined in super class

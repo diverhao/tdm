@@ -14,7 +14,7 @@ export class SidebarGroupItems extends SidebarComponent {
     constructor(sidebar: BaseWidgetSidebar) {
         super(sidebar);
         const mainWidget = this.getMainWidget() as Group;
-        for (let ii = 0; ii < mainWidget.getItemNames().length; ii++) {
+        for (let ii = 0; ii < mainWidget.getItems().length; ii++) {
             this._members.push(new SidebarGroupItem(this, ii));
         }
     }
@@ -81,11 +81,17 @@ export class SidebarGroupItems extends SidebarComponent {
         }
         const mainWidget = this.getMainWidget() as Group;
 
-        const newIndex = mainWidget.getItemNames().length;
+        const newIndex = mainWidget.getItems().length;
 
-        mainWidget.getItemNames().push(`item-${newIndex}`);
-        mainWidget.getItemBackgroundColors().push("rgba(255,255,255,1)");
-        mainWidget.getWidgetKeys().push([])
+        const newItem = {
+            name: `item-${newIndex}`,
+            backgroundColor: `rgba(255,255,255,1)`,
+            widgetKeys: [],
+        };
+        mainWidget.getItems().push(newItem);
+        // mainWidget.getItemNames().push(`item-${newIndex}`);
+        // mainWidget.getItemBackgroundColors().push("rgba(255,255,255,1)");
+        // mainWidget.getWidgetKeys().push([])
 
         mainWidget.updateGroup(newIndex);
         mainWidget.selectGroup(newIndex, true);

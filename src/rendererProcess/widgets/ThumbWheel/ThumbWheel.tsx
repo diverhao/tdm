@@ -1,24 +1,13 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ThumbWheelSidebar } from "./ThumbWheelSidebar";
-import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
+import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ThumbWheelRule } from "./ThumbWheelRule";
 import { Log } from "../../../common/Log";
-
-export type type_ThumbWheel_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultThumbWheelTdl, type_ThumbWheel_tdl } from "../../../common/types/type_widget_tdl";
 
 export class ThumbWheel extends BaseWidget {
     showSettings: boolean = false;
@@ -555,60 +544,12 @@ export class ThumbWheel extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = () => {
-
-        const defaultTdl: type_ThumbWheel_tdl = {
-            type: "ThumbWheel",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(128, 255, 255, 1)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 0,
-                borderColor: "rgba(255, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: false,
-                showUnit: true,
-                alarmBorder: true,
-                // highlightBackgroundColor: "rgba(255, 255, 0, 1)",
-                // minPvValue: 0,
-                // maxPvValue: 10,
-                // usePvLimits: false,
-                // sliderBlockWidth: 40,
-                // direction: "horizontal",
-                // showPvValue: true,
-                stepSize: 1,
-                invisibleInOperation: false,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_ThumbWheel_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultThumbWheelTdl.type);
+        return structuredClone({
+            ...defaultThumbWheelTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = ThumbWheel.generateDefaultTdl;
