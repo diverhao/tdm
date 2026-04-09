@@ -1,35 +1,14 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { RepeaterSidebar } from "./RepeaterSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-import { type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-import { rendererWindowStatus } from "../../global/Widgets";
-import path from "path";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { type_tdl } from "../../../common/GlobalVariables";
-
-export type type_Repeater_widget = {
-    widgetKey: string;
-    macro: [string, string][]; // this macro is for this Repeater widget only, not the macro for the whole display
-};
-
-export type type_Repeater_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    widgets: type_Repeater_widget[],
-};
+import { defaultRepeaterTdl, type_Repeater_tdl, type_Repeater_widget } from "../../../common/types/type_widget_tdl";
 
 export class Repeater extends BaseWidget {
 
@@ -572,60 +551,12 @@ export class Repeater extends BaseWidget {
 
     // -------------------------- tdl -------------------------------
 
-    static generateDefaultTdl = (): Record<string, any> => {
-
-        const defaultTdl: type_Repeater_tdl = {
-            type: "Repeater",
-            widgetKey: "", // "key" is a reserved keyword
-            key: "",
-            // the style for outmost div
-            // these properties are explicitly defined in style because they are
-            // (1) different from default CSS settings, or
-            // (2) they may be modified
-            style: {
-                position: "absolute",
-                display: "inline-flex",
-                backgroundColor: "rgba(240, 240, 240, 0)",
-                left: 100,
-                top: 100,
-                width: 150,
-                height: 80,
-                outlineStyle: "none",
-                outlineWidth: 1,
-                outlineColor: "black",
-                transform: "rotate(0deg)",
-                color: "rgba(0,0,0,1)",
-                borderStyle: "solid",
-                borderWidth: 1,
-                borderColor: "rgba(0, 0, 0, 1)",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
-            },
-            // the ElementBody style
-            text: {
-                horizontalAlign: "flex-start",
-                verticalAlign: "flex-start",
-                wrapWord: true,
-                showUnit: false,
-                alarmBorder: true,
-                selectedGroup: 0,
-                tabPosition: "top",
-                tabWidth: 100,
-                tabHeight: 20,
-                tabSelectedColor: "rgba(180,180,180,1)",
-                tabDefaultColor: "rgba(220,220,220,1)",
-                showTab: true,
-                gap: 5,
-            },
-            channelNames: [],
-            groupNames: [],
-            rules: [],
-            widgets: [],
-        };
-        defaultTdl["widgetKey"] = GlobalMethods.generateWidgetKey(defaultTdl["type"]);
-        return structuredClone(defaultTdl);
+    static generateDefaultTdl = (): type_Repeater_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultRepeaterTdl.type);
+        return structuredClone({
+            ...defaultRepeaterTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     generateDefaultTdl: () => any = Repeater.generateDefaultTdl;

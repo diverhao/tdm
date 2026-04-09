@@ -346,6 +346,122 @@ export const defaultGroupTdl: type_Group_tdl = {
     }],
 };
 
+// ======================== Repeater TDL Schema ========================
+
+export const type_Repeater_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: "number",
+    height: "number",
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Repeater_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    selectedGroup: "number",
+    tabPosition: "string",
+    tabWidth: "number",
+    tabHeight: "number",
+    tabSelectedColor: "string",
+    tabDefaultColor: "string",
+    showTab: "boolean",
+    gap: "number",
+    useParentMacros: ["boolean", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Repeater_widget_tdl_schema = {
+    widgetKey: "string",
+    macro: type_macros_tdl_schema,
+} as const satisfies TypeSchema;
+
+export const type_Repeater_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Repeater_style_tdl_schema,
+    text: type_Repeater_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    widgets: { arrayOf: type_Repeater_widget_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Repeater_style_tdl = Mutable<InferType<typeof type_Repeater_style_tdl_schema>>;
+export type type_Repeater_text_tdl = Mutable<InferType<typeof type_Repeater_text_tdl_schema>>;
+export type type_Repeater_widget = Omit<Mutable<InferType<typeof type_Repeater_widget_tdl_schema>>, "macro"> & {
+    macro: type_macros_tdl;
+};
+export type type_Repeater_tdl = Omit<Mutable<InferType<typeof type_Repeater_tdl_schema>>, "widgets"> & {
+    widgets: type_Repeater_widget[];
+};
+
+export const defaultRepeaterTdl: type_Repeater_tdl = {
+    type: "Repeater",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(240, 240, 240, 0)",
+        left: 100,
+        top: 100,
+        width: 150,
+        height: 80,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 1,
+        borderColor: "rgba(0, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        boxSizing: undefined,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        selectedGroup: 0,
+        tabPosition: "top",
+        tabWidth: 100,
+        tabHeight: 20,
+        tabSelectedColor: "rgba(180,180,180,1)",
+        tabDefaultColor: "rgba(220,220,220,1)",
+        showTab: true,
+        gap: 5,
+        useParentMacros: undefined,
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    widgets: [],
+};
+
 // ======================== Polyline TDL Schema ========================
 
 export const type_Polyline_text_tdl_schema = {
@@ -3369,6 +3485,110 @@ export const defaultProbeTdl: type_Probe_tdl = {
     channelNames: [],
     groupNames: [],
     rules: [],
+};
+
+// ======================== PvTable TDL Schema ========================
+
+export const type_PvTable_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    backgroundColor: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    boxSizing: ["string", "undefined"],
+    padding: ["string", "number", "undefined"],
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    transform: "string",
+    color: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+} as const satisfies TypeSchema;
+
+export const type_PvTable_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    alarmBorder: "boolean",
+    highlightBackgroundColor: "string",
+    overflowVisible: "boolean",
+    channelPropertyNames: "string[]",
+} as const satisfies TypeSchema;
+
+export const type_PvTable_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_PvTable_style_tdl_schema,
+    text: type_PvTable_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    macros: type_macros_tdl_schema,
+    fieldNames: "string[]",
+    channelValues: { arrayOf: ["number", "undefined"] },
+    channelSelects: "boolean[]",
+} as const satisfies TypeSchema;
+
+export type type_PvTable_style_tdl = Mutable<InferType<typeof type_PvTable_style_tdl_schema>>;
+export type type_PvTable_text_tdl = Mutable<InferType<typeof type_PvTable_text_tdl_schema>>;
+export type type_PvTable_tdl = Omit<Mutable<InferType<typeof type_PvTable_tdl_schema>>, "macros"> & {
+    macros: type_macros_tdl;
+};
+
+export const defaultPvTableTdl: type_PvTable_tdl = {
+    type: "PvTable",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        backgroundColor: "rgba(255, 255,255, 1)",
+        left: 0,
+        top: 0,
+        width: 500,
+        height: 500,
+        boxSizing: undefined,
+        padding: undefined,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        transform: "rotate(0deg)",
+        color: "rgba(0,0,0,1)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(255, 0, 0, 1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: true,
+        showUnit: false,
+        alarmBorder: true,
+        highlightBackgroundColor: "rgba(255, 255, 0, 1)",
+        overflowVisible: true,
+        channelPropertyNames: [],
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    macros: [],
+    fieldNames: ["value", "RTYP", "severity", "time", "units"],
+    channelValues: [],
+    channelSelects: [],
 };
 
 // ======================== Calculator TDL Schema ========================
