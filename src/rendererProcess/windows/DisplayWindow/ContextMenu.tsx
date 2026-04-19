@@ -1,8 +1,10 @@
 import * as React from "react";
 import { DisplayWindowClient } from "./DisplayWindowClient";
-import { g_widgets1, getBasePath } from "../../../rendererProcess/global/GlobalVariables";
+import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import ReactDOM from 'react-dom/client';
+import { createPortal } from "react-dom";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 
 
 type MenuItem =
@@ -51,6 +53,68 @@ export class ContextMenu {
 
     getDisplayWindowClient = () => {
         return this._displayWindowClient;
+    };
+
+    _getMenuTheme = () => {
+        const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        if (isDarkMode) {
+            return {
+                backgroundColor: "rgba(20, 20, 20, 0.65)",
+                color: "rgba(252, 252, 253, 0.98)",
+                border: "2px solid rgba(100, 100, 100, 0.0)",
+                outline: "0.5px solid rgba(50, 50, 50, 0.8)",
+                separatorColor: "rgba(255, 255, 255, 0.15)",
+                hoverBackgroundColor: "rgba(10, 132, 255, 0.96)",
+                hoverColor: "rgba(255, 255, 255, 1)",
+                boxShadow: "0 18px 44px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.24)",
+                backdropFilter: "blur(4px) saturate(110%)",
+                WebkitBackdropFilter: "blur(4px) saturate(110%)",
+                fontFamily: GlobalVariables.defaultFontFamily,
+                fontSize: 13.5,
+                fontWeight: 500,
+                borderRadius: 10,
+                menuPaddingX: 5,
+                menuPaddingY: 5,
+                itemPaddingX: 11,
+                itemPaddingY: 3,
+                itemMinHeight: 24,
+                itemBorderRadius: 6,
+                separatorInset: 24,
+                separatorHeight: 12,
+                submenuOffsetX: -3,
+                submenuOffsetY: -8,
+                submenuIndicatorWidth: 16,
+            };
+        }
+
+        return {
+            backgroundColor: "rgba(240, 240, 240, 0.68)", /* Translucent white */
+            outline: "0.5px solid rgba(70, 70, 70, 0.3)",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)", /* Soft shadow */
+            color: "rgba(18, 18, 20, 0.98)",
+            border: "0.5px solid rgba(230, 230, 230, 0.72)",
+            separatorColor: "rgba(60, 60, 67, 0.16)",
+            hoverBackgroundColor: "rgba(92, 161, 255, 1)",
+            hoverColor: "rgba(255, 255, 255, 1)",
+            backdropFilter: "blur(4px) saturate(110%)",
+            WebkitBackdropFilter: "blur(4px) saturate(110%)",
+            fontFamily: GlobalVariables.defaultFontFamily,
+            fontSize: 13.5,
+            fontWeight: 500,
+            borderRadius: 10,
+            menuPaddingX: 5,
+            menuPaddingY: 5,
+            itemPaddingX: 11,
+            itemPaddingY: 3,
+            itemMinHeight: 24,
+            itemBorderRadius: 6,
+            separatorInset: 24,
+            separatorHeight: 12,
+            submenuOffsetX: -3,
+            submenuOffsetY: -8,
+            submenuIndicatorWidth: 16,
+        };
     };
 
     contextMenuOptions: Record<string, any> = {};
@@ -126,64 +190,92 @@ export class ContextMenu {
     };
 
     _ElementContextMenu = () => {
+        const menuTheme = this._getMenuTheme();
+
         return (
-            <div style={{
-                backgroundColor: "rgba(90, 90, 90, 1)",
-                // backdropFilter: "blur(40px)",
-                borderRadius: "7px",
-                color: "rgba(235,235,235,1)",
-                fontFamily: "TDM Default",
-                fontSize: 13,
-                paddingLeft: 4,
-                paddingRight: 4,
-                paddingTop: 6,
-                paddingBottom: 6,
-                display: "inline-flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                border: "1px solid rgba(150, 150, 150, 1)",
-                outline: "0.5px solid rgba(0, 0, 0, 1)",
-                userSelect: "none",
-            }}>
-                {
-                    this.getTemplate().map((menuItem: MenuItem, index: number) => {
-                        return (
-                            <this._ElementMenuItem key={menuItem["label"] + `-${index}`} menuItem={menuItem}></this._ElementMenuItem>
-                        )
-                    })
-                }
-            </div>
+            <>
+                <div style={{
+                    backgroundColor: menuTheme.backgroundColor,
+                    color: menuTheme.color,
+                    border: menuTheme.border,
+                    outline: menuTheme.outline,
+                    borderRadius: menuTheme.borderRadius,
+                    backdropFilter: menuTheme.backdropFilter,
+                    WebkitBackdropFilter: menuTheme.WebkitBackdropFilter,
+                    boxShadow: menuTheme.boxShadow,
+                    fontFamily: menuTheme.fontFamily,
+                    fontSize: menuTheme.fontSize,
+                    fontWeight: menuTheme.fontWeight,
+                    paddingLeft: menuTheme.menuPaddingX,
+                    paddingRight: menuTheme.menuPaddingX,
+                    paddingTop: menuTheme.menuPaddingY,
+                    paddingBottom: menuTheme.menuPaddingY,
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    userSelect: "none",
+                    boxSizing: "border-box",
+                    minWidth: 240,
+                    WebkitFontSmoothing: "antialiased",
+                }}>
+                    {
+                        this.getTemplate().map((menuItem: MenuItem, index: number) => {
+                            return (
+                                <this._ElementMenuItem key={menuItem["label"] + `-${index}`} menuItem={menuItem}></this._ElementMenuItem>
+                            )
+                        })
+                    }
+                </div>
+                <div id="context-menu-submenu-root"></div>
+            </>
         );
     }
 
 
-    _ElementSubMenu = ({ submenu, show }: any) => {
-        return (
+    _ElementSubMenu = ({ submenu, show, anchorRect, onMouseEnter, onMouseLeave }: any) => {
+        const menuTheme = this._getMenuTheme();
+        const portalContainer = document.getElementById("context-menu-submenu-root");
+
+        if (show !== true || anchorRect === null || portalContainer === null) {
+            return null;
+        }
+
+        return createPortal((
             <div style={{
-                position: "absolute",
+                position: "fixed",
                 width: "auto",
                 height: "auto",
-                top: 0,
-                left: `calc(100% - 0px)`,
-                backgroundColor: "rgba(90, 90, 90, 1)",
-                backdropFilter: "blur(40px)",
-                borderRadius: "7px",
-                color: "rgba(235,235,235,1)",
-                fontFamily: "TDM Default",
-                fontSize: 13,
-                paddingLeft: 4,
-                paddingRight: 4,
-                paddingTop: 6,
-                paddingBottom: 6,
+                top: anchorRect.top + menuTheme.submenuOffsetY,
+                left: anchorRect.right + menuTheme.submenuOffsetX,
+                backgroundColor: menuTheme.backgroundColor,
+                backdropFilter: menuTheme.backdropFilter,
+                WebkitBackdropFilter: menuTheme.WebkitBackdropFilter,
+                borderRadius: menuTheme.borderRadius,
+                color: menuTheme.color,
+                fontFamily: menuTheme.fontFamily,
+                fontSize: menuTheme.fontSize,
+                fontWeight: menuTheme.fontWeight,
+                paddingLeft: menuTheme.menuPaddingX,
+                paddingRight: menuTheme.menuPaddingX,
+                paddingTop: menuTheme.menuPaddingY,
+                paddingBottom: menuTheme.menuPaddingY,
                 display: show ? "inline-flex" : "none",
                 flexDirection: "column",
                 alignItems: "flex-start",
                 justifyContent: "center",
-                border: "1px solid rgba(150, 150, 150, 1)",
-                outline: "0.5px solid rgba(0, 0, 0, 1)",
+                border: menuTheme.border,
+                outline: menuTheme.outline,
+                boxShadow: menuTheme.boxShadow,
                 userSelect: "none",
-            }}>
+                boxSizing: "border-box",
+                minWidth: 220,
+                WebkitFontSmoothing: "antialiased",
+                zIndex: 1,
+            }}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+            >
                 {
                     submenu.map((menuItem: MenuItem) => {
                         return (
@@ -194,28 +286,82 @@ export class ContextMenu {
 
                 }
             </div>
-        );
+        ), portalContainer);
     }
 
     _ElementMenuItem = ({ menuItem, }: any) => {
+        const menuTheme = this._getMenuTheme();
         const refElement = React.useRef<HTMLDivElement>(null);
         const [showSubMenu, setShowSubMenu] = React.useState(false);
+        const [submenuAnchorRect, setSubmenuAnchorRect] = React.useState<DOMRect | null>(null);
+        const closeSubMenuTimerRef = React.useRef<number | null>(null);
 
         const label = menuItem["label"];
         const handleClick = menuItem["click"];
         const submenu = menuItem["submenu"];
         const type = menuItem["type"];
 
+        React.useEffect(() => {
+            return () => {
+                if (closeSubMenuTimerRef.current !== null) {
+                    window.clearTimeout(closeSubMenuTimerRef.current);
+                }
+            };
+        }, []);
+
+        const clearCloseSubMenuTimer = () => {
+            if (closeSubMenuTimerRef.current !== null) {
+                window.clearTimeout(closeSubMenuTimerRef.current);
+                closeSubMenuTimerRef.current = null;
+            }
+        };
+
+        const setHoverStyle = () => {
+            if (refElement.current !== null) {
+                refElement.current.style["backgroundColor"] = menuTheme.hoverBackgroundColor;
+                refElement.current.style["color"] = menuTheme.hoverColor;
+            }
+        };
+
+        const clearHoverStyle = () => {
+            if (refElement.current !== null) {
+                refElement.current.style["backgroundColor"] = "rgba(60, 135, 210, 0)";
+                refElement.current.style["color"] = menuTheme.color;
+            }
+        };
+
+        const openSubMenu = () => {
+            clearCloseSubMenuTimer();
+            setHoverStyle();
+            if (refElement.current !== null) {
+                setSubmenuAnchorRect(refElement.current.getBoundingClientRect());
+            }
+            setShowSubMenu(true);
+        };
+
+        const closeSubMenu = () => {
+            clearCloseSubMenuTimer();
+            clearHoverStyle();
+            setShowSubMenu(false);
+        };
+
+        const scheduleCloseSubMenu = () => {
+            clearCloseSubMenuTimer();
+            closeSubMenuTimerRef.current = window.setTimeout(() => {
+                closeSubMenu();
+            }, 120);
+        };
+
         if (label !== undefined) {
             return (
                 <div
                     ref={refElement}
                     style={{
-                        paddingTop: 3.5,
-                        paddingBottom: 3.5,
-                        paddingLeft: 9,
-                        paddingRight: 9,
-                        borderRadius: 4,
+                        paddingTop: menuTheme.itemPaddingY,
+                        paddingBottom: menuTheme.itemPaddingY,
+                        paddingLeft: menuTheme.itemPaddingX,
+                        paddingRight: menuTheme.itemPaddingX,
+                        borderRadius: menuTheme.itemBorderRadius,
                         boxSizing: "border-box",
                         width: "100%",
                         cursor: "default",
@@ -225,17 +371,21 @@ export class ContextMenu {
                         justifyContent: "space-between",
                         alignItems: "center",
                         userSelect: "none",
+                        color: menuTheme.color,
+                        minHeight: menuTheme.itemMinHeight,
                     }}
                     onMouseEnter={() => {
-                        if (refElement.current !== null) {
-                            refElement.current.style["backgroundColor"] = "rgba(104, 145, 229, 1)";
-                            setShowSubMenu(true);
+                        if (submenu !== undefined) {
+                            openSubMenu();
+                        } else {
+                            setHoverStyle();
                         }
                     }}
                     onMouseLeave={() => {
-                        if (refElement.current !== null) {
-                            refElement.current.style["backgroundColor"] = "rgba(60, 135, 210, 0)";
-                            setShowSubMenu(false);
+                        if (submenu !== undefined) {
+                            scheduleCloseSubMenu();
+                        } else {
+                            clearHoverStyle();
                         }
                     }}
                     onClick={(event: any) => {
@@ -253,22 +403,45 @@ export class ContextMenu {
                 >
                     {submenu !== undefined ?
                         <>
-                            <div>
+                            <div style={{
+                                flex: 1,
+                                paddingRight: 14,
+                            }}>
                                 {label}
                             </div>
                             <div style={{
-                                width: 80
+                                width: menuTheme.submenuIndicatorWidth,
+                                display: "inline-flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                flexShrink: 0,
                             }}>
-                            </div>
-                            <div>
-                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowRight-thin-white.svg`} width="9px" height="9px">
-                                </img>
+                                <div style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderTop: "1.75px solid currentColor",
+                                    borderRight: "1.75px solid currentColor",
+                                    transform: "rotate(45deg)",
+                                    boxSizing: "border-box",
+                                }}>
+                                </div>
                             </div>
                         </>
                         :
                         label}
                     {submenu !== undefined ?
-                        <this._ElementSubMenu submenu={submenu} show={showSubMenu}></this._ElementSubMenu>
+                        <this._ElementSubMenu
+                            submenu={submenu}
+                            show={showSubMenu}
+                            anchorRect={submenuAnchorRect}
+                            onMouseEnter={() => {
+                                clearCloseSubMenuTimer();
+                                setHoverStyle();
+                            }}
+                            onMouseLeave={() => {
+                                scheduleCloseSubMenu();
+                            }}
+                        ></this._ElementSubMenu>
                         : null}
                 </div>
             )
@@ -276,15 +449,20 @@ export class ContextMenu {
             return (
                 <div style={{
                     width: "100%",
-                    height: 10,
+                    height: menuTheme.separatorHeight,
                     display: "flex",
                     justifyContent: 'center',
                     alignItems: "center",
                     userSelect: "none",
+                    paddingLeft: menuTheme.separatorInset,
+                    paddingRight: menuTheme.separatorInset,
+                    boxSizing: "border-box",
                 }}>
                     <hr style={{
                         width: "100%",
-                        border: "0.5px solid rgba(130, 130, 130, 1)"
+                        margin: 0,
+                        border: "none",
+                        borderTop: `0.5px solid ${menuTheme.separatorColor}`
                     }}></hr>
                 </div>
             )
@@ -605,17 +783,24 @@ export class ContextMenu {
             },
         },
         {
-            label: "Save Display on Server",
+            label: "Save Display (to Server)",
             accelerator: "CmdOrCtrl+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "save-display", subcommand: undefined });
             },
         },
         {
-            label: "Download Display",
-            accelerator: "CmdOrCtrl+Shift+s",
+            label: "Save Display (to Server) As",
+            accelerator: "CmdOrCtrl+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "save-display-as", subcommand: undefined });
+            },
+        },
+        {
+            label: "Download Display (to Local)",
+            accelerator: "CmdOrCtrl+Shift+s",
+            click: () => {
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "download-display", subcommand: undefined });
             },
         },
 
@@ -650,10 +835,17 @@ export class ContextMenu {
 
         { type: "separator" },
         {
-            label: "Open Display",
+            label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openTdlFileInWebMode();
+                this.getDisplayWindowClient().openServerTdlFileInWebMode();
+            },
+        },
+        {
+            label: "Open Display (on Local)",
+            accelerator: "CmdOrCtrl+o",
+            click: () => {
+                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
             },
         },
         {
@@ -1307,10 +1499,17 @@ export class ContextMenu {
             },
         },
         {
-            label: "Download Display",
-            accelerator: "CmdOrCtrl+Shift+s",
+            label: "Save Display (to Server) As",
+            accelerator: "CmdOrCtrl+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "save-display-as", subcommand: undefined });
+            },
+        },
+        {
+            label: "Download Display (to Local)",
+            accelerator: "CmdOrCtrl+Shift+s",
+            click: () => {
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "download-display", subcommand: undefined });
             },
         },
         {
@@ -1344,24 +1543,20 @@ export class ContextMenu {
 
         { type: "separator" },
         {
-            label: "Open Display",
+            label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openTdlFileInWebMode();
+                this.getDisplayWindowClient().openServerTdlFileInWebMode();
 
             },
-            // click: () => {
-            //     // this.getDisplayWindowAgent().getWindowAgentsManager().handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
-            //     this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
-            //         tdlFileNames: undefined, // open dialog
-            //         mode: "operating",
-            //         editable: true,
-            //         macros: [],
-            //         replaceMacros: false,
-            //         // currentTdlFolder?: string;
-            //     });
-            //     // .handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
-            // },
+        },
+        {
+            label: "Open Display (on Local)",
+            accelerator: "CmdOrCtrl+o",
+            click: () => {
+                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
+
+            },
         },
         {
             label: "Browse Displays on Server",
@@ -1570,10 +1765,17 @@ export class ContextMenu {
             },
         },
         {
-            label: "Download Display",
-            accelerator: "CmdOrCtrl+Shift+s",
+            label: "Save Display (to Server) As",
+            accelerator: "CmdOrCtrl+s",
             click: () => {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "save-display-as", subcommand: undefined });
+            },
+        },
+        {
+            label: "Download Display (to Local)",
+            accelerator: "CmdOrCtrl+Shift+s",
+            click: () => {
+                this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "download-display", subcommand: undefined });
             },
         },
         {
@@ -1598,34 +1800,20 @@ export class ContextMenu {
                 this.getDisplayWindowClient().getIpcManager().handleContextMenuCommand(undefined, { command: "show-tdl-file-contents", subcommand: undefined });
             },
         },
-        // {
-        //     label: "Open Text Editor",
-        //     click: () => {
-        //         this.getDisplayWindowAgent().sendFromMainProcess("context-menu-command", "open-text-editor");
-        //     },
-        // },
-
         { type: "separator" },
         {
-            label: "Open Display",
+            label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openTdlFileInWebMode();
+                this.getDisplayWindowClient().openServerTdlFileInWebMode();
             },
-
-            // click: () => {
-            //     // this.getDisplayWindowAgent().getWindowAgentsManager().handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
-            //     this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles(undefined, {
-            //         tdlFileNames: undefined, // open dialog
-            //         mode: "operating",
-            //         editable: true,
-            //         macros: [],
-            //         replaceMacros: false,
-            //         // currentTdlFolder?: string;
-            //         windowId: this.getDisplayWindowAgent().getId(),
-            //     });
-            //     // .handleOpenTdlFiles(undefined, undefined, "operating", true, [], false);
-            // },
+        },
+        {
+            label: "Open Display (on Local)",
+            accelerator: "CmdOrCtrl+o",
+            click: () => {
+                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
+            },
         },
         {
             label: "Browse Displays on Server",

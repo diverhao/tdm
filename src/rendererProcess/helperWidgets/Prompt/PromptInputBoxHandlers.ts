@@ -19,7 +19,6 @@ export class PromptInputBoxHandlers {
             "save-tdl-file": this._handleSaveTdlFile,
             "window-will-be-closed-user-select-save": this._handleWindowWillBeClosedUserSelectSave,
             "save-data-to-file": this._handleSaveDataToFile,
-            "data-viewer-export-data": this._handleDataViewerExportData,
             "save-text-file": this._handleSaveTextFile,
             "select-a-file": this._handleSelectAFile,
             "open-text-file": this._handleOpenTextFile,
@@ -102,20 +101,6 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleDataViewerExportData = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
-        const attachment = info["attachment"];
-        this._setTwoButtonHandlers(info, () => {
-            const fileName = this.getPrompt().getDialogInputBoxText();
-            if (fileName !== "") {
-                attachment["fileName1"] = fileName;
-                sendFromRendererProcess("data-viewer-export-data", {
-                    displayWindowId: attachment["displayWindowId"],
-                    data: attachment["data"],
-                    fileName1: attachment["fileName1"],
-                });
-            }
-        });
-    }
 
     private _handleSaveTextFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
         const attachment = info["attachment"];

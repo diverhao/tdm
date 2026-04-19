@@ -309,7 +309,6 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("input-file-path", this.handleInputFilePath);
         this.ipcMain.on("select-a-file", this.handleSelectAFile);
         this.ipcMain.on("fetch-folder-content", this.handleFetchFolderContent);
-        this.ipcMain.on("data-viewer-export-data", this.handleDataViewerExportData);
         this.ipcMain.on("file-browser-command", this.handleFileBrowserCommand);
         this.ipcMain.on("fetch-thumbnail", this.handleFetchThumbnail);
         this.ipcMain.on("file-converter-command", this.handleFileConverterCommand);
@@ -1171,20 +1170,6 @@ export class IpcManagerOnMainProcess {
         } else {
             Log.error(`No such display window ${displayWindowId}. Cancel selecting file.`);
         }
-    };
-
-    handleDataViewerExportData = (
-        event: WebSocket | string,
-        options: IpcEventArgType["data-viewer-export-data"]
-    ) => {
-        let { displayWindowId } = options;
-
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
-        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error(`Cannot find window agent for ${displayWindowId}`);
-            return;
-        }
-        displayWindowAgent.getDisplayWindowFile().saveDataViewerData(options);
     };
 
     handleFetchFolderContent = (event: WebSocket | string, options: IpcEventArgType["fetch-folder-content"]) => {

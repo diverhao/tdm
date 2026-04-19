@@ -488,6 +488,7 @@ export class LogViewer extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: result,
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
             },
@@ -500,6 +501,7 @@ export class LogViewer extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: this.getLogData(),
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
             },

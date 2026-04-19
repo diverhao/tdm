@@ -7,7 +7,11 @@ import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton
 import { TdmLogo } from "../../global/Images";
 import { PromptInputBoxHandlers } from "./PromptInputBoxHandlers";
 
-
+export type type_InputBox = {
+    title: string,
+    text: string,
+    defaultContent: string,
+}
 
 /**
  * Customized prompt for all modes. The electron.js does not support native prompt. <br>
@@ -20,6 +24,139 @@ export abstract class Prompt {
     private _nameElementMap: Record<string, ({ args }: any) => React.JSX.Element> = {}
     dialogInputBoxText = "";
     private readonly _promptInputBoxHandlers: PromptInputBoxHandlers;
+
+    private _confirmResolve: (value: string | undefined) => void = () => { };
+    private _confirmPromise = new Promise<string | undefined>((resolve, reject) => {
+        this._confirmResolve = resolve;
+    });
+
+    /**
+     * 1 input box, 2 buttons
+     */
+    showInputBox = async (info: type_InputBox): Promise<string | undefined> => {
+        // cancel the old resolve, create new promise
+        this._confirmResolve(undefined);
+        this._confirmPromise = new Promise<string | undefined>((resolve, reject) => {
+            this._confirmResolve = resolve;
+        });
+
+        // create element, will lift the block from element
+        this.createInputBox(info);
+
+        // block and return here
+        try {
+            return await this._confirmPromise;
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    createInputBox = (info: type_InputBox) => {
+
+        this.removeElement();
+
+        // transparent backdrop
+        const newElement = document.createElement('div');
+        newElement.id = this._id;
+
+        newElement.style.position = "absolute";
+        newElement.style.left = "0px";
+        newElement.style.top = "0px";
+        newElement.style.width = "100%";
+        newElement.style.height = "100%";
+        newElement.style.display = "inline-flex";
+        newElement.style.alignItems = "flex-start";
+        newElement.style.justifyContent = "center";
+
+        // let the wrapper div include the contents
+        ReactDOM.createRoot(newElement).render(<this._ElementInputBox info={info}></this._ElementInputBox>);
+        // append wrapper element
+        document.body.appendChild(newElement);
+    }
+
+    _ElementInputBox = ({ info }: { info: type_InputBox }) => {
+        const { title, defaultContent, text } = info;
+
+        const refInput = React.useRef<HTMLInputElement>(null);
+        const [inputText, setInputText] = React.useState(defaultContent);
+
+        return (<this._ElementBackground>
+            {/* header */}
+            <div>
+                <TdmLogo width={50} height={50}></TdmLogo>
+            </div>
+            {/* human readable info */}
+            <div style={{
+                display: "inline-flex",
+                flexDirection: "column",
+            }}>
+                <div style={{ height: 20, display: "inline-flex", justifyContent: 'center', alignItems: "center" }}>{text}</div>
+            </div>
+            &nbsp;
+            <div style={{
+                display: "inline-flex",
+                flexDirection: "column",
+                width: "70%",
+            }}>
+                <form
+                    style={{
+                        width: "100%",
+                    }}
+                    onSubmit={(event) => { event?.preventDefault() }}>
+                    <this._ElementInput
+                        value={inputText}
+                        handleChange={(event) => {
+                            setInputText(event.target.value);
+                        }}
+                        autoFocus={true}
+                        type={"text"}
+                    >
+                    </this._ElementInput>
+                </form>
+            </div>
+            {/* only one OK button, if buttons entry is undefined or empty */}
+            <div style={{
+                display: "inline-flex",
+                width: "100%",
+                flexDirection: 'row',
+                alignItems: "cener",
+                justifyContent: "center",
+                margin: 5,
+                userSelect: "none",
+            }}>
+                <ElementRectangleButton
+                    additionalStyle={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                    }}
+                    handleClick={(event: React.MouseEvent) => {
+                        event.preventDefault();
+                        this.removeElement();
+                        this._confirmResolve(undefined);
+                    }}
+                >
+                    Cancel
+                </ElementRectangleButton>
+
+                <ElementRectangleButton
+                    additionalStyle={{
+                        marginLeft: 5,
+                        marginRight: 5,
+                    }}
+                    handleClick={(event: React.MouseEvent) => {
+                        event.preventDefault();
+                        this.removeElement();
+                        this._confirmResolve(inputText);
+                    }}
+                >
+                    OK
+                </ElementRectangleButton>
+            </div>
+        </this._ElementBackground>)
+
+    }
+
+    // -------------------- old stuff, still actively used --------------------
 
     getDialogInputBoxText = () => {
         return this.dialogInputBoxText;
@@ -87,6 +224,7 @@ export abstract class Prompt {
             this.removeElement();
         }
     }
+
 
     // --------------------------- general elements -----------------------
 

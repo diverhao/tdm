@@ -592,8 +592,9 @@ export class DisplayWindowLifeCycleManager {
 
         const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
 
-        const success = await displayWindowFile.saveFile(fileName, fileContent, dataType);
-        if (success) {
+        const saveResult = await displayWindowFile.saveFile(fileName, fileContent, dataType);
+        
+        if (saveResult["status"] === true) {
             this.closeBrowserWindow();
         } else {
             this.setReadyToClose(false);

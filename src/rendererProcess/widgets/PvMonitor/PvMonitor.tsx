@@ -726,6 +726,7 @@ export class PvMonitor extends BaseWidget {
                             displayWindowId: displayWindowId,
                             data: result,
                             preferredFileTypes: ["json"],
+                            fileName: "",
                         }
                     )
                 }
@@ -750,6 +751,7 @@ export class PvMonitor extends BaseWidget {
                             displayWindowId: displayWindowId,
                             data: this.getData(),
                             preferredFileTypes: ["json"],
+                            fileName: "",
                         }
                     )
                 }

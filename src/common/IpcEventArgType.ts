@@ -278,7 +278,7 @@ export type IpcEventArgType = {
         // this data must be serializable, e.g. a regular object
         data: any,
         preferredFileTypes: string[],
-        fileName?: string,
+        fileName: string,
     },
 
     "new-tdl-rendered": {
@@ -364,18 +364,6 @@ export type IpcEventArgType = {
         windowId: string
     },
 
-
-    "data-viewer-export-data": {
-        displayWindowId: string,
-        data: Record<
-            string,
-            {
-                Time: string[];
-                Data: number[];
-            }
-        >,
-        fileName1?: string
-    },
 
     "processes-info": {
         displayWindowId: string,

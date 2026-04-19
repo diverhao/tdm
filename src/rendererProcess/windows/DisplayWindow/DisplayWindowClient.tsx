@@ -972,7 +972,6 @@ export class DisplayWindowClient {
         const tdl = this.generateTdl();
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
         const tdlFileName = this.getTdlFileName();
-        // if (this.getMainProcessMode() === "desktop" || this.getMainProcessMode() === "ssh-client") {
         this.getIpcManager().sendFromRendererProcess("create-utility-display-window",
             {
                 utilityType: "TdlViewer",
@@ -984,93 +983,56 @@ export class DisplayWindowClient {
                 windowId: this.getWindowId(),
             }
         );
-        // } else {
-        //     // web mode
-        //     const currentSite = `https://${window.location.host}/`;
-
-        //     this.getIpcManager().sendPostRequestCommand("create-utility-display-window", {
-        //         utilityType: "TdlViewer", utilityOptions: {
-        //             tdl: tdl,
-        //             externalMacros: externalMacros,
-        //             tdlFileName: tdlFileName,
-        //         }
-        //     }).then((response: any) => {
-        //         // decode string
-        //         return response.json()
-        //     }).then(data => {
-        //         const ipcServerPort = data["ipcServerPort"];
-        //         const displayWindowId = data["displayWindowId"];
-        //         window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`)
-        //     })
-
-        // }
     };
 
     /**
      * Save tdl file at the current display window state. <br>
      *
-     * The JSON object is generated and sent to main process to save on disk.
-     *
      * @param {string} tdlFileName The file name that will be saved.
-     * An empty file name "" means it is saved as. In this case, a prompt will pop up.
+     *                             An empty file name "" means it is saved as. In this case, a prompt will pop up.
      */
-    saveTdl = (tdlFileName: string) => {
+    saveTdl = async (tdlFileName0: string) => {
+        let tdlFileName: string | undefined = tdlFileName0;
         if (this.getMainProcessMode() === "web") {
             if (tdlFileName === "") {
-                // save tdl to local computer
-                const tdl = this.generateTdl();
-                const blob = new Blob([JSON.stringify(tdl, null, 4)], { type: 'text/json' });
-                this.downloadData(blob, tdlFileName);
-                return;
-            } else {
-                // save to server, the server will make sure the file is allowed to be saved
-                if (this.getActionHistory().getModified() === true) {
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
-                        {
-                            windowId: this.getWindowId(),
-                            tdl: this.generateTdl() as type_tdl,
-                            tdlFileName1: tdlFileName
-                        }
-                    );
-                }
-            }
-        } else {
-            if (this.getActionHistory().getModified() === true) {
-                Log.debug("We are going to save TDL", tdlFileName)
-                this.getIpcManager().sendFromRendererProcess("save-tdl-file",
-                    {
-                        windowId: this.getWindowId(),
-                        tdl: this.generateTdl() as type_tdl,
-                        tdlFileName1: tdlFileName
-                    }
-                );
-            } else {
-                if (this.getIsUtilityWindow() === true) {
-                    // always save utility window (in editing mode)
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
-                        {
-                            windowId: this.getWindowId(),
-                            tdl: this.generateTdl() as type_tdl,
-                            tdlFileName1: tdlFileName
-                        }
-                    );
+                // user input file name
+                const prompt = this.getPrompt();
+                tdlFileName = await prompt.showInputBox({
+                    title: "",
+                    text: "Input full path for the file",
+                    defaultContent: "",
+                });
+                // canceled
+                if (tdlFileName === undefined) {
                     return;
-                }
-                if (tdlFileName === "") {
-                    Log.info("We are going to save this new TDL");
-                    this.getIpcManager().sendFromRendererProcess("save-tdl-file",
-                        {
-                            windowId: this.getWindowId(),
-                            tdl: this.generateTdl() as type_tdl,
-                            tdlFileName1: tdlFileName
-                        }
-                    );
-                } else {
-                    Log.debug("TDL file", tdlFileName, "is not changed, no need to save");
                 }
             }
         }
+        this.getIpcManager().sendFromRendererProcess("save-tdl-file",
+            {
+                windowId: this.getWindowId(),
+                tdl: this.generateTdl() as type_tdl,
+                tdlFileName1: tdlFileName
+            }
+        );
     };
+
+    /**
+     * Download the current display window state as a TDL file in web mode. <br>
+     *
+     * @param {string} tdlFileName The suggested file name for the downloaded TDL file.
+     */
+    downloadTdl = (tdlFileName: string) => {
+        if (this.getMainProcessMode() === "web") {
+            // save tdl to local computer
+            const tdl = this.generateTdl();
+            const blob = new Blob([JSON.stringify(tdl, null, 4)], { type: 'text/json' });
+            this.downloadData(blob, tdlFileName);
+            return;
+        } else {
+            Log.error("Download TDL is only available in web mode");
+        }
+    }
 
     downloadData = async (blob: Blob, suggestedName: string, description: string = "", applicationKey: string = "application/json", applicationValue: string[] = [".tdl", ".json"]) => {
         if (this.getMainProcessMode() !== "web") {
@@ -1156,122 +1118,118 @@ export class DisplayWindowClient {
     }
 
     /**
-     * In web mode, open a local file in web browser. It may be initiated by
+     * In web mode, open a local file in web browser. 
      * 
-     * (1) drop a tdl file in web browser, providing a file name and a blob
-     * 
-     * (2) ActionButton open, providing a file name
-     * 
-     * (3) click `Open Display` in context menu, providing nothing, user needs to input the file name
-     * 
+     * @param fileBlob Optional local file blob.
+     *                 If provided, read this blob directly instead of opening the browser's
+     *                 file picker. This is used by drag-and-drop in web mode.
      */
-    openTdlFileInWebMode = (fileName: string | undefined = undefined, fileBlob: Blob | undefined = undefined) => {
+    openLocalTdlFileInWebMode = async (fileBlob: Blob | undefined = undefined) => {
         if (this.getMainProcessMode() !== "web") {
             return;
         }
 
-        if (fileName !== undefined && fileBlob !== undefined) {
-            const tdlFileName = fileName;
-            // we supply the file blob
-            Log.debug("Open TDL file", fileBlob);
-            const reader = new FileReader();
-            reader.onload = (event: any) => {
-                // const fileContents = event.target.result;
-                // const currentSite = `https://${window.location.host}/`;
-                const tdlStr = event.target.result;
-                const tdl = JSON.parse(tdlStr);
-                this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                    options: {
-                        // tdlStr: tdlStr ,
-                        tdl: tdl,
-                        tdlFileNames: [tdlFileName],
-                        mode: g_widgets1.isEditing() ? "editing" : "operating",
-                        editable: true,
-                        // external macros: user-provided and parent display macros
-                        macros: [],
-                        replaceMacros: true,
-                        currentTdlFolder: undefined,
-                        windowId: this.getWindowId(),
-                    }
-                });
-            };
-            reader.readAsText(fileBlob);
+        if (fileBlob === undefined) {
+            fileBlob = await this.readLocalTdlFile();
+        }
+        if (fileBlob === undefined) {
+            return;
+        }
 
-        } else if (typeof fileName === "string") {
-            // only a file name is provided
-            // manually select the file in web browser file prompt or read file on server (ActionButton open)
-            let currentTdlFolder = undefined;
-            try {
-                currentTdlFolder = path.dirname(this.getTdlFileName());
-            } catch (e) {
-                Log.error(e);
-            }
+        Log.debug("Open TDL file", fileBlob);
+        const reader = new FileReader();
+        reader.onload = (event: any) => {
+            const tdlStr = event.target.result;
+            const tdl = JSON.parse(tdlStr);
             this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
                 options: {
-                    // tdlStr: undefined,
-                    tdlFileNames: [fileName],
+                    tdl: tdl,
+                    // tdl file name is empty, otherwise it will be a file on server
+                    tdlFileNames: [""],
                     mode: g_widgets1.isEditing() ? "editing" : "operating",
                     editable: true,
-                    // external macros: user-provided and parent display macros
                     macros: [],
                     replaceMacros: true,
-                    currentTdlFolder: currentTdlFolder,
+                    currentTdlFolder: undefined,
                     windowId: this.getWindowId(),
                 }
-            })
+            });
+        };
+        reader.readAsText(fileBlob);
+    }
 
-        } else {
-            // nothing is provided
-            let currentTdlFolder: string | undefined = undefined;
-            try {
-                currentTdlFolder = path.dirname(this.getTdlFileName());
-            } catch (e) {
-                Log.error(e);
-            }
+    /**
+     * Open file on server in web mode
+     * 
+     * @param fileName TDL file path on the server.
+     *                 If `undefined`, prompt the user to type a server-side file path.
+     *                 The path must be absolute
+     */
+    openServerTdlFileInWebMode = async (fileName?: string) => {
+        if (this.getMainProcessMode() !== "web") {
+            return;
+        }
+
+        // user needs to input a name
+        if (fileName === undefined) {
+
             const ipcManager = this.getIpcManager();
-            ipcManager.handleDialogShowInputBox(undefined,
-                {
-                    info: {
-                        command: "",
-                        humanReadableMessages: ["Input a file path, which can be relative to this file or an absolute path on server."],
-                        buttons: [
 
-                            {
-                                text: "OK",
-                                handleClick: (dialogInputText?: string) => {
-                                    if (typeof dialogInputText !== "string") {
-                                        return;
-                                    }
-                                    this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                                        options: {
-                                            // tdlStr: undefined,
-                                            tdlFileNames: [dialogInputText],
-                                            mode: g_widgets1.isEditing() ? "editing" : "operating",
-                                            editable: true,
-                                            // external macros: user-provided and parent display macros
-                                            macros: [],
-                                            replaceMacros: true,
-                                            currentTdlFolder: currentTdlFolder,
-                                            windowId: this.getWindowId(),
-                                        }
-                                    })
-                                },
-                            },
-                            {
-                                text: "Cancel",
-                                handleClick: (dialogInputText?: string) => {
-                                    // do nothing
-                                },
-                            }
-                        ],
-                        defaultInputText: "",
-                        attachment: undefined,
-                    }
-                }
-            )
+            const prompt = this.getPrompt();
+            const result = await prompt.showInputBox({
+                title: "",
+                text: "Input file name on server",
+                defaultContent: "",
+            });
+            if (result === undefined) {
+                // user canceled
+                return;
+            } else {
+                fileName = result;
+            }
+        }
 
+        this.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+            options: {
+                tdlFileNames: [fileName],
+                mode: g_widgets1.isEditing() ? "editing" : "operating",
+                editable: true,
+                // external macros: user-provided and parent display macros
+                macros: [],
+                replaceMacros: true,
+                // currentTdlFolder: currentTdlFolder,
+                windowId: this.getWindowId(),
+            }
+        })
+
+    }
+
+    readLocalTdlFile = async () => {
+        try {
+            const [handle] = await (window as any).showOpenFilePicker({
+                multiple: false,
+                types: [
+                    {
+                        description: "TDM files",
+                        accept: {
+                            "application/json": [".tdl", ".json"],
+                            "text/plain": [".txt"],
+                        },
+                    },
+                ],
+            });
+
+            const file = await handle.getFile();
+            // const fileContentStr = await file.text();
+            // const fileContent = JSON.parse(fileContentStr);
+            // const fileName = await file.name;
+            return file;
+        } catch (e) {
+            // user cancelled => AbortError
+            return undefined;
         }
     }
+
 
     /**
      * Open a text file inside 

@@ -297,7 +297,7 @@ export class IpcManagerOnDisplayWindow {
                         const fileBlob = event.dataTransfer.files[0];
                         if (fileBlob !== undefined) {
                             const fileName = event.dataTransfer.files[0].name;
-                            this.getDisplayWindowClient().openTdlFileInWebMode(fileName, fileBlob);
+                            this.getDisplayWindowClient().openLocalTdlFileInWebMode(fileBlob);
                         }
                     } else {
                         this.sendFromRendererProcess("open-tdl-file",
@@ -499,6 +499,8 @@ export class IpcManagerOnDisplayWindow {
             g_widgets1.getRoot().getDisplayWindowClient().saveTdl(this.getDisplayWindowClient().getTdlFileName());
         } else if (command === "save-display-as") {
             g_widgets1.getRoot().getDisplayWindowClient().saveTdl("");
+        } else if (command === "download-display") {
+            g_widgets1.getRoot().getDisplayWindowClient().downloadTdl(this.getDisplayWindowClient().getTdlFileName());
         } else if (command === "toggle-title") {
             g_widgets1.getRoot().getDisplayWindowClient().toggleWindowTitle();
         } else if (command === "copy-widgets") {
@@ -608,9 +610,12 @@ export class IpcManagerOnDisplayWindow {
 
     }
 
+    /**
+     * TDL file has been successfully saved
+     */
     handleTdlFileSaved = (event: string, data: IpcEventArgType2["tdl-file-saved"]) => {
         const { newTdlFileName } = data;
-        Log.debug("TDL file saved to", newTdlFileName);
+        Log.info("TDL file successfully saved to", newTdlFileName);
         this.getDisplayWindowClient().setTdlFileName(newTdlFileName);
         if (this.getDisplayWindowClient().getWindowTitleType() === "file-name") {
             this.sendFromRendererProcess("set-window-title",

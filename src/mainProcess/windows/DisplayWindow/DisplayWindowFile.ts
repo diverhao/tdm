@@ -196,54 +196,7 @@ export class DisplayWindowFile {
 
     // ------------------ write file -----------------------
 
-    saveDataToFile = async (options: IpcEventArgType["save-data-to-file"]): Promise<void> => {
-        const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "web") {
-            return;
-        }
 
-        const { data, preferredFileTypes } = options;
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        Log.debug("We are going to save a file");
-        let fileName = options["fileName"];
-
-        try {
-            if (fileName === undefined) {
-                if (mainProcessMode === "desktop") {
-                    fileName = dialog.showSaveDialogSync({ title: "Save data to file", filters: [{ name: "", extensions: preferredFileTypes }] });
-                } else if (mainProcessMode === "ssh-server") {
-                    displayWindowAgent.showInputBox({
-                        command: "save-data-to-file",
-                        humanReadableMessages: ["Save file to"],
-                        buttons: [
-                            {
-                                text: "OK",
-                            },
-                            {
-                                text: "Cancel",
-                            }
-                        ],
-                        defaultInputText: "",
-                        attachment: options,
-                    });
-                    return;
-                }
-            }
-
-            if (fileName === undefined) {
-                displayWindowAgent.showError([`Failed to save file: file not selected`], [""]);
-                return;
-            }
-
-            await fs.promises.writeFile(fileName, JSON.stringify(data, null, 4));
-            Log.info(`Saved tdl to file ${fileName}`);
-        } catch (e) {
-            Log.error(e);
-            if (fileName !== undefined) {
-                displayWindowAgent.showError([`Failed to save ${fileName}`, "Please check the file permission."], ["Below is the raw message:", `${e}`]);
-            }
-        }
-    };
 
     private canWriteToPath = (fileName: string): boolean => {
         try {
@@ -280,62 +233,79 @@ export class DisplayWindowFile {
      * @param dataType File category used to pick dialog defaults and filters.
      * @returns Promise that resolves `true` on successful write, `false` otherwise.
      */
-    saveFile = async (fileName: string, fileContent: string, dataType: type_fileType,): Promise<boolean> => {
+    saveFile = async (fileName: string, fileContent: string, dataType: type_fileType,): Promise<{
+        status: boolean,
+        fileName: string,
+        fileContent: string,
+        reason: string,
+    }> => {
         const saveOptions = fileDialogOptionsByType[dataType];
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
         fileName = fileName.trim();
 
-        // file writable, just write
-        if (fileName !== "" && this.canWriteToPath(fileName)) {
-            const result = this.writeFile(fileName, fileContent);
-            if (result === true) {
-                return true;
+        if (fileName === "") {
+            // save file as
+            if (mainProcessMode === "web") {
+                // web mode must send a legitimate path on server
+                // we do not accept an empty file name
+                return {
+                    status: false,
+                    fileName: fileName,
+                    fileContent: fileContent,
+                    reason: `Failed to save file to ${fileName} in web mode`,
+                };
+            } else if (mainProcessMode === "desktop") {
+                // in desktop mode, an empty file name means save-as
+                // user select a path, undefined if Cancel
+                fileName = dialog.showSaveDialogSync({
+                    title: "Select a file to save to",
+                    defaultPath: saveOptions.defaultFileName,
+                    filters: saveOptions.filters,
+                });
             } else {
-                displayWindowAgent.showError([`Failed to save file ${fileName}`])
-                return false;
+                return {
+                    status: false,
+                    fileName: fileName,
+                    fileContent: fileContent,
+                    reason: `Failed to save file to ${fileName}: main process mode ${mainProcessMode} wrong`,
+                };
             }
         }
 
-        // file not writable, ask user to select a file
-        if (mainProcessMode === "desktop") {
-
-            fileName = dialog.showSaveDialogSync({
-                title: "Select a file to save to",
-                defaultPath: saveOptions.defaultFileName,
-                filters: saveOptions.filters,
-            });
-        } else if (mainProcessMode === "ssh-server") {
-            displayWindowAgent.showInputBox({
-                command: "input-file-path",
-                humanReadableMessages: ["Type the file absolute path"],
-                buttons: [
-                    {
-                        text: "OK",
-                    },
-                    {
-                        text: "Cancel",
-                    }
-                ],
-                defaultInputText: "",
-            });
-            fileName = await new Promise<string>((resolve, reject) => {
-                this.selectFileInputResolve = resolve;
-            });
-        }
-
-        if (fileName === undefined || fileName === "") {
-            // user cancels the selection, do not show notification
-            return false;
-        }
-
-        const success = this.writeFile(fileName, fileContent);
-        if (success) {
-            return true;
+        if (this.canWriteToPath(fileName)) {
+            // at this step, the file name should be a writable absolute path
+            const result = this.writeFile(fileName, fileContent);
+            if (result === true) {
+                return {
+                    status: true,
+                    fileName: fileName,
+                    fileContent: fileContent,
+                    reason: "",
+                };
+            } else {
+                // failed to write
+                return {
+                    status: false,
+                    fileName: fileName,
+                    fileContent: fileContent,
+                    reason: `Failed to save file ${fileName}: failed to write`,
+                };
+            }
         } else {
-            displayWindowAgent.showError([`Failed to save file ${fileName}`])
-            return false;
+            // cannot write: e.g. file name still "", undefined, or not writable
+            let reason = `Failed to save file ${fileName}: cannot write.`;
+            if (fileName === "" || fileName === undefined) {
+                reason = "";
+            }
+            return {
+                status: false,
+                fileName: fileName,
+                fileContent: fileContent,
+                reason: reason,
+            };
         }
+
     }
 
     // --------------------- event handlers -----------------------
@@ -539,29 +509,34 @@ export class DisplayWindowFile {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
         const mainProcessMode = mainProcess.getMainProcessMode();
-        const success = await this.saveFile(tdlFileName1, JSON.stringify(tdl), "tdl");
+        const result = await this.saveFile(tdlFileName1, JSON.stringify(tdl), "tdl");
 
-        if (success) {
+        if (result["status"] === true) {
+            // update agent info
+            displayWindowAgent.setTdlFileName(result["fileName"]);
+            displayWindowAgent.setTdl(tdl);
+
+            // update client's file name
             displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
                 newTdlFileName: tdlFileName1
             });
+        } else {
+            const reason = result["reason"];
+            if (reason !== "") {
+                displayWindowAgent.showError([reason]);
+            }
         }
     }
 
-    saveDataViewerData = (
-        options: IpcEventArgType["data-viewer-export-data"]
-    ) => {
-        let { fileName1, displayWindowId, data } = options;
-        if (fileName1 === undefined) {
-            fileName1 = "";
-        }
-        const displayWindowAgent = this.getDisplayWindowAgent();
-
-        const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
+    saveDataToFile = async (options: IpcEventArgType["save-data-to-file"]): Promise<void> => {
+        let { fileName, displayWindowId, data } = options;
         const fileContent = JSON.stringify(data, null, 4);
-        displayWindowFile.saveFile(fileName1, fileContent, "data-viewer");
+        const result = await this.saveFile(fileName, fileContent, "data-viewer");
+        if (result["status"] === false && result["reason"] !== "") {
+            this.getDisplayWindowAgent().showError([result["reason"]]);
+        }
     };
-
+    
     /**
      * the read/write permission from TDM's point of view, it is not about the file/folder's permission
      * from operating system's point of view

@@ -936,6 +936,7 @@ export class Casw extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: result,
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
 
@@ -949,6 +950,7 @@ export class Casw extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: this.getCaProtoRsrvIsUpData(),
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
             },

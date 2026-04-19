@@ -2655,7 +2655,6 @@ export class Widgets {
             openPath = "$HOME"
         }
 
-        // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
         this.getRoot()
             .getDisplayWindowClient()
             .getIpcManager()
@@ -2666,28 +2665,6 @@ export class Widgets {
                     windowId: displayWindowId,
                 }
             );
-        // } else {
-        //     const currentSite = `https://${window.location.host}/`;
-
-        //     this.getRoot()
-        //         .getDisplayWindowClient()
-        //         .getIpcManager()
-        //         .sendPostRequestCommand("create-utility-display-window", {
-        //             utilityType: "FileBrowser",
-        //             utilityOptions: { path: openPath, parentDisplayWindowId: this.getRoot().getDisplayWindowClient().getWindowId(), modal: modal },
-        //             windowId: displayWindowId,
-        //         })
-        //         .then((response: any) => {
-        //             // decode string
-        //             return response.json();
-        //         })
-        //         .then((data) => {
-        //             const ipcServerPort = data["ipcServerPort"];
-        //             const displayWindowId = data["displayWindowId"];
-        //             // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
-        //             window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
-        //         });
-        // }
     };
 
     // invoked in the regular display window

@@ -828,6 +828,7 @@ export class CaSnooper extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: result,
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
             },
@@ -840,6 +841,7 @@ export class CaSnooper extends BaseWidget {
                         displayWindowId: displayWindowId,
                         data: this.getCaProtoSearchData(),
                         preferredFileTypes: ["json"],
+                        fileName: "",
                     }
                 )
             },

@@ -296,15 +296,11 @@ export class DataViewerPlotDataHelper {
                 .getRoot()
                 .getDisplayWindowClient()
                 .getIpcManager()
-                .sendFromRendererProcess("data-viewer-export-data", {
+                .sendFromRendererProcess("save-data-to-file", {
                     displayWindowId: windowId,
-                    data: result as Record<
-                        string,
-                        {
-                            Time: string[];
-                            Data: number[];
-                        }
-                    >,
+                    data: result,
+                    fileName: "",
+                    preferredFileTypes: ["json"],
                 });
         }
     };
