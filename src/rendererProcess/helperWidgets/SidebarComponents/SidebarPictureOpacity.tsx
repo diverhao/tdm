@@ -162,13 +162,16 @@ export class SidebarPictureOpacity extends SidebarComponent {
 					>
 						<div
 							style={{
-								border: "solid 1px rgba(0,0,0,1)",
+                                display: "inline-flex",
+								border: "solid 1px rgba(100,100,100,1)",
 								width: "100%",
 								height: "80%",
 								borderRadius: "2px",
+                                alignItems: "center",
+                                justifyContent: "center",
+
 							}}
 						>
-							{" "}
 							<img
 								src={`${getBasePath()}/webpack/resources/webpages/opacity-bar.png`}
 								style={{
@@ -185,7 +188,7 @@ export class SidebarPictureOpacity extends SidebarComponent {
 								height: "100%",
 								border: "solid",
 								borderWidth: "1px",
-								borderColor: "black",
+								borderColor: "rgba(100, 100, 100, 1)",
 								left: blockLeft,
 								top: "-1px",
 								borderRadius: "2px",

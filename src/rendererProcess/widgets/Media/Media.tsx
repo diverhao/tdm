@@ -144,7 +144,7 @@ export class Media extends BaseWidget {
         const objectFit = stretchToFit ? "fill" : "contain";
 
         const fileName = allText["fileName"];
-        const fullFileName = displayWindowClient.resolvePath(fileName);
+        const fullFileName = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
         const src = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
         return (
             <img
@@ -187,7 +187,7 @@ export class Media extends BaseWidget {
         const allText = this.getAllText();
 
         const fileName = allText["fileName"];
-        const fullFileName = displayWindowClient.resolvePath(fileName);
+        const fullFileName = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
 
         const data = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
         return (
@@ -214,7 +214,7 @@ export class Media extends BaseWidget {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const allText = this.getAllText();
         const fileName = allText["fileName"];
-        const src = displayWindowClient.resolvePath(fileName);
+        const src = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
 
         return (
             <video preload="none" width="100%" height="100%" controls>
@@ -421,7 +421,7 @@ export class Media extends BaseWidget {
         }
 
         // full image path, /home/ics/xxx.jpg
-        const fullFileName = displayWindowClient.resolvePath(fileName);
+        const fullFileName = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
 
         // if the file name indicates that is it not an image or pdf file
         const mediaType = this.getMediaType(fileName);

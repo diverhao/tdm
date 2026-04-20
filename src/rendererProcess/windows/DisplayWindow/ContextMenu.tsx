@@ -838,14 +838,14 @@ export class ContextMenu {
             label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openServerTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openServerTdlFileInWebMode();
             },
         },
         {
             label: "Open Display (on Local)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openLocalTdlFileInWebMode();
             },
         },
         {
@@ -1252,7 +1252,7 @@ export class ContextMenu {
                     accelerator: "F7",
                     click: () => {
                         this.hideElement();
-                        this.getDisplayWindowClient().downloadScreenshot();
+                        this.getDisplayWindowClient().getDisplayWindowFile().downloadScreenshot();
                     },
                 },
                 {
@@ -1546,7 +1546,7 @@ export class ContextMenu {
             label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openServerTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openServerTdlFileInWebMode();
 
             },
         },
@@ -1554,7 +1554,7 @@ export class ContextMenu {
             label: "Open Display (on Local)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openLocalTdlFileInWebMode();
 
             },
         },
@@ -1707,7 +1707,7 @@ export class ContextMenu {
                     accelerator: "F7",
                     click: () => {
                         this.hideElement();
-                        this.getDisplayWindowClient().downloadScreenshot();
+                        this.getDisplayWindowClient().getDisplayWindowFile().downloadScreenshot();
                     },
                 },
                 {
@@ -1805,14 +1805,14 @@ export class ContextMenu {
             label: "Open Display (on Server)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openServerTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openServerTdlFileInWebMode();
             },
         },
         {
             label: "Open Display (on Local)",
             accelerator: "CmdOrCtrl+o",
             click: () => {
-                this.getDisplayWindowClient().openLocalTdlFileInWebMode();
+                this.getDisplayWindowClient().getDisplayWindowFile().openLocalTdlFileInWebMode();
             },
         },
         {
@@ -1964,7 +1964,7 @@ export class ContextMenu {
                     accelerator: "F7",
                     click: () => {
                         this.hideElement();
-                        this.getDisplayWindowClient().downloadScreenshot();
+                        this.getDisplayWindowClient().getDisplayWindowFile().downloadScreenshot();
                     },
                 },
                 {

@@ -367,7 +367,7 @@ export class TextEditor extends BaseWidget {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         if (displayWindowClient.getMainProcessMode() === "web") {
-            displayWindowClient.openTextFileInTextEditorInWebMode(this);
+            displayWindowClient.getDisplayWindowFile().openTextFileInTextEditorInWebMode(this);
             return;
         }
 
@@ -430,7 +430,7 @@ export class TextEditor extends BaseWidget {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         if (displayWindowClient.getMainProcessMode() === "web") {
-            displayWindowClient.openTextFileInTextEditorInWebMode(this);
+            displayWindowClient.getDisplayWindowFile().openTextFileInTextEditorInWebMode(this);
             return;
         }
 
@@ -476,7 +476,7 @@ export class TextEditor extends BaseWidget {
         if (displayWindowClient.getMainProcessMode() === "web") {
             const blob = new Blob([this.getFileContent()], { type: "text/text" });
             const relativePath = path.basename(this.getFileName());
-            displayWindowClient.downloadData(blob, relativePath, "Save Text File", "text/text", []);
+            displayWindowClient.getDisplayWindowFile().downloadData(blob, relativePath, "Save Text File", "text/text", []);
             return;
         }
         displayWindowClient.getIpcManager().sendFromRendererProcess("save-text-file", {

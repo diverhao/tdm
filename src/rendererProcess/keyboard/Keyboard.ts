@@ -329,9 +329,9 @@ export class Keyboard {
     on_s_down = () => {
         if (this.onlyMetaDown()) {
             const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
-            this.getDisplayWindowClient().saveTdl(tdlFileName);
+            this.getDisplayWindowClient().getDisplayWindowFile().saveTdl(tdlFileName);
         } else if (this.getMetaDown() === true && this.getShiftDown() === true && this.getCtrlDown() === false && this.getAltDown() === false) {
-            this.getDisplayWindowClient().saveTdl("");
+            this.getDisplayWindowClient().getDisplayWindowFile().saveTdl("");
         }
     };
 
@@ -339,7 +339,7 @@ export class Keyboard {
         if (this.onlyMetaDown()) {
             if (g_widgets1 !== undefined) {
                 const windowStatus = g_widgets1.getRendererWindowStatus();
-                this.getDisplayWindowClient().manualOpenTdl(windowStatus);
+                this.getDisplayWindowClient().getDisplayWindowFile().manualOpenTdl(windowStatus);
             }
         }
     };
@@ -348,7 +348,7 @@ export class Keyboard {
         if (this.onlyMetaDown()) {
             if (g_widgets1 !== undefined) {
                 const displayWindowClient = this.getDisplayWindowClient();
-                displayWindowClient.undo();
+                displayWindowClient.getDisplayWindowFile().undo();
             }
         }
     };

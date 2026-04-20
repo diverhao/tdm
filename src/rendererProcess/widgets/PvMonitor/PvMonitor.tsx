@@ -719,7 +719,7 @@ export class PvMonitor extends BaseWidget {
                     const applicationKey = "application/json";
                     const applicationValue = [".json"];
 
-                    displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
+                    displayWindowClient.getDisplayWindowFile().downloadData(blob, suggestedName, description, applicationKey, applicationValue);
                 } else {
                     ipcManager.sendFromRendererProcess("save-data-to-file",
                         {
@@ -743,7 +743,7 @@ export class PvMonitor extends BaseWidget {
                     const description = 'PV Monitor data';
                     const applicationKey = "application/json";
                     const applicationValue = [".json"];
-                    displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
+                    displayWindowClient.getDisplayWindowFile().downloadData(blob, suggestedName, description, applicationKey, applicationValue);
                 } else {
 
                     ipcManager.sendFromRendererProcess("save-data-to-file",

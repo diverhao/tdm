@@ -290,7 +290,7 @@ export class DataViewerPlotDataHelper {
             const description = "Data Viewer data";
             const applicationKey = "application/json";
             const applicationValue = [".json"];
-            displayWindowClient.downloadData(blob, suggestedName, description, applicationKey, applicationValue);
+            displayWindowClient.getDisplayWindowFile().downloadData(blob, suggestedName, description, applicationKey, applicationValue);
         } else {
             g_widgets1
                 .getRoot()

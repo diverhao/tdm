@@ -379,7 +379,7 @@ export class ActionButton extends BaseWidget {
             });
         } else {
             // web mode
-            displayWindowClient.openServerTdlFileInWebMode(tdlFileName);
+            displayWindowClient.getDisplayWindowFile().openServerTdlFileInWebMode(tdlFileName);
         }
     };
 

@@ -253,7 +253,7 @@ export class IpcManagerOnDisplayWindow {
                         if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
                             // do not open a new tab
                             if (fileBlob !== undefined) {
-                                this.getDisplayWindowClient().openTextFileInTextEditorInWebMode(widget, fileName, fileBlob);
+                                this.getDisplayWindowClient().getDisplayWindowFile().openTextFileInTextEditorInWebMode(widget, fileName, fileBlob);
                             }
                         } else {
                             g_widgets1.openTextEditorWindow({
@@ -297,7 +297,7 @@ export class IpcManagerOnDisplayWindow {
                         const fileBlob = event.dataTransfer.files[0];
                         if (fileBlob !== undefined) {
                             const fileName = event.dataTransfer.files[0].name;
-                            this.getDisplayWindowClient().openLocalTdlFileInWebMode(fileBlob);
+                            this.getDisplayWindowClient().getDisplayWindowFile().openLocalTdlFileInWebMode(fileBlob);
                         }
                     } else {
                         this.sendFromRendererProcess("open-tdl-file",
@@ -496,11 +496,11 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "reload-display") {
             g_widgets1.reloadTdlFile();
         } else if (command === "save-display") {
-            g_widgets1.getRoot().getDisplayWindowClient().saveTdl(this.getDisplayWindowClient().getTdlFileName());
+            g_widgets1.getRoot().getDisplayWindowClient().getDisplayWindowFile().saveTdl(this.getDisplayWindowClient().getTdlFileName());
         } else if (command === "save-display-as") {
-            g_widgets1.getRoot().getDisplayWindowClient().saveTdl("");
+            g_widgets1.getRoot().getDisplayWindowClient().getDisplayWindowFile().saveTdl("");
         } else if (command === "download-display") {
-            g_widgets1.getRoot().getDisplayWindowClient().downloadTdl(this.getDisplayWindowClient().getTdlFileName());
+            g_widgets1.getRoot().getDisplayWindowClient().getDisplayWindowFile().downloadTdl(this.getDisplayWindowClient().getTdlFileName());
         } else if (command === "toggle-title") {
             g_widgets1.getRoot().getDisplayWindowClient().toggleWindowTitle();
         } else if (command === "copy-widgets") {
@@ -514,9 +514,9 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "duplicate-widgets") {
             g_widgets1.duplicateSelectedWidgets(true);
         } else if (command === "undo") {
-            this.getDisplayWindowClient().undo();
+            this.getDisplayWindowClient().getDisplayWindowFile().undo();
         } else if (command === "redo") {
-            this.getDisplayWindowClient().redo();
+            this.getDisplayWindowClient().getDisplayWindowFile().redo();
         } else if (command === "group-widgets") {
             g_widgets1.groupSelectedWidgets();
         } else if (command === "ungroup-widgets") {
@@ -530,7 +530,7 @@ export class IpcManagerOnDisplayWindow {
         } else if (command === "match-widgets-size") {
             g_widgets1.matchWidgetsSize(subcommand as "width" | "height", true);
         } else if (command === "show-tdl-file-contents") {
-            this.getDisplayWindowClient().showTdlFileContents();
+            this.getDisplayWindowClient().getDisplayWindowFile().showTdlFileContents();
             // } else if (command === "create-new-display-in-web-mode") {
             //     this.handleCreateNewDisplayInWebMode();
         } else if (command === "open-display-in-ssh-mode") {
@@ -865,7 +865,7 @@ export class IpcManagerOnDisplayWindow {
             id: "0",
             time: performance.now(),
         })
-        this.getDisplayWindowClient().updateTdl(
+        this.getDisplayWindowClient().getDisplayWindowFile().updateTdl(
             options["newTdl"],
             options["tdlFileName"],
             options["initialModeStr"],
@@ -1038,7 +1038,7 @@ export class IpcManagerOnDisplayWindow {
             }
         } else if (history.getModified()) {
             fileName = tdlFileName;
-            fileContent = JSON.stringify(displayWindowClient.generateTdl(), null, 4);
+            fileContent = JSON.stringify(displayWindowClient.getDisplayWindowFile().generateTdl(), null, 4);
             dataType = "tdl";
             humanReadableMessage = "Save changes to this display before closing?";
             shouldPrompt = true;

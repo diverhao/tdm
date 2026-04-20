@@ -85,5 +85,4 @@ export class ErrorBoxSidebar extends BaseWidgetSidebar {
             </div>
         );
     };
-
 }

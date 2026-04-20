@@ -62,7 +62,7 @@ export class ErrorBox extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    overflow: "visible",
+                    overflow: "hidden",
                     whiteSpace: whiteSpace,
                     justifyContent: justifyContent,
                     alignItems: alignItems,
@@ -102,7 +102,7 @@ export class ErrorBox extends BaseWidget {
     getMessage = () => {
         const type = this.getOriginalType();
         const widgetKey = this.getOriginalWidgetKey();
-        return `There is an error in this ${widgetKey}.`
+        return `Error in widget ${widgetKey}.`
     }
 
     updateGeometry = () => {
@@ -149,12 +149,14 @@ export class ErrorBox extends BaseWidget {
 
     getTdlCopy(newKey: boolean = false): Record<string, any> {
         const result = structuredClone(this.getOriginalTdl());
-        result["style"] = {...result.style, 
-            left: this.getStyle()["left"],
-            top: this.getStyle()["top"],
-            width: this.getStyle()["width"],
-            height: this.getStyle()["height"],
-            transform: this.getStyle()["transform"],
+        const style = this.getStyle();
+        result["style"] = {
+            ...result.style,
+            left: style["left"],
+            top: style["top"],
+            width: style["width"],
+            height: style["height"],
+            transform: style["transform"],
         }
         return result;
     }

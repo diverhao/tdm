@@ -3166,7 +3166,7 @@ export class Widgets {
             {
                 options:
                 {
-                    tdl: this.getRoot().getDisplayWindowClient().generateTdl() as type_tdl,
+                    tdl: this.getRoot().getDisplayWindowClient().getDisplayWindowFile().generateTdl() as type_tdl,
                     mode: this.isEditing() ? "editing" : "operating",
                     externalMacros: this.getRoot().getExternalMacros(),
                     windowId: this.getRoot().getDisplayWindowClient().getWindowId(),
@@ -3363,7 +3363,7 @@ export class Widgets {
     };
 
     copyDisplayContents = async () => {
-        const result = this.getRoot().getDisplayWindowClient().generateTdl();
+        const result = this.getRoot().getDisplayWindowClient().getDisplayWindowFile().generateTdl();
         try {
             await navigator.clipboard.writeText(JSON.stringify(result, null, 4));
         } catch (e) {

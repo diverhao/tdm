@@ -61,7 +61,7 @@ export class ActionHistory {
 		this._patchSets.splice(this._currentIndex + 1);
 		this._currentIndex++;
 
-		const newTdl = this.getDisplayWindowClient().generateTdl() as type_tdl;
+		const newTdl = this.getDisplayWindowClient().getDisplayWindowFile().generateTdl() as type_tdl;
 
 		if (this._currentMaterialized === undefined) {
 			// Baseline: no previous state to diff against — push empty sentinel
