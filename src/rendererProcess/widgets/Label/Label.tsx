@@ -6,14 +6,14 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LabelRule } from "./LabelRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { defaultLabelTdl, type_Label_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultLabelTdl, type_Label_tdl, type_Label_tdl_schema } from "../../../common/types/type_widget_tdl";
 
 export class Label extends BaseWidget {
 
     _rules: BaseWidgetRules;
-
     constructor(widgetTdl: type_Label_tdl) {
         super(widgetTdl);
+        
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("read");
@@ -107,15 +107,6 @@ export class Label extends BaseWidget {
     };
 
     generateDefaultTdl: () => any = Label.generateDefaultTdl;
-
-    verifyWidgetTdl(tdl: Record<string, any>) {
-        if (!super.verifyWidgetTdl(tdl)) {
-            return false;
-        }
-        // add more verification if needed
-
-        return true;
-    }
 
     // --------------------- sidebar --------------------------
 

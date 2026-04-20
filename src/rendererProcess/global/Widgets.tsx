@@ -74,6 +74,7 @@ import { SidebarWidgetsList } from "../helperWidgets/SidebarComponents/SidebarWi
 import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
 import { type_tdl } from "../../common/GlobalVariables";
 import { Table } from "../widgets/Table/Table";
+import { ErrorBox } from "../widgets/ErrorBox/ErrorBox";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -617,224 +618,236 @@ export class Widgets {
      */
     createWidget = (widgetTdlRaw: Record<string, any>, doFlush: boolean): type_widget => {
         // make a copy, do not use original
-        const widgetTdl: any = structuredClone(widgetTdlRaw);
-        const widgetKey: string = widgetTdl.widgetKey;
-        const widgetType: string = widgetTdl.type;
+        let widgetTdl: any = structuredClone(widgetTdlRaw);
+        let widgetKey: string = widgetTdl.widgetKey;
+        let widgetType: string = widgetTdl.type;
         let widget: any = null;
-        switch (widgetType) {
-            case "TextUpdate": {
-                widget = new TextUpdate(widgetTdl);
-                break;
+        try {
+            switch (widgetType) {
+                case "TextUpdate": {
+                    widget = new TextUpdate(widgetTdl);
+                    break;
+                }
+                case "Terminal": {
+                    widget = new Terminal(widgetTdl);
+                    break;
+                }
+                case "Calculator": {
+                    widget = new Calculator(widgetTdl);
+                    break;
+                }
+                case "TextEntry": {
+                    widget = new TextEntry(widgetTdl);
+                    break;
+                }
+                case "ScaledSlider": {
+                    widget = new ScaledSlider(widgetTdl);
+                    break;
+                }
+                case "Spinner": {
+                    widget = new Spinner(widgetTdl);
+                    break;
+                }
+                case "ThumbWheel": {
+                    widget = new ThumbWheel(widgetTdl);
+                    break;
+                }
+                case "ChoiceButton": {
+                    widget = new ChoiceButton(widgetTdl);
+                    break;
+                }
+                case "CheckBox": {
+                    widget = new CheckBox(widgetTdl);
+                    break;
+                }
+                case "SlideButton": {
+                    widget = new SlideButton(widgetTdl);
+                    break;
+                }
+                case "BooleanButton": {
+                    widget = new BooleanButton(widgetTdl);
+                    break;
+                }
+                case "RadioButton": {
+                    widget = new RadioButton(widgetTdl);
+                    break;
+                }
+                case "ComboBox": {
+                    widget = new ComboBox(widgetTdl);
+                    break;
+                }
+                case "BinaryImage": {
+                    widget = new BinaryImage(widgetTdl);
+                    break;
+                }
+                case "Image": {
+                    widget = new Image(widgetTdl);
+                    break;
+                }
+                case "Table": {
+                    widget = new Table(widgetTdl);
+                    break;
+                }
+                case "Repeater": {
+                    widget = new Repeater(widgetTdl);
+                    break;
+                }
+                case "Polyline": {
+                    widget = new Polyline(widgetTdl);
+                    break;
+                }
+                case "Arc": {
+                    widget = new Arc(widgetTdl);
+                    break;
+                }
+                case "Rectangle": {
+                    widget = new Rectangle(widgetTdl);
+                    break;
+                }
+                case "Media": {
+                    widget = new Media(widgetTdl);
+                    break;
+                }
+                case "LED": {
+                    widget = new LED(widgetTdl);
+                    break;
+                }
+                case "LEDMultiState": {
+                    widget = new LEDMultiState(widgetTdl);
+                    break;
+                }
+                case "ByteMonitor": {
+                    widget = new ByteMonitor(widgetTdl);
+                    break;
+                }
+                case "Meter": {
+                    widget = new Meter(widgetTdl);
+                    break;
+                }
+                case "Tank": {
+                    widget = new Tank(widgetTdl);
+                    break;
+                }
+                case "PvMonitor": {
+                    widget = new PvMonitor(widgetTdl);
+                    break;
+                }
+                case "FileBrowser": {
+                    widget = new FileBrowser(widgetTdl);
+                    break;
+                }
+                case "Thermometer": {
+                    widget = new Thermometer(widgetTdl);
+                    break;
+                }
+                case "Label": {
+                    widget = new Label(widgetTdl);
+                    break;
+                }
+                case "EmbeddedDisplay": {
+                    widget = new EmbeddedDisplay(widgetTdl);
+                    break;
+                }
+                case "Group": {
+                    widget = new Group(widgetTdl);
+                    break;
+                }
+                case "ActionButton": {
+                    widget = new ActionButton(widgetTdl);
+                    break;
+                }
+                case "Symbol": {
+                    widget = new Symbol(widgetTdl);
+                    break;
+                }
+                case "TextSymbol": {
+                    widget = new TextSymbol(widgetTdl);
+                    break;
+                }
+                case "Canvas": {
+                    widget = new Canvas(widgetTdl);
+                    break;
+                }
+                case "MouseSelectionRegion": {
+                    widget = new MouseSelectionRegion(widgetTdl);
+                    break;
+                }
+                case "GroupSelection2": {
+                    widget = new GroupSelection2(widgetTdl);
+                    break;
+                }
+                case "Probe": {
+                    widget = new Probe(widgetTdl);
+                    break;
+                }
+                case "DataViewer": {
+                    widget = new DataViewer(widgetTdl);
+                    break;
+                }
+                case "Talhk": {
+                    widget = new Talhk(widgetTdl);
+                    break;
+                }
+                case "XYPlot": {
+                    widget = new XYPlot(widgetTdl);
+                    break;
+                }
+                case "ChannelGraph": {
+                    widget = new ChannelGraph(widgetTdl);
+                    break;
+                }
+                case "SeqGraph": {
+                    widget = new SeqGraph(widgetTdl);
+                    break;
+                }
+                case "PvTable": {
+                    widget = new PvTable(widgetTdl);
+                    break;
+                }
+                case "ProfilesViewer": {
+                    widget = new ProfilesViewer(widgetTdl);
+                    break;
+                }
+                case "LogViewer": {
+                    widget = new LogViewer(widgetTdl);
+                    break;
+                }
+                case "TdlViewer": {
+                    widget = new TdlViewer(widgetTdl);
+                    break;
+                }
+                case "TextEditor": {
+                    widget = new TextEditor(widgetTdl);
+                    break;
+                }
+                case "CaSnooper": {
+                    widget = new CaSnooper(widgetTdl);
+                    break;
+                }
+                case "Casw": {
+                    widget = new Casw(widgetTdl);
+                    break;
+                }
+                case "FileConverter": {
+                    widget = new FileConverter(widgetTdl);
+                    break;
+                }
+                default: {
+                    const errorMsg = `Wrong widget type: ${widgetType} in Widgets.createWidget()`;
+                    throw new Error(errorMsg);
+                }
             }
-            case "Terminal": {
-                widget = new Terminal(widgetTdl);
-                break;
-            }
-            case "Calculator": {
-                widget = new Calculator(widgetTdl);
-                break;
-            }
-            case "TextEntry": {
-                widget = new TextEntry(widgetTdl);
-                break;
-            }
-            case "ScaledSlider": {
-                widget = new ScaledSlider(widgetTdl);
-                break;
-            }
-            case "Spinner": {
-                widget = new Spinner(widgetTdl);
-                break;
-            }
-            case "ThumbWheel": {
-                widget = new ThumbWheel(widgetTdl);
-                break;
-            }
-            case "ChoiceButton": {
-                widget = new ChoiceButton(widgetTdl);
-                break;
-            }
-            case "CheckBox": {
-                widget = new CheckBox(widgetTdl);
-                break;
-            }
-            case "SlideButton": {
-                widget = new SlideButton(widgetTdl);
-                break;
-            }
-            case "BooleanButton": {
-                widget = new BooleanButton(widgetTdl);
-                break;
-            }
-            case "RadioButton": {
-                widget = new RadioButton(widgetTdl);
-                break;
-            }
-            case "ComboBox": {
-                widget = new ComboBox(widgetTdl);
-                break;
-            }
-            case "BinaryImage": {
-                widget = new BinaryImage(widgetTdl);
-                break;
-            }
-            case "Image": {
-                widget = new Image(widgetTdl);
-                break;
-            }
-            case "Table": {
-                widget = new Table(widgetTdl);
-                break;
-            }
-            case "Repeater": {
-                widget = new Repeater(widgetTdl);
-                break;
-            }
-            case "Polyline": {
-                widget = new Polyline(widgetTdl);
-                break;
-            }
-            case "Arc": {
-                widget = new Arc(widgetTdl);
-                break;
-            }
-            case "Rectangle": {
-                widget = new Rectangle(widgetTdl);
-                break;
-            }
-            case "Media": {
-                widget = new Media(widgetTdl);
-                break;
-            }
-            case "LED": {
-                widget = new LED(widgetTdl);
-                break;
-            }
-            case "LEDMultiState": {
-                widget = new LEDMultiState(widgetTdl);
-                break;
-            }
-            case "ByteMonitor": {
-                widget = new ByteMonitor(widgetTdl);
-                break;
-            }
-            case "Meter": {
-                widget = new Meter(widgetTdl);
-                break;
-            }
-            case "Tank": {
-                widget = new Tank(widgetTdl);
-                break;
-            }
-            case "PvMonitor": {
-                widget = new PvMonitor(widgetTdl);
-                break;
-            }
-            case "FileBrowser": {
-                widget = new FileBrowser(widgetTdl);
-                break;
-            }
-            case "Thermometer": {
-                widget = new Thermometer(widgetTdl);
-                break;
-            }
-            case "Label": {
-                widget = new Label(widgetTdl);
-                break;
-            }
-            case "EmbeddedDisplay": {
-                widget = new EmbeddedDisplay(widgetTdl);
-                break;
-            }
-            case "Group": {
-                widget = new Group(widgetTdl);
-                break;
-            }
-            case "ActionButton": {
-                widget = new ActionButton(widgetTdl);
-                break;
-            }
-            case "Symbol": {
-                widget = new Symbol(widgetTdl);
-                break;
-            }
-            case "TextSymbol": {
-                widget = new TextSymbol(widgetTdl);
-                break;
-            }
-            case "Canvas": {
-                widget = new Canvas(widgetTdl);
-                break;
-            }
-            case "MouseSelectionRegion": {
-                widget = new MouseSelectionRegion(widgetTdl);
-                break;
-            }
-            case "GroupSelection2": {
-                widget = new GroupSelection2(widgetTdl);
-                break;
-            }
-            case "Probe": {
-                widget = new Probe(widgetTdl);
-                break;
-            }
-            case "DataViewer": {
-                widget = new DataViewer(widgetTdl);
-                break;
-            }
-            case "Talhk": {
-                widget = new Talhk(widgetTdl);
-                break;
-            }
-            case "XYPlot": {
-                widget = new XYPlot(widgetTdl);
-                break;
-            }
-            case "ChannelGraph": {
-                widget = new ChannelGraph(widgetTdl);
-                break;
-            }
-            case "SeqGraph": {
-                widget = new SeqGraph(widgetTdl);
-                break;
-            }
-            case "PvTable": {
-                widget = new PvTable(widgetTdl);
-                break;
-            }
-            case "ProfilesViewer": {
-                widget = new ProfilesViewer(widgetTdl);
-                break;
-            }
-            case "LogViewer": {
-                widget = new LogViewer(widgetTdl);
-                break;
-            }
-            case "TdlViewer": {
-                widget = new TdlViewer(widgetTdl);
-                break;
-            }
-            case "TextEditor": {
-                widget = new TextEditor(widgetTdl);
-                break;
-            }
-            case "CaSnooper": {
-                widget = new CaSnooper(widgetTdl);
-                break;
-            }
-            case "Casw": {
-                widget = new Casw(widgetTdl);
-                break;
-            }
-            case "FileConverter": {
-                widget = new FileConverter(widgetTdl);
-                break;
-            }
-            default: {
-                const errorMsg = `Wrong widget type: ${widgetType} in Widgets.createWidget()`;
-                throw new Error(errorMsg);
-            }
+        } catch (e) {
+            Log.error(e);
+            // intercept the widget with ErrorBox widget
+            const errorBoxTdl = ErrorBox.generateDefaultTdl();
+            errorBoxTdl["originalTdl"] = structuredClone(widgetTdl);
+            widgetKey = errorBoxTdl.widgetKey;
+            widgetType = errorBoxTdl.type;
+            widget = new ErrorBox(errorBoxTdl);
+            widgetTdl = errorBoxTdl;
         }
+
         // these are speical widgets
         if (
             (this.hasWidget("Canvas") && widgetKey === "Canvas") ||

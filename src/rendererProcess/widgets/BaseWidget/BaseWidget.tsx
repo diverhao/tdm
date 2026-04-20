@@ -12,6 +12,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../common/Log";
 import { evaluate } from "mathjs";
+import { type_widget_tdl_schema_registry } from "../../../common/types/type_widget_tdl";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -206,6 +207,8 @@ export abstract class BaseWidget {
     _macros: [string, string][] = [];
 
     constructor(widgetTdl: type_BaseWidget_tdl) {
+        // throw if verification does not pass
+        this.verifyWidgetTdl(widgetTdl);
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
@@ -1006,107 +1009,6 @@ export abstract class BaseWidget {
     // -------------------------- tdl -------------------------------
     abstract generateDefaultTdl: () => any;
 
-    /**
-     * Verify if a tdl object is valid by comparing the provided tdl and the
-     * widget's default tdl
-     * 
-     * This verification is minimum: for each widget type, the 
-     * 
-     * The tdl properties should be reasonable, e.g. the width should be reasonable number
-     */
-    verifyWidgetTdl(tdl: Record<string, any>) {
-
-        if (typeof (tdl["type"]) !== "string") {
-            return false;
-        }
-        if (typeof (tdl["widgetKey"]) !== "string") {
-            return false;
-        }
-        if (typeof (tdl["key"]) !== "string") {
-            return false;
-        }
-
-        // tdl["style"]
-        const style = tdl["style"];
-        if (typeof (style) !== "object") {
-            return false;
-        }
-        if (typeof (style["position"]) !== "string") {
-            return false;
-        }
-        if (typeof (style["display"]) !== "string") {
-            return false;
-        }
-        if (typeof (style["left"]) !== "number") {
-            return false;
-        }
-        if (typeof (style["top"]) !== "number") {
-            return false;
-        }
-        if (typeof (style["width"]) !== "number" && style["width"] !== "100%") {
-            return false;
-        }
-        if (typeof (style["height"]) !== "number" && style["height"] !== "100%") {
-            return false;
-        }
-        // the widget must be in visible region
-        if (style["width"] !== "100%" && style["height"] !== "100%") {
-            if (style["left"] + style["width"] <= 0) {
-                return false;
-            }
-            if (style["top"] + style["height"] <= 0) {
-                return false;
-            }
-        }
-        if (!GlobalMethods.isValidRgbaColor(style["backgroundColor"])) {
-            return false;
-        }
-        if (!GlobalMethods.isValidRgbaColor(style["color"])) {
-            return false;
-        }
-        if (typeof (style["fontFamily"]) !== "string") {
-            return false;
-        }
-        if (typeof (style["fontSize"]) !== "number") {
-            return false;
-        }
-        // font size should be reasonable
-        if (style["fontSize"] < 5 || style["fontSize"] > 150) {
-            return false;
-        }
-        if (typeof (style["fontWeight"]) !== "string") {
-            return false;
-        }
-        if (typeof (style["fontStyle"]) !== "string") {
-            return false;
-        }
-        if (typeof (style["position"]) !== "string") {
-            return false;
-        }
-
-        // tdl["text"]
-        if (typeof (tdl["text"]) !== "object") {
-            return false;
-        }
-
-        // tdl["channelNames"]
-        if (!GlobalMethods.isStringArray(tdl["channelNames"])) {
-            return false;
-        }
-
-        // tdl["groupNames"]
-        if (!GlobalMethods.isStringArray(tdl["groupNames"])) {
-            return false;
-        }
-
-        // tdl["rules"]
-        if (!GlobalMethods.isRuleElementArray(tdl["rules"])) {
-            return false;
-        }
-
-        return true;
-    }
-
     initStyle = (widgetTdl: Record<string, any>) => {
         this.setStyle(GlobalMethods.deepMerge(this.generateDefaultTdl().style, widgetTdl.style));
     }
@@ -1142,6 +1044,22 @@ export abstract class BaseWidget {
             result.key = widgetKey;
         }
         return result;
+    }
+
+    /**
+     * throw an error if verification fails
+     */
+    verifyWidgetTdl(tdl: any): void {
+        const widgetType = typeof tdl?.type === "string" ? tdl.type : undefined;
+        const schema = widgetType === undefined ? undefined : type_widget_tdl_schema_registry[widgetType as keyof typeof type_widget_tdl_schema_registry];
+
+        if (schema === undefined) {
+            throw new Error(`No TDL schema registered for widget type ${JSON.stringify(widgetType)}.`);
+        }
+
+        if (!GlobalMethods.isOfType(tdl, schema)) {
+            throw new Error(`TDL ${JSON.stringify(tdl)} is not ${widgetType} type.`);
+        }
     }
 
     /**

@@ -4544,3 +4544,211 @@ export const defaultImageTdl: type_Image_tdl = {
     rules: [],
     regionsOfInterest: [],
 };
+
+// ======================== ErrorBox TDL Schema ========================
+
+export const type_ErrorBox_text_tdl_schema = {} as const satisfies TypeSchema;
+
+export const type_ErrorBox_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_style_tdl_schema,
+    text: type_ErrorBox_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+    originalTdl: {},
+} as const satisfies TypeSchema;
+
+export type type_ErrorBox_text_tdl = Mutable<InferType<typeof type_ErrorBox_text_tdl_schema>>;
+export type type_ErrorBox_tdl = Omit<Mutable<InferType<typeof type_ErrorBox_tdl_schema>>, "originalTdl"> & {
+    originalTdl: Record<string, any>;
+};
+
+export const defaultErrorBoxTdl: type_ErrorBox_tdl = {
+    type: "ErrorBox",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(255,255,255,0)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {},
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+    originalTdl: {},
+};
+
+
+// ======================== Talhk TDL Schema ========================
+
+export const type_Talhk_style_tdl_schema = {
+    position: "string",
+    display: "string",
+    left: "number",
+    top: "number",
+    width: ["number", "string"],
+    height: ["number", "string"],
+    backgroundColor: "string",
+    transform: "string",
+    borderStyle: "string",
+    borderWidth: "number",
+    borderColor: "string",
+    color: "string",
+    fontFamily: "string",
+    fontSize: "number",
+    fontStyle: "string",
+    fontWeight: "string",
+    outlineStyle: "string",
+    outlineWidth: "number",
+    outlineColor: "string",
+    boxSizing: ["string", "undefined"],
+} as const satisfies TypeSchema;
+
+export const type_Talhk_text_tdl_schema = {
+    horizontalAlign: "string",
+    verticalAlign: "string",
+    wrapWord: "boolean",
+    showUnit: "boolean",
+    invisibleInOperation: "boolean",
+    format: "string",
+    scale: "number",
+    alarmBorder: "boolean",
+    alarmText: "boolean",
+    alarmBackground: "boolean",
+    alarmLevel: "string",
+    serverAddress: "string",
+} as const satisfies TypeSchema;
+
+export const type_Talhk_tdl_schema = {
+    type: "string",
+    widgetKey: "string",
+    key: "string",
+    style: type_Talhk_style_tdl_schema,
+    text: type_Talhk_text_tdl_schema,
+    channelNames: "string[]",
+    groupNames: "string[]",
+    rules: { arrayOf: type_rule_tdl_schema },
+} as const satisfies TypeSchema;
+
+export type type_Talhk_style_tdl = Mutable<InferType<typeof type_Talhk_style_tdl_schema>>;
+export type type_Talhk_text_tdl = Mutable<InferType<typeof type_Talhk_text_tdl_schema>>;
+export type type_Talhk_tdl = Mutable<InferType<typeof type_Talhk_tdl_schema>>;
+
+export const defaultTalhkTdl: type_Talhk_tdl = {
+    type: "Talhk",
+    widgetKey: "",
+    key: "",
+    style: {
+        position: "absolute",
+        display: "inline-flex",
+        left: 0,
+        top: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        transform: "rotate(0deg)",
+        borderStyle: "solid",
+        borderWidth: 0,
+        borderColor: "rgba(0, 0, 0, 1)",
+        color: "rgba(0,0,0,1)",
+        fontFamily: GlobalVariables.defaultFontFamily,
+        fontSize: GlobalVariables.defaultFontSize,
+        fontStyle: GlobalVariables.defaultFontStyle,
+        fontWeight: GlobalVariables.defaultFontWeight,
+        outlineStyle: "none",
+        outlineWidth: 1,
+        outlineColor: "black",
+        boxSizing: "content-box",
+    },
+    text: {
+        horizontalAlign: "flex-start",
+        verticalAlign: "flex-start",
+        wrapWord: false,
+        showUnit: true,
+        invisibleInOperation: false,
+        format: "default",
+        scale: 0,
+        alarmBorder: true,
+        alarmText: false,
+        alarmBackground: false,
+        alarmLevel: "MINOR",
+        serverAddress: "",
+    },
+    channelNames: [],
+    groupNames: [],
+    rules: [],
+};
+
+export const type_widget_tdl_schema_registry = {
+    ActionButton: type_ActionButton_tdl_schema,
+    Arc: type_Arc_tdl_schema,
+    BinaryImage: type_BinaryImage_tdl_schema,
+    BooleanButton: type_BooleanButton_tdl_schema,
+    ByteMonitor: type_ByteMonitor_tdl_schema,
+    CaSnooper: type_CaSnooper_tdl_schema,
+    Calculator: type_Calculator_tdl_schema,
+    Casw: type_Casw_tdl_schema,
+    ChannelGraph: type_ChannelGraph_tdl_schema,
+    CheckBox: type_CheckBox_tdl_schema,
+    ChoiceButton: type_ChoiceButton_tdl_schema,
+    ComboBox: type_ComboBox_tdl_schema,
+    DataViewer: type_DataViewer_tdl_schema,
+    EmbeddedDisplay: type_EmbeddedDisplay_tdl_schema,
+    ErrorBox: type_ErrorBox_tdl_schema,
+    FileBrowser: type_FileBrowser_tdl_schema,
+    FileConverter: type_FileConverter_tdl_schema,
+    Group: type_Group_tdl_schema,
+    Image: type_Image_tdl_schema,
+    LED: type_LED_tdl_schema,
+    LEDMultiState: type_LEDMultiState_tdl_schema,
+    Label: type_Label_tdl_schema,
+    LogViewer: type_LogViewer_tdl_schema,
+    Media: type_Media_tdl_schema,
+    Meter: type_Meter_tdl_schema,
+    Polyline: type_Polyline_tdl_schema,
+    Probe: type_Probe_tdl_schema,
+    ProfilesViewer: type_ProfilesViewer_tdl_schema,
+    PvMonitor: type_PvMonitor_tdl_schema,
+    PvTable: type_PvTable_tdl_schema,
+    RadioButton: type_RadioButton_tdl_schema,
+    Rectangle: type_Rectangle_tdl_schema,
+    Repeater: type_Repeater_tdl_schema,
+    ScaledSlider: type_ScaledSlider_tdl_schema,
+    SeqGraph: type_SeqGraph_tdl_schema,
+    SlideButton: type_SlideButton_tdl_schema,
+    Spinner: type_Spinner_tdl_schema,
+    Symbol: type_Symbol_tdl_schema,
+    Table: type_Table_tdl_schema,
+    Talhk: type_Talhk_tdl_schema,
+    Tank: type_Tank_tdl_schema,
+    TdlViewer: type_TdlViewer_tdl_schema,
+    Terminal: type_Terminal_tdl_schema,
+    TextEditor: type_TextEditor_tdl_schema,
+    TextEntry: type_TextEntry_tdl_schema,
+    TextSymbol: type_TextSymbol_tdl_schema,
+    TextUpdate: type_TextUpdate_tdl_schema,
+    Thermometer: type_Thermometer_tdl_schema,
+    ThumbWheel: type_ThumbWheel_tdl_schema,
+    XYPlot: type_XYPlot_tdl_schema,
+} as const satisfies Record<string, TypeSchema>;
