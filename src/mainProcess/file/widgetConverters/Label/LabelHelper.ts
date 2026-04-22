@@ -7,6 +7,7 @@ import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/Globa
 import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import { defaultLabelTdl, type_Label_tdl } from "../../../../common/types/type_widget_tdl";
+import { TdlPropertyConverter } from "../../TdlPropertyConverter";
 
 export class LabelHelper extends BaseWidgetHelper {
 
@@ -367,5 +368,21 @@ export class LabelHelper extends BaseWidgetHelper {
         }
 
         return tdl;
+    };
+
+    static convertTdlToBob = (tdl: type_Label_tdl): string => {
+        const style = tdl["style"];
+        const styleRegistry = TdlPropertyConverter.conversionRegistryStyle;
+        const textRegistry = TdlPropertyConverter.conversionRegistryText;
+        let result = "";
+
+        for (const [name, value] of Object.entries(style)) {
+            const conversionFunc = (styleRegistry as any)[name];
+            if (conversionFunc !== undefined) {
+                result = result + "\n" + conversionFunc(value);
+            }
+        }
+
+        return result;
     };
 }

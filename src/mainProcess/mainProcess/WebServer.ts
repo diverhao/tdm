@@ -104,6 +104,10 @@ export class WebServer {
             }
         })
 
+        server.get(this.withBasePath("/HelpWindow.html"), (request: any, response: any) => {
+            response.sendFile(path.join(__dirname, "../../webpack/HelpWindow.html"));
+        })
+
         // todo: test
         server.set("trust proxy", true);
 

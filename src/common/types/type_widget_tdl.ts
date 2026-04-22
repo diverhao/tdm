@@ -1,3 +1,4 @@
+import { isOfType } from "../GlobalMethods";
 import { GlobalVariables } from "../GlobalVariables";
 import { TypeSchema, InferType, Mutable } from "./type_schema";
 
@@ -4752,3 +4753,21 @@ export const type_widget_tdl_schema_registry = {
     ThumbWheel: type_ThumbWheel_tdl_schema,
     XYPlot: type_XYPlot_tdl_schema,
 } as const satisfies Record<string, TypeSchema>;
+
+
+
+/**
+ * throw an error if verification fails
+ */
+export function verifyWidgetTdl(tdl: any): void {
+    const widgetType = typeof tdl?.type === "string" ? tdl.type : undefined;
+    const schema = widgetType === undefined ? undefined : type_widget_tdl_schema_registry[widgetType as keyof typeof type_widget_tdl_schema_registry];
+
+    if (schema === undefined) {
+        throw new Error(`No TDL schema registered for widget type ${JSON.stringify(widgetType)}.`);
+    }
+
+    if (!isOfType(tdl, schema)) {
+        throw new Error(`TDL ${JSON.stringify(tdl)} is not ${widgetType} type.`);
+    }
+}

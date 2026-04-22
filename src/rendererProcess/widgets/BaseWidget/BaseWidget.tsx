@@ -12,7 +12,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../common/Log";
 import { evaluate } from "mathjs";
-import { type_widget_tdl_schema_registry } from "../../../common/types/type_widget_tdl";
+import { type_widget_tdl_schema_registry, verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -216,7 +216,7 @@ export abstract class BaseWidget {
 
     constructor(widgetTdl: type_BaseWidget_tdl) {
         // throw if verification does not pass
-        this.verifyWidgetTdl(widgetTdl);
+        verifyWidgetTdl(widgetTdl);
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
@@ -1138,22 +1138,6 @@ export abstract class BaseWidget {
             result.key = widgetKey;
         }
         return result;
-    }
-
-    /**
-     * throw an error if verification fails
-     */
-    verifyWidgetTdl(tdl: any): void {
-        const widgetType = typeof tdl?.type === "string" ? tdl.type : undefined;
-        const schema = widgetType === undefined ? undefined : type_widget_tdl_schema_registry[widgetType as keyof typeof type_widget_tdl_schema_registry];
-
-        if (schema === undefined) {
-            throw new Error(`No TDL schema registered for widget type ${JSON.stringify(widgetType)}.`);
-        }
-
-        if (!GlobalMethods.isOfType(tdl, schema)) {
-            throw new Error(`TDL ${JSON.stringify(tdl)} is not ${widgetType} type.`);
-        }
     }
 
     /**

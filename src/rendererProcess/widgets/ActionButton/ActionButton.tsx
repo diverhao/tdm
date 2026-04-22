@@ -391,10 +391,15 @@ export class ActionButton extends BaseWidget {
     };
 
     openWebpage = (index: number) => {
+        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
         const tdl = this.getActions()[index] as type_action_openwebpage_tdl;
         const url = tdl["url"];
-        const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-        ipcManager.sendFromRendererProcess("open-webpage", { url: url });
+        if (mainProcessMode === "desktop") {
+            const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
+            ipcManager.sendFromRendererProcess("open-webpage", { url: url });
+        } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+        }
     };
 
     executeCommand = (index: number) => {

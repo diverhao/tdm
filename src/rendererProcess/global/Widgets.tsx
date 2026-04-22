@@ -3049,35 +3049,22 @@ export class Widgets {
     };
 
     openHelpWindow = () => {
-        const url = "file://${tdm_root}/dist/webpack/HelpWindow.html";
-        this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-webpage",
-            {
-                url: url
-            }
-        );
 
-        // if (this.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || this.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-        //     this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window", "Help", {});
-        // } else {
-        //     const currentSite = `https://${window.location.host}/`;
-        //     this.getRoot()
-        //         .getDisplayWindowClient()
-        //         .getIpcManager()
-        //         .sendPostRequestCommand("create-utility-display-window", {
-        //             utilityType: "Help",
-        //             utilityOptions: {},
-        //         })
-        //         .then((response: any) => {
-        //             // decode string
-        //             return response.json();
-        //         })
-        //         .then((data) => {
-        //             const ipcServerPort = data["ipcServerPort"];
-        //             const displayWindowId = data["displayWindowId"];
-        //             // window.open(`${currentSite}DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${displayWindowId}`);
-        //             window.open(`${currentSite}DisplayWindow.html?displayWindowId=${displayWindowId}`);
-        //         });
-        // }
+        const mainProcessMode = this.getRoot().getDisplayWindowClient().getMainProcessMode();
+
+        if (mainProcessMode === "desktop") {
+            const url = "file://${tdm_root}/dist/webpack/HelpWindow.html";
+            this.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-webpage",
+                {
+                    url: url
+                }
+            );
+        } else {
+            const currentSite = this.getRoot().getDisplayWindowClient().getWebPath();
+            const httpScheme = window.location.protocol;
+            const helpWindowUrl = `${httpScheme}//${currentSite}/HelpWindow.html`;
+            window.open(helpWindowUrl, "_blank", "noopener,noreferrer");
+        }
     };
 
     // ------------------------------- sidebar ---------------------------------

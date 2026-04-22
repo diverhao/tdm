@@ -527,6 +527,9 @@ export class DisplayWindowClient {
         return "";
     }
 
+    /**
+     * abc.com/def
+     */
     getWebPath = () => {
         const basePath = getBasePath();
         return `${window.location.host}${basePath}`;
