@@ -16,8 +16,11 @@ export class SidebarMediaOpenFile extends SidebarComponent {
         super(sidebar);
     }
 
+    setFileName: (newName: string) => void = (newName: string) => {};
+
     _Element = () => {
         const [fileName, setFileName] = React.useState<string>(this.getText()["fileName"]);
+        this.setFileName = setFileName;
 
         this._updateFromWidget = (newFileName: string) => {
             this.getText()["fileName"] = newFileName;

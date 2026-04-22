@@ -206,6 +206,14 @@ export abstract class BaseWidget {
 
     _macros: [string, string][] = [];
 
+    /**
+     * number of selected widgets when mouse button down
+     * 
+     * used for determining if need to show the primary info input box
+     */
+    private _numSelectedWidgetsOnMouseDown = 0;
+   
+
     constructor(widgetTdl: type_BaseWidget_tdl) {
         // throw if verification does not pass
         this.verifyWidgetTdl(widgetTdl);
@@ -285,6 +293,8 @@ export abstract class BaseWidget {
                 // (4)
                 let group = g_widgets1.getGroupSelection2();
                 group.reset(true);
+                // (5)
+                this.setNumSelectedWidgetsOnMouseDown(group.getWidgets().size);
             } else {
                 // do nothing
             }
@@ -713,15 +723,52 @@ export abstract class BaseWidget {
         // update sidebar
         g_widgets1.updateSidebar(doFlush);
 
+
+        this.showPrimaryInfoInput();
+    };
+
+    showPrimaryInfoInput = () => {
         const sidebar = this.getSidebar();
         if (sidebar === undefined) {
             return;
         }
+        console.log("this.getNumSelectedWidgetsOnMouseDown", this.getNumSelectedWidgetsOnMouseDown())
+        if (this.getNumSelectedWidgetsOnMouseDown() !== 1) {
+            return;
+        }
+
         // change (1) channel name, (2) Label text (3) Action Button text
         let updater = (newValue: string) => { };
+        const channelNameWidgets = [
+            "Arc",
+            "BinaryImage",
+            "BooleanButton",
+            "ByteMonitor",
+            "CheckBox",
+            "ChoiceButton",
+            "ComboBox",
+            "LED",
+            "LEDMultiState",
+            "Meter",
+            "Polyline",
+            "RadioButton",
+            "Rectangle",
+            "ScaledSlider",
+            "SlideButton",
+            "Spinner",
+            "Symbol",
+            "Tank",
+            "TextEntry",
+            "TextSymbol",
+            "TextUpdate",
+            "Thermometer",
+        ];
         let value = "";
         let readableText = "";
-        if (this.getWidgetKey().startsWith("Label") || this.getWidgetKey().startsWith("ActionButton")) {
+        const widgetKey = this.getWidgetKey();
+        const widgetName = widgetKey.split("_")[0];
+
+        if (widgetName === "Label" || widgetName === "ActionButton") {
             // update text
             const text = this.getText();
             updater = (newValue: string) => {
@@ -731,7 +778,20 @@ export abstract class BaseWidget {
             }
             value = text["text"];
             readableText = "label text";
-        } else {
+        } else if (widgetName === "Media") {
+            // update file name
+            const text = this.getText();
+            updater = (newValue: string) => {
+                const sidebarMediaOpenFile = (sidebar as any).sidebarMediaOpenFile();
+                if (sidebarMediaOpenFile !== undefined) {
+                    sidebarMediaOpenFile.setFileName(newValue);
+                    sidebarMediaOpenFile.updateWidget(undefined, newValue);
+                }
+            }
+            value = text["fileName"];
+            readableText = "file name";
+        } else if (channelNameWidgets.includes(widgetName)) {
+            // update channel name
             const channelNames = this.getChannelNamesLevel0();
             updater = (newValue: string) => {
                 const sidebarChannelName = sidebar.getSidebarChannelName();
@@ -740,11 +800,12 @@ export abstract class BaseWidget {
             }
             value = channelNames[0] ?? "";
             readableText = "channel name";
+        } else {
+            return;
         }
 
-
         sidebar.getSidebarLargeInput().createElement(value, (input: any) => { }, readableText, updater, true, "DisplayWindow");
-    };
+    }
 
     /**
      * Move this widget on Canvas. It does not update sidebar. To update sidebar, g_widgets1.updateSidebar()
@@ -1263,6 +1324,10 @@ export abstract class BaseWidget {
         this._embeddedDisplayWidgetKey = newKey;
     }
 
+    getNumSelectedWidgetsOnMouseDown() {
+        return this._numSelectedWidgetsOnMouseDown;
+    }
+
     // ---------------------- setters -------------------------
 
     setStyle = (newStyle: Record<string, any>) => {
@@ -1290,6 +1355,9 @@ export abstract class BaseWidget {
         this._rulesText = newText;
     };
 
+    setNumSelectedWidgetsOnMouseDown(numSelectedWidgetsOnMouseDown: number) {
+        this._numSelectedWidgetsOnMouseDown = numSelectedWidgetsOnMouseDown;
+    }
     // -------------------------------------- channel names ---------------------------------
 
     setChannelNamesLevel0 = (newNames: string[]) => {
