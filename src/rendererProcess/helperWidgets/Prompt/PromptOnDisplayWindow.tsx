@@ -5,6 +5,7 @@ import path from "path";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 
 export class PromptOnDisplayWindow extends Prompt {
 
@@ -118,6 +119,18 @@ export class PromptOnDisplayWindow extends Prompt {
     }
 
     getBackgroundStyle = () => {
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (canvas?.getWidgetKey() === "Canvas") {
+            const backgroundColor = canvas.getStyle()["backgroundColor"];
+            if (typeof backgroundColor === "string") {
+                const [r, g, b, a] = rgbaStrToRgbaArray(backgroundColor);
+                if (typeof r === "number" && typeof g === "number" && typeof b === "number") {
+                    if (r + g + b < 180) {
+                        return liquidGlassStyle;
+                    }
+                }
+            }
+        }
         return liquidGlassStyleDark;
     }
 

@@ -194,7 +194,7 @@ export abstract class Prompt {
      * press Esc key. 
      */
     removeEventListeners = () => {
-        window.removeEventListener("mousedown", this.removeElement)
+        // window.removeEventListener("mousedown", this.removeElement)
         window.removeEventListener("keydown", this.removeElementOnEscKey)
     }
 

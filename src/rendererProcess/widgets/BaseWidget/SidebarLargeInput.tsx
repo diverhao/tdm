@@ -5,7 +5,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
-import { isDarkMode } from "../../../common/GlobalMethods";
+import { isDarkMode, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 
 export class SidebarLargeInput {
     value: string = "";
@@ -17,6 +17,21 @@ export class SidebarLargeInput {
     readonly id: string = "sidebar-large-input";
 
     constructor() {
+        this.startEventListeners();
+    }
+
+
+    startEventListeners = () => {
+        window.addEventListener("keydown", this.removeElementOnEscKey)
+    }
+
+    /**
+     * If we remove these event listeners, the prompt won't disappear when we click blank area or 
+     * press Esc key. 
+     */
+    removeEventListeners = () => {
+        window.removeEventListener("mousedown", this.removeElement)
+        window.removeEventListener("keydown", this.removeElementOnEscKey)
     }
 
     createElement = (
@@ -79,7 +94,7 @@ export class SidebarLargeInput {
             inputElementRef.current?.select();
         }, [])
 
-        const backgroundStyle = isDarkMode() === true ? liquidGlassStyleDark : liquidGlassStyle;
+        const backgroundStyle = this.getBackgroundStyle();
 
         return (
             <div style={{
@@ -253,7 +268,7 @@ export class SidebarLargeInput {
         // channel name hint
         const formElementRef = React.useRef<HTMLFormElement>(null);
 
-        const backgroundStyle = isDarkMode() === true ? liquidGlassStyleDark : liquidGlassStyle;
+        const backgroundStyle = this.getBackgroundStyle();
 
         return (
             <div style={{
@@ -464,6 +479,22 @@ export class SidebarLargeInput {
             this.readableText = "";
             this.updater = undefined;
         }
+    }
+
+    getBackgroundStyle = () => {
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (canvas?.getWidgetKey() === "Canvas") {
+            const backgroundColor = canvas.getStyle()["backgroundColor"];
+            if (typeof backgroundColor === "string") {
+                const [r, g, b, a] = rgbaStrToRgbaArray(backgroundColor);
+                if (typeof r === "number" && typeof g === "number" && typeof b === "number") {
+                    if (r + g + b < 180) {
+                        return liquidGlassStyle;
+                    }
+                }
+            }
+        }
+        return liquidGlassStyleDark;
     }
 
     removeElementOnEscKey = (event: KeyboardEvent) => {
