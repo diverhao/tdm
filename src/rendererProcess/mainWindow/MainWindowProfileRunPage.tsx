@@ -55,13 +55,21 @@ export class MainWindowProfileRunPage {
                 }
             );
         };
-        const openRemoteFile = () => {
+        const openRemoteFile = async () => {
             // open the large input
-            this._largeInput.createElement("", (newValue: "string") => { }, "Remote TDL File Path", (newValue: string) => {
+            const mainWindowClient = this.getMainWindowClient();
+            const prompt = mainWindowClient.getPrompt();
+            const tdlFileName = await prompt.showInputBox({
+                title: "",
+                text: "Input remote file path",
+                defaultContent: "",
+            });
+
+            if (typeof tdlFileName === "string") {
                 this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
                     {
                         options: {
-                            tdlFileNames: [newValue],
+                            tdlFileNames: [tdlFileName],
                             mode: "operating",
                             editable: false,
                             macros: [],
@@ -71,7 +79,23 @@ export class MainWindowProfileRunPage {
                         }
                     }
                 );
-            }, true, "MainWindow")
+            }
+
+            // this._largeInput.createElement("", (newValue: "string") => { }, "Remote TDL File Path", (newValue: string) => {
+            //     this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
+            //         {
+            //             options: {
+            //                 tdlFileNames: [newValue],
+            //                 mode: "operating",
+            //                 editable: false,
+            //                 macros: [],
+            //                 replaceMacros: false,
+            //                 // currentTdlFolder?: string;
+            //                 windowId: this.getMainWindowClient().getWindowId(),
+            //             }
+            //         }
+            //     );
+            // }, false, "MainWindow")
         };
         // const openFileBrowser = (event: any) => {
         //     this.getMainWindowClient().getIpcManager().sendFromRendererProcess("new-tdm-process");
@@ -328,7 +352,7 @@ export class MainWindowProfileRunPage {
             });
         }
         const quitTdmProcess = () => {
-            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process", {confirmToQuit: false});
+            this.getMainWindowClient().getIpcManager().sendFromRendererProcess("quit-tdm-process", { confirmToQuit: false });
         }
         const openTalhk = () => {
             const mainWindowId = this.getMainWindowClient().getWindowId();
@@ -370,8 +394,8 @@ export class MainWindowProfileRunPage {
         };
 
         if (this.getMainWindowClient().getMainProcessMode() === "ssh-client") {
-            delete(buttonFunctions["Open file"])
-            delete(buttonFunctions["New TDM process"])
+            delete (buttonFunctions["Open file"])
+            delete (buttonFunctions["New TDM process"])
         }
 
         return (
@@ -586,14 +610,14 @@ export class MainWindowProfileRunPage {
                 onMouseDown={(event: React.MouseEvent) => {
                     event.preventDefault();
                     if (event.button === 0) {
-                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("focus-window", {displayWindowId: displayWindowId});
+                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("focus-window", { displayWindowId: displayWindowId });
                     }
                 }}
                 // mid click, onClick is only for left button
                 onAuxClick={(event: React.MouseEvent) => {
                     event.preventDefault();
                     if (event.button === 1) {
-                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("close-window", {displayWindowId: displayWindowId});
+                        this.getMainWindowClient().getIpcManager().sendFromRendererProcess("close-window", { displayWindowId: displayWindowId });
                         setWindowName("");
                         setTdlFileName("");
                     }

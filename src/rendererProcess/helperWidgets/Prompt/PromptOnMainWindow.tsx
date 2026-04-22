@@ -2,6 +2,7 @@ import * as React from "react";
 import { MainWindowClient } from "../../windows/MainWindow/MainWindowClient";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
+import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 
 export class PromptOnMainWindow extends Prompt {
 
@@ -109,5 +110,7 @@ export class PromptOnMainWindow extends Prompt {
     getMainWindowClient = () => {
         return this._mainWindowClient;
     }
+
+    getBackgroundStyle = () => {return liquidGlassStyleDark};
 
 }

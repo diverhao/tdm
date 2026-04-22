@@ -6,6 +6,8 @@ import { SidebarComponent } from "./SidebarComponent";
 import { TcaChannel } from "../../channel/TcaChannel";
 
 export class SidebarChannelName extends SidebarComponent {
+    setChannelName = (newName: string) => {};
+
     constructor(sidebar: BaseWidgetSidebar) {
         super(sidebar);
     }
@@ -13,6 +15,8 @@ export class SidebarChannelName extends SidebarComponent {
     _Element = () => {
         const channelNameRaw = this.getMainWidget().getChannelNamesLevel0()[0];
         const [channelName, setChannelName] = React.useState<string>(channelNameRaw === undefined ? "" : channelNameRaw);
+        this.setChannelName = setChannelName;
+
         const [channeNameColor, setChanneNameColor] = React.useState<string>(
             TcaChannel.checkChannelName(this.getMainWidget().getChannelNamesLevel0()[0]) !== undefined ? "black" : "red"
         );

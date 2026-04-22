@@ -4,7 +4,8 @@ import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import ReactDOM from 'react-dom/client';
 import { createPortal } from "react-dom";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { isDarkMode } from "../../../common/GlobalMethods";
 
 
 type MenuItem =
@@ -56,21 +57,21 @@ export class ContextMenu {
     };
 
     _getMenuTheme = () => {
-        const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const inDarkMode = isDarkMode();
 
-        if (isDarkMode) {
+        if (inDarkMode) {
             return {
-                backgroundColor: "rgba(20, 20, 20, 0.65)",
-                color: "rgba(252, 252, 253, 0.98)",
-                border: "2px solid rgba(100, 100, 100, 0.0)",
-                outline: "0.5px solid rgba(50, 50, 50, 0.8)",
+                // backgroundColor: "rgba(20, 20, 20, 0.65)",
+                // color: "rgba(252, 252, 253, 0.98)",
+                // border: "2px solid rgba(100, 100, 100, 0.0)",
+                // outline: "0.5px solid rgba(50, 50, 50, 0.8)",
                 separatorColor: "rgba(255, 255, 255, 0.15)",
                 hoverBackgroundColor: "rgba(10, 132, 255, 0.96)",
                 hoverColor: "rgba(255, 255, 255, 1)",
-                boxShadow: "0 18px 44px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.24)",
-                backdropFilter: "blur(4px) saturate(110%)",
-                WebkitBackdropFilter: "blur(4px) saturate(110%)",
-                fontFamily: GlobalVariables.defaultFontFamily,
+                // boxShadow: "0 18px 44px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.24)",
+                // backdropFilter: "blur(4px) saturate(110%)",
+                // WebkitBackdropFilter: "blur(4px) saturate(110%)",
+                // fontFamily: GlobalVariables.defaultFontFamily,
                 fontSize: 13.5,
                 fontWeight: 500,
                 borderRadius: 10,
@@ -85,21 +86,22 @@ export class ContextMenu {
                 submenuOffsetX: -3,
                 submenuOffsetY: -8,
                 submenuIndicatorWidth: 16,
+                ...liquidGlassStyleDark,
             };
         }
 
         return {
-            backgroundColor: "rgba(240, 240, 240, 0.68)", /* Translucent white */
-            outline: "0.5px solid rgba(70, 70, 70, 0.3)",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)", /* Soft shadow */
-            color: "rgba(18, 18, 20, 0.98)",
-            border: "0.5px solid rgba(230, 230, 230, 0.72)",
+            // backgroundColor: "rgba(240, 240, 240, 0.68)", /* Translucent white */
+            // outline: "0.5px solid rgba(70, 70, 70, 0.3)",
+            // boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)", /* Soft shadow */
+            // color: "rgba(18, 18, 20, 0.98)",
+            // border: "0.5px solid rgba(230, 230, 230, 0.72)",
             separatorColor: "rgba(60, 60, 67, 0.16)",
             hoverBackgroundColor: "rgba(92, 161, 255, 1)",
             hoverColor: "rgba(255, 255, 255, 1)",
-            backdropFilter: "blur(4px) saturate(110%)",
-            WebkitBackdropFilter: "blur(4px) saturate(110%)",
-            fontFamily: GlobalVariables.defaultFontFamily,
+            // backdropFilter: "blur(4px) saturate(110%)",
+            // WebkitBackdropFilter: "blur(4px) saturate(110%)",
+            // fontFamily: GlobalVariables.defaultFontFamily,
             fontSize: 13.5,
             fontWeight: 500,
             borderRadius: 10,
@@ -114,6 +116,7 @@ export class ContextMenu {
             submenuOffsetX: -3,
             submenuOffsetY: -8,
             submenuIndicatorWidth: 16,
+            ...liquidGlassStyle,
         };
     };
 

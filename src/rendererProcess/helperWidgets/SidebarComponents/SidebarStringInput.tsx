@@ -9,6 +9,8 @@ export class SidebarStringInput extends SidebarComponent {
     private readonly _propertyName: string;
     private readonly _label: string;
     private readonly _extraStyle: Record<string, any>;
+    setStr = (str: string) => {};
+
     constructor(sidebar: BaseWidgetSidebar, obj: Record<string, any>, propertyName: string, label: string, extraStyle: Record<string, any> = {}) {
         super(sidebar);
         this._obj = obj;
@@ -19,6 +21,7 @@ export class SidebarStringInput extends SidebarComponent {
 
     _Element = () => {
         const [str, setStr] = React.useState<string>(this.getPropertyValue());
+        this.setStr = setStr;
 
         return (
             <form

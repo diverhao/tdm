@@ -1,11 +1,12 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
 import { TdmLogo } from "../../global/Images";
 import { PromptInputBoxHandlers } from "./PromptInputBoxHandlers";
+import { isDarkMode } from "../../../common/GlobalMethods";
 
 export type type_InputBox = {
     title: string,
@@ -132,10 +133,10 @@ export abstract class Prompt {
                     handleClick={(event: React.MouseEvent) => {
                         event.preventDefault();
                         this.removeElement();
-                        this._confirmResolve(undefined);
+                        this._confirmResolve(inputText);
                     }}
                 >
-                    Cancel
+                    OK
                 </ElementRectangleButton>
 
                 <ElementRectangleButton
@@ -146,10 +147,10 @@ export abstract class Prompt {
                     handleClick={(event: React.MouseEvent) => {
                         event.preventDefault();
                         this.removeElement();
-                        this._confirmResolve(inputText);
+                        this._confirmResolve(undefined);
                     }}
                 >
-                    OK
+                    Cancel
                 </ElementRectangleButton>
             </div>
         </this._ElementBackground>)
@@ -228,26 +229,33 @@ export abstract class Prompt {
 
     // --------------------------- general elements -----------------------
 
+    abstract getBackgroundStyle: () => typeof liquidGlassStyle;
+
     _ElementBackground = ({ children }: any) => {
+
+        const backgroundStyle = this.getBackgroundStyle();
+
+
         return (<div
             style={{
                 width: "80%",
-                backgroundColor: "rgba(40, 40, 40, 1)",
+                // backgroundColor: "rgba(40, 40, 40, 1)",
                 borderRadius: 4,
                 display: "inline-flex",
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
                 animation: "fadeIn 5s",
-                color: "rgba(200, 200, 200, 1)",
+                // color: "rgba(200, 200, 200, 1)",
                 padding: 10,
-                fontFamily: GlobalVariables.defaultFontFamily,
+                // fontFamily: GlobalVariables.defaultFontFamily,
                 fontSize: GlobalVariables.defaultFontSize,
                 fontStyle: GlobalVariables.defaultFontStyle,
                 fontWeight: GlobalVariables.defaultFontWeight,
                 position: "fixed",
                 margin: 20,
-                border: "solid 1px white",
+                // border: "solid 1px white",
+                ...backgroundStyle
             }}
             onMouseDown={(event: React.MouseEvent) => {
             }
@@ -285,10 +293,13 @@ export abstract class Prompt {
                     border: "solid 1px rgba(0, 80, 200, 1)",
                     borderRadius: 0,
                     outline: "none",
-                    color: "rgba(200, 200, 200, 1)",
-                    backgroundColor: "rgba(60, 60, 60, 1)",
+                    color: "rgba(20, 20, 20, 1)",
+                    backgroundColor: "rgba(250, 250, 250, 1)",
                     padding: 5,
+                    fontFamily: "Courier Prime",
+                    fontSize: 16
                 }}
+                spellCheck={false}
                 autoFocus={autoFocus}
                 onChange={handleChange}
                 value={value}
@@ -425,10 +436,11 @@ export abstract class Prompt {
                 justifyContent: "center",
                 alignItems: "center",
                 height: 50,
+                // WebkitTextStroke: "1px black",
             }}>
                 <span
                     style={{
-                        color: messageType === "error" ? "red" : messageType === "warning" ? "yellow" : "rgba(150,150,150,1)",
+                        color: messageType === "error" ? "red" : messageType === "warning" ? "orange" : "rgba(150,150,150,1)",
                     }}
                 >
                     {messageType.toUpperCase()}

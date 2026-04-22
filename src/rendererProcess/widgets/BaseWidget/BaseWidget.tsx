@@ -479,6 +479,7 @@ export abstract class BaseWidget {
     _handleMouseDoubleClick = (event: React.MouseEvent<HTMLElement, MouseEvent>): void => {
         if (g_widgets1.isEditing()) {
             this.selectOnMouseDoubleClick(true);
+            // show input box
         } else {
             // do nothing
         }
@@ -711,6 +712,38 @@ export abstract class BaseWidget {
         this.simpleSelect(doFlush);
         // update sidebar
         g_widgets1.updateSidebar(doFlush);
+
+        const sidebar = this.getSidebar();
+        if (sidebar === undefined) {
+            return;
+        }
+        // change (1) channel name, (2) Label text (3) Action Button text
+        let updater = (newValue: string) => { };
+        let value = "";
+        let readableText = "";
+        if (this.getWidgetKey().startsWith("Label") || this.getWidgetKey().startsWith("ActionButton")) {
+            // update text
+            const text = this.getText();
+            updater = (newValue: string) => {
+                const sidebarText = sidebar.getSidebarText();
+                sidebarText.setStr(newValue);
+                sidebarText.updateWidget(undefined, newValue);
+            }
+            value = text["text"];
+            readableText = "label text";
+        } else {
+            const channelNames = this.getChannelNamesLevel0();
+            updater = (newValue: string) => {
+                const sidebarChannelName = sidebar.getSidebarChannelName();
+                sidebarChannelName.updateWidget(undefined, newValue);
+                sidebarChannelName.setChannelName(newValue);
+            }
+            value = channelNames[0] ?? "";
+            readableText = "channel name";
+        }
+
+
+        sidebar.getSidebarLargeInput().createElement(value, (input: any) => { }, readableText, updater, true, "DisplayWindow");
     };
 
     /**

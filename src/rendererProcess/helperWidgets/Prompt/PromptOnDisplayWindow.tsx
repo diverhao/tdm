@@ -4,6 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import path from "path";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
+import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 
 export class PromptOnDisplayWindow extends Prompt {
 
@@ -114,6 +115,10 @@ export class PromptOnDisplayWindow extends Prompt {
 
     getDisplayWindowClient = () => {
         return this._displayWindowClient;
+    }
+
+    getBackgroundStyle = () => {
+        return liquidGlassStyleDark;
     }
 
 }

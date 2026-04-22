@@ -2,7 +2,10 @@ import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { BaseWidget } from "./BaseWidget";
+import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
+import { isDarkMode } from "../../../common/GlobalMethods";
 
 export class SidebarLargeInput {
     value: string = "";
@@ -16,7 +19,14 @@ export class SidebarLargeInput {
     constructor() {
     }
 
-    createElement = (value: string, setValue: any, readableText: string, updater: any, withOkButton: boolean = false, windowType: "DisplayWindow" | "MainWindow" = "DisplayWindow") => {
+    createElement = (
+        value: string,
+        setValue: any,
+        readableText: string,
+        updater: any,
+        hitEnterAsOK: boolean = false,
+        windowType: "DisplayWindow" | "MainWindow" = "DisplayWindow",
+    ) => {
         this.removeElement();
         this.setValue = setValue;
         this.value = value;
@@ -37,19 +47,20 @@ export class SidebarLargeInput {
         newElement.style.justifyContent = "center";
 
         if (windowType === "DisplayWindow") {
-            ReactDOM.createRoot(newElement).render(<this._Element withOkButton={withOkButton}></this._Element>);
+            ReactDOM.createRoot(newElement).render(<this._Element hitEnterAsOK={hitEnterAsOK} ></this._Element>);
             document.body.appendChild(newElement);
         } else {
-            ReactDOM.createRoot(newElement).render(<this._ElementForMainWindow withOkButton={withOkButton}></this._ElementForMainWindow>);
+            ReactDOM.createRoot(newElement).render(<this._ElementForMainWindow hitEnterAsOK={hitEnterAsOK}></this._ElementForMainWindow>);
             document.body.appendChild(newElement);
         }
     }
 
-    _Element = ({ withOkButton }: { withOkButton: boolean }) => {
+    _Element = ({ hitEnterAsOK }: { hitEnterAsOK: boolean }) => {
         const [localValue, setLocalValue] = React.useState(this.getValue());
 
         // channel name hint
         const formElementRef = React.useRef<HTMLFormElement>(null);
+        const inputElementRef = React.useRef<HTMLInputElement>(null);
 
         const [showChannelNameHint, setShowChannelNameHint] = React.useState(false);
         const ChannelNameHintElement = g_widgets1.getRoot().getDisplayWindowClient().getChannelNameHint()._Element;
@@ -57,20 +68,18 @@ export class SidebarLargeInput {
         const [channelNameHintData, setChannelNameHintData] = React.useState<string[]>([]);
 
         const selectHint = (channelName: string) => {
-            // this.newProbe(channelName);
             // (event.currentTarget.elements[0] as HTMLInputElement).blur();
             // setShowChannelNameHint(false);
             setLocalValue(channelName);
             setShowChannelNameHint(false)
-            if (withOkButton === true) {
-                // do nothing on submit
-                // do the change when click the OK button
-            } else {
-                this.value = channelName;
-                this.setValue(channelName);
-                this.updater(channelName);
-            }
         }
+
+        React.useEffect(() => {
+            inputElementRef.current?.focus();
+            inputElementRef.current?.select();
+        }, [])
+
+        const backgroundStyle = isDarkMode() === true ? liquidGlassStyleDark : liquidGlassStyle;
 
         return (
             <div style={{
@@ -91,50 +100,24 @@ export class SidebarLargeInput {
                         justifyContent: "center",
                         width: "85%",
                         height: "70%",
-                        backgroundColor: "rgba(20,20,20,1)",
                         // backgroundColor: "rgba(20,20,20,1)",
-                        // color: "rgba(210,210,210,1)",
-                        // borderRadius: 6,
                         // liquid glass blur effect
                         boxSizing: "border-box",
-                        textShadow: `-0.5px -0.5px 0 white, 0.5px -0.5px 0 white, -0.5px 0.5px 0 white, 0.5px 0.5px 0 white`,
+                        // textShadow: `-0.5px -0.5px 0 white, 0.5px -0.5px 0 white, -0.5px 0.5px 0 white, 0.5px 0.5px 0 white`,
                         zIndex: 100,
-                        background: "rgba(255, 255, 255, 0.15)",
-                        backdropFilter: "blur(2px) saturate(180%)",
-                        border: "1px solid rgba(255, 255, 255, 0.8)",
+                        // background: "rgba(255, 255, 255, 0.15)",
+                        // backdropFilter: "blur(2px) saturate(180%)",
+                        // border: "1px solid rgba(255, 255, 255, 0.8)",
                         borderRadius: "2rem",
-                        boxShadow: "0 8px 32px rgba(31, 38, 135, 0.2), inset 0 4px 20px rgba(255, 255, 255, 0.3)",
+                        // boxShadow: "0 8px 32px rgba(31, 38, 135, 0.2), inset 0 4px 20px rgba(255, 255, 255, 0.3)",
                         overflow: "hidden",
+                        ...backgroundStyle
                     }}
                     onMouseDown={(event) => event.stopPropagation()}
                 >
-                    {/* ::after pseudo-element equivalent */}
-                    {/* liquid glass blur effect */}
-                    <div
-                        style={{
-                            content: "''",
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            background: "rgba(255, 255, 255, 0.3)",
-                            borderRadius: "2rem",
-                            backdropFilter: "blur(1px)",
-                            boxShadow: "inset -10px -8px 0px -11px rgba(255, 255, 255, 1), inset 0px -9px 0px -8px rgba(255, 255, 255, 1)",
-                            opacity: 0.6,
-                            zIndex: -1,
-                            filter: "blur(1px) drop-shadow(10px 4px 6px black) brightness(115%)",
-                            pointerEvents: "none",
-                        }}
-                    />
-
                     <h2>
-                        Set value for <span style={{ color: "rgba(0,0,0,1)" }}>{this.readableText}</span>
+                        Set value for <span>{this.readableText}</span>
                     </h2>
-                    <p style={{ fontSize: 13, marginTop: 0 }}>
-                        Hit Enter to confirm the input.
-                    </p>
                     <form
                         ref={formElementRef}
                         style={{
@@ -148,16 +131,14 @@ export class SidebarLargeInput {
                         }}
                         onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
-                            setShowChannelNameHint(false);
-
-                            if (withOkButton === true) {
-                                // do nothing on submit
-                                // do the change when click the OK button
-                            } else {
+                            if (hitEnterAsOK === true) {
+                                // as OK
                                 this.value = localValue;
                                 this.setValue(localValue);
                                 this.updater(localValue);
+                                this.removeElement();
                             }
+                            // setShowChannelNameHint(false);
                         }}
                     >
 
@@ -174,6 +155,7 @@ export class SidebarLargeInput {
                                 borderRadius: 0,
                                 border: "none",
                             }}
+                            ref={inputElementRef}
                             type="string"
                             spellCheck={false}
                             value={localValue}
@@ -212,18 +194,6 @@ export class SidebarLargeInput {
                                     }
                                 }
                             }}
-                            // must use enter to change the value
-                            onBlur={(event) => {
-                                setShowChannelNameHint(false);
-                                setChannelNameHintData([]);
-
-                                // const orig = this.getMainWidget().getChannelNames()[0];
-                                const orig = this.getValue();
-                                // console.log("blur:", orig, localValue)
-                                if (orig !== localValue) {
-                                    setLocalValue(orig);
-                                }
-                            }}
                         />
 
                         <ChannelNameHintElement
@@ -234,24 +204,41 @@ export class SidebarLargeInput {
                         ></ChannelNameHintElement>
 
                     </form>
-                    <ElementRectangleButton
-                        defaultTextColor={"white"}
-                        highlightTextColor={"white"}
-                        additionalStyle={{
-                            textShadow: "none",
-                        }}
+                    <div style={{
+                        display: "inline-flex",
+                        flexDirection: "row",
+                    }}>
+                        <ElementRectangleButton
+                            defaultTextColor={"white"}
+                            highlightTextColor={"white"}
+                            additionalStyle={{
+                                textShadow: "none",
+                                marginRight: 15,
+                            }}
 
-                        handleClick={() => {
-                            if (withOkButton === true) {
+                            handleClick={() => {
                                 this.value = localValue;
                                 this.setValue(localValue);
                                 this.updater(localValue);
-                            }
-                            this.removeElement();
-                        }}
-                    >
-                        {withOkButton === true ? "OK" : "Close"}
-                    </ElementRectangleButton>
+                                this.removeElement();
+                            }}
+                        >
+                            OK
+                        </ElementRectangleButton>
+                        <ElementRectangleButton
+                            defaultTextColor={"white"}
+                            highlightTextColor={"white"}
+                            additionalStyle={{
+                                textShadow: "none",
+                            }}
+
+                            handleClick={() => {
+                                this.removeElement();
+                            }}
+                        >
+                            Cancel
+                        </ElementRectangleButton>
+                    </div>
                 </div>
             </div>
         )
@@ -260,23 +247,24 @@ export class SidebarLargeInput {
     /**
      * similar to _Element, but without channel name hint
      */
-    _ElementForMainWindow = ({ withOkButton }: { withOkButton: boolean }) => {
+    _ElementForMainWindow = ({ hitEnterAsOK }: { hitEnterAsOK: boolean }) => {
         const [localValue, setLocalValue] = React.useState(this.getValue());
 
         // channel name hint
         const formElementRef = React.useRef<HTMLFormElement>(null);
 
+        const backgroundStyle = isDarkMode() === true ? liquidGlassStyleDark : liquidGlassStyle;
 
         return (
             <div style={{
                 display: "inline-flex",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.2)",
+                // backgroundColor: "rgba(0, 0, 0, 0.2)",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                backdropFilter: "blur(10px)",
+                // backdropFilter: "blur(10px)",
             }}>
                 <div style={{
                     display: "inline-flex",
@@ -285,16 +273,14 @@ export class SidebarLargeInput {
                     justifyContent: "center",
                     width: "85%",
                     height: "70%",
-                    backgroundColor: "rgba(20,20,20,1)",
-                    color: "rgba(210,210,210,1)",
+                    // backgroundColor: "rgba(20,20,20,1)",
+                    // color: "rgba(210,210,210,1)",
                     borderRadius: 6,
+                    ...backgroundStyle
                 }}>
                     <h2>
-                        Set value for <span style={{ color: "yellow" }}>{this.readableText}</span>
+                        Set value for <span style={{ color: "blue" }}>{this.readableText}</span>
                     </h2>
-                    <p style={{ fontSize: 13, marginTop: 0 }}>
-                        Hit Enter to confirm the input.
-                    </p>
                     <form
                         ref={formElementRef}
                         style={{
@@ -308,14 +294,11 @@ export class SidebarLargeInput {
                         }}
                         onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
-
-                            if (withOkButton === true) {
-                                // do nothing on submit
-                                // do the change when click the OK button
-                            } else {
+                            if (hitEnterAsOK === true) {
                                 this.value = localValue;
                                 this.setValue(localValue);
                                 this.updater(localValue);
+                                this.removeElement();
                             }
                         }}
                     >
@@ -340,30 +323,34 @@ export class SidebarLargeInput {
                                 const newVal = event.target.value;
                                 setLocalValue(newVal);
                             }}
-                            // must use enter to change the value
-                            onBlur={(event) => {
-                                // const orig = this.getMainWidget().getChannelNames()[0];
-                                const orig = this.getValue();
-                                // console.log("blur:", orig, localValue)
-                                if (orig !== localValue) {
-                                    setLocalValue(orig);
-                                }
-                            }}
                         />
 
                     </form>
-                    <ElementRectangleButton
-                        handleClick={() => {
-                            if (withOkButton === true) {
+                    <div style={{
+                        display: 'inline-flex',
+                        flexDirection: "row",
+                    }}>
+                        <ElementRectangleButton
+                            additionalStyle={{
+                                marginRight: 15,
+                            }}
+                            handleClick={() => {
                                 this.value = localValue;
                                 this.setValue(localValue);
                                 this.updater(localValue);
-                            }
-                            this.removeElement();
-                        }}
-                    >
-                        {withOkButton === true ? "OK" : "Close"}
-                    </ElementRectangleButton>
+                                this.removeElement();
+                            }}
+                        >
+                            OK
+                        </ElementRectangleButton>
+                        <ElementRectangleButton
+                            handleClick={() => {
+                                this.removeElement();
+                            }}
+                        >
+                            Cancel
+                        </ElementRectangleButton>
+                    </div>
                 </div>
             </div>
         )

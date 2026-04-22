@@ -1444,3 +1444,4 @@ export const generateDisplayWindowHtml = (option: {basePath: string, displayWind
 }
 
 
+export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
