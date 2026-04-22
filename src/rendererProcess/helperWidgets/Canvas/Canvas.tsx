@@ -385,28 +385,6 @@ export class Canvas {
     };
 
     // -------------------- getters and setters ---------------------------
-
-    // 2 types of macros (1) internal, defined inside tdl file (2) external, provided by caller
-
-    // setExternalMacros = (externalMacros: [string, string][]) => {
-    // 	this._externalMacros = JSON.parse(JSON.stringify(externalMacros));
-    // };
-
-    // getExternalMacros = (): [string, string][] => {
-    // 	return this._externalMacros;
-    // };
-
-    // getReplaceMacros = () => {
-    // 	return this._replaceMacros;
-    // };
-
-    // setExternalReplaceMacros = (externalReplaceMacros: boolean) => {
-    // 	this._externalReplaceMacros = externalReplaceMacros;
-    // };
-    // getExternalReplaceMacros = () => {
-    // 	return this._externalReplaceMacros;
-    // };
-
     /**
      * For a widget, the macros are expanded from furtheset to nearest, if there
      * is any duplicated macros, the nearest one will be used.
@@ -420,12 +398,17 @@ export class Canvas {
      * external macros must be a set of fully expanded macros, e.g S=SYS, not S=${S1}
      */
     getAllMacros = () => {
-        // todo
         const useExternalMacros = g_widgets1.getRoot().getUseExternalMacros();
         // user-provided macros, may contain the parent window macros
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
+        const internalMacros = this.getMacros();
         // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
-        return [...externalMacros, ...this.getMacros()];
+        if (useExternalMacros) {
+            return [...internalMacros, ...externalMacros];
+        } else {
+            return [...externalMacros, ...internalMacros];
+        }
+
     };
 
 

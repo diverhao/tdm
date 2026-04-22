@@ -183,10 +183,20 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                     // Message button specific
                 } else if (propertyName === "pressValue") {
                     hasPressValue = true;
-                    tdl["itemValues"][1] = parseFloat(propertyValue.replaceAll(`"`, ""));
+                    const value = parseFloat(propertyValue.replaceAll(`"`, ""));
+                    if (typeof value === "number" && !isNaN(value)) {
+                        tdl["itemValues"][1] = value;
+                    } else {
+                        tdl["itemValues"][1] = propertyValue.replaceAll(`"`, "");
+                    }
                 } else if (propertyName === "releaseValue") {
                     hasReleaseValue = true;
-                    tdl["itemValues"][0] = parseFloat(propertyValue.replaceAll(`"`, ""));
+                    const value = parseFloat(propertyValue.replaceAll(`"`, ""));
+                    if (typeof value === "number" && !isNaN(value)) {
+                        tdl["itemValues"][0] = value;
+                    } else {
+                        tdl["itemValues"][0] = propertyValue.replaceAll(`"`, "");
+                    }
                 } else if (propertyName === "invisible") {
                     const newRules = EdlConverter.convertEdlInvisible(propertyValue) as type_rules_tdl;
                     tdl["rules"].push(...newRules);
@@ -316,6 +326,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             });
         }
 
+        console.log(tdl)
         return tdl;
     };
 

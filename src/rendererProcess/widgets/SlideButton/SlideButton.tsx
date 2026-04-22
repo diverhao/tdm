@@ -25,9 +25,9 @@ export class SlideButton extends BaseWidget {
         this.setReadWriteType("write");
 
         const defaultTdl = this.generateDefaultTdl();
-        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
-        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
-        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        this._itemNames = deepMerge(defaultTdl.itemNames, widgetTdl.itemNames);
+        this._itemColors = deepMerge(defaultTdl.itemColors, widgetTdl.itemColors);
+        this._itemValues = deepMerge(defaultTdl.itemValues, widgetTdl.itemValues);
         // ensure the same number of states
         const numStates = 2;
         this._itemNames.splice(numStates);

@@ -15,7 +15,7 @@ export class BooleanButton extends BaseWidget {
     _rules: BaseWidgetRules;
     _itemNames: string[];
     _itemColors: string[];
-    _itemValues: number[];
+    _itemValues: (number | string)[];
 
     // used for indicating if the mouse button is down
     buttonPressed: boolean = false;
@@ -29,9 +29,9 @@ export class BooleanButton extends BaseWidget {
 
 
         const defaultTdl = this.generateDefaultTdl();
-        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
-        this._itemColors = deepMerge(widgetTdl.itemColors, defaultTdl.itemColors);
-        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        this._itemNames = deepMerge(defaultTdl.itemNames, widgetTdl.itemNames);
+        this._itemColors = deepMerge(defaultTdl.itemColors, widgetTdl.itemColors,);
+        this._itemValues = deepMerge(defaultTdl.itemValues, widgetTdl.itemValues);
         // ensure the same number of states
         const numStates = 2;
         this._itemNames.splice(numStates);
@@ -209,10 +209,10 @@ export class BooleanButton extends BaseWidget {
         let targetValue = allText["onValue"];
 
         let currentValue = this._getChannelValue(true);
-        if (typeof currentValue !== "number") {
+        if (typeof currentValue !== "number" && typeof currentValue !== "string") {
             return;
         }
-        if (currentValue !== offValue) {
+        if (typeof currentValue === "number" && typeof offValue === "number" && currentValue !== offValue) {
             currentValue = onValue;
         }
 

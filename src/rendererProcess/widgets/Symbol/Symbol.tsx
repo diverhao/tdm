@@ -23,8 +23,8 @@ export class Symbol extends BaseWidget {
         this.setReadWriteType("write");
 
         const defaultTdl = this.generateDefaultTdl();
-        this._itemNames = deepMerge(widgetTdl.itemNames, defaultTdl.itemNames);
-        this._itemValues = deepMerge(widgetTdl.itemValues, defaultTdl.itemValues);
+        this._itemNames = deepMerge(defaultTdl.itemNames, widgetTdl.itemNames);
+        this._itemValues = deepMerge(defaultTdl.itemValues, widgetTdl.itemValues);
         // ensure the same number of states
         const numStates = Math.min(this._itemNames.length, this._itemValues.length);
         this._itemNames.splice(numStates);

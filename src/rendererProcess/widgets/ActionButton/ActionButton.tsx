@@ -145,7 +145,7 @@ export class ActionButton extends BaseWidget {
                     boxSizing: "border-box",
                 }}
                 // do not use onMouseOver, which also applies to the children elements
-                onMouseEnter={(event: React.MouseEvent) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
+                onMouseEnter={(event: React.MouseEvent) => this.hanldeMouseEnterWriteWidget(event, elementRef, false)}
                 // do not use onMouseOut
                 onMouseLeave={(event: React.MouseEvent) => {
                     this.handleMouseLeaveWriteWidget(event, elementRef);
@@ -189,9 +189,9 @@ export class ActionButton extends BaseWidget {
                     display: "inline-flex",
                     width: "100%",
                     height: "100%",
+                    overflow: "hidden",
                     justifyContent: justifyContent,
                     alignItems: alignItems,
-                    backgroundColor: "rgba(0,0,0,0)",
                 }}
                 onMouseDown={(event: React.MouseEvent) => {
                     if (numActions !== 1) {

@@ -75,72 +75,6 @@ import { generateWidgetKey, isOfType } from "../../../../common/GlobalMethods";
 // };
 
 export class ActionButtonHelper extends BaseWidgetHelper {
-    // static _defaultTdl: type_ActionButton_tdl = {
-    //     type: "ActionButton",
-    //     widgetKey: "", // "key" is a reserved keyword
-    //     key: "",
-    //     style: {
-    //         // basics
-    //         position: "absolute",
-    //         display: "inline-flex",
-    //         // dimensions
-    //         left: 100,
-    //         top: 100,
-    //         width: 100,
-    //         height: 100,
-    //         backgroundColor: "rgba(210, 210, 210, 1)",
-    //         // border, not related to the below alarmBorder
-    //         borderStyle: "solid",
-    //         borderWidth: 0,
-    //         borderColor: "rgba(0, 0, 0, 1)",
-    //         // font
-    //         color: "rgba(0,0,0,1)",
-    //         fontFamily: GlobalVariables.defaultFontFamily,
-    //         fontSize: GlobalVariables.defaultFontSize,
-    //         fontStyle: GlobalVariables.defaultFontStyle,
-    //         fontWeight: GlobalVariables.defaultFontWeight,
-    //         // angle
-    //         transform: "rotate(0deg)",
-    //         // shows when the widget is selected
-    //         outlineStyle: "none",
-    //         outlineWidth: 1,
-    //         outlineColor: "black",
-    //     },
-    //     text: {
-    //         wrapWord: false,
-    //         horizontalAlign: "center",
-    //         verticalAlign: "center",
-    //         // actually alarmOutline
-    //         alarmBorder: true,
-    //         text: "Action Button",
-    //         // becomes not visible in operation mode, but still clickable
-    //         invisibleInOperation: false,
-    //         // "contemporary" | "traditional"
-    //         appearance: "traditional",
-    //         alarmText: false,
-    //         alarmBackground: false,
-    //         alarmLevel: "MINOR",
-    //     },
-    //     channelNames: [],
-    //     groupNames: [],
-    //     rules: [],
-    //     actions: [],
-    // };
-
-
-
-    // // not getDefaultTdl(), always generate a new key
-    // static generateDefaultTdl = (type: string): type_ActionButton_tdl => {
-    //     const result = super.generateDefaultTdl(type) as type_ActionButton_tdl;
-    //     result.style = structuredClone(this._defaultTdl.style);
-    //     result.text = structuredClone(this._defaultTdl.text);
-    //     result.channelNames = structuredClone(this._defaultTdl.channelNames);
-    //     result.groupNames = structuredClone(this._defaultTdl.groupNames);
-    //     result.actions = structuredClone(this._defaultTdl.actions);
-    //     return result;
-    // };
-
-
     static generateDefaultTdl = (): type_ActionButton_tdl => {
         const widgetKey = generateWidgetKey(defaultActionButtonTdl.type);
         return structuredClone({
@@ -386,7 +320,7 @@ export class ActionButtonHelper extends BaseWidgetHelper {
         tdl["text"]["horizontalAlign"] = "center";
         // tdl["text"]["swapButtons"] = false;
         tdl["text"]["appearance"] = "traditional";
-        tdl["text"]["text"] = "";
+        tdl["text"]["text"] = "EXIT";
 
         for (const propertyName of propertyNames) {
             const propertyValue = edl[propertyName];
@@ -422,6 +356,9 @@ export class ActionButtonHelper extends BaseWidgetHelper {
             }
         }
         tdl["actions"] = EdlConverter.convertEdlExitButton(edl["exitProgram"]) as type_actions_tdl;
+        if (tdl["actions"].length > 0) {
+            tdl["actions"][0]["label"] = tdl["text"]["text"];
+        }
         return tdl;
     };
 

@@ -1415,7 +1415,12 @@ export class EdlConverter {
             if (commandRaw.includes("StripTool ") && commandRaw.includes(".stp")) {
                 // command to run StripTool to open a .stp file
                 // should be converted to "open display"
-                const action: Record<string, any> = { type: "OpenDisplay", externalMacros: [], useParentMacros: false, openInSameWindow: false };
+                const action: Record<string, any> = {
+                    type: "OpenDisplay",
+                    externalMacros: [],
+                    useParentMacros: false,
+                    openInSameWindow: false
+                };
                 const labelArray = labelRaw.split(" ");
                 labelArray.splice(0, 1);
                 const label = labelArray.join(" ").replaceAll(`"`, "");
@@ -1435,7 +1440,14 @@ export class EdlConverter {
                 actions.push(action);
             } else {
                 // regular command
-                const action: Record<string, any> = { type: "ExecuteCommand" };
+                const action: Record<string, any> = {
+                    type: "ExecuteCommand",
+                    label: "",
+                    command: "",
+                    confirmOnWrite: false,
+                    confirmOnWriteUsePassword: false,
+                    confirmOnWritePassword: "",
+                };
                 const labelArray = labelRaw.split(" ");
                 labelArray.splice(0, 1);
                 const label = labelArray.join(" ").replaceAll(`"`, "");
@@ -2331,7 +2343,7 @@ export class EdlConverter {
             if (channelNameArray[1] !== undefined) {
                 const channelName = channelNameArray[1].replaceAll(`"`, "");
                 if (tdl["yAxes"][yIndex] === undefined) {
-                    tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`};
+                    tdl["yAxes"][yIndex] = { ...structuredClone(defaultXYPlotYAxis), label: `y${ii}` };
                 }
                 if (pvType === "x") {
                     tdl["channelNames"][2 * yIndex] = channelName;
@@ -2370,7 +2382,7 @@ export class EdlConverter {
             const color = this.convertEdlColor(colorStr);
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`};
+                tdl["yAxes"][yIndex] = { ...structuredClone(defaultXYPlotYAxis), label: `y${ii}` };
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineColor"] = color;
@@ -2402,7 +2414,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
+                tdl["yAxes"][yIndex] = { ...structuredClone(defaultXYPlotYAxis), label: `y${ii}` }
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineWidth"] = thickness;
@@ -2433,7 +2445,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
+                tdl["yAxes"][yIndex] = { ...structuredClone(defaultXYPlotYAxis), label: `y${ii}` }
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["lineStyle"] = style;
@@ -2469,7 +2481,7 @@ export class EdlConverter {
             }
 
             if (tdl["yAxes"][yIndex] === undefined) {
-                tdl["yAxes"][yIndex] = {...structuredClone(defaultXYPlotYAxis), label: `y${ii}`}
+                tdl["yAxes"][yIndex] = { ...structuredClone(defaultXYPlotYAxis), label: `y${ii}` }
             }
             const yAxis = tdl["yAxes"][yIndex];
             yAxis["pointType"] = type;

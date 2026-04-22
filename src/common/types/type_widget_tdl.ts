@@ -1,4 +1,4 @@
-import { isOfType } from "../GlobalMethods";
+import { getTypeCheckError } from "../GlobalMethods";
 import { GlobalVariables } from "../GlobalVariables";
 import { TypeSchema, InferType, Mutable } from "./type_schema";
 
@@ -2068,7 +2068,7 @@ export const type_BooleanButton_tdl_schema = {
     rules: { arrayOf: type_rule_tdl_schema },
     itemNames: "string[]",
     itemColors: "string[]",
-    itemValues: "number[]",
+    itemValues: { arrayOf: ["number", "string"] },
 } as const satisfies TypeSchema;
 
 export type type_BooleanButton_text_tdl = Mutable<InferType<typeof type_BooleanButton_text_tdl_schema>>;
@@ -2694,7 +2694,7 @@ export const defaultActionButtonTdl: type_ActionButton_tdl = {
         top: 100,
         width: 120,
         height: 40,
-        backgroundColor: "rgba(255,255,255,1)",
+        backgroundColor: "rgba(210, 210, 210,1)",
         transform: "rotate(0deg)",
         borderStyle: "solid",
         borderWidth: 1,
@@ -4761,13 +4761,22 @@ export const type_widget_tdl_schema_registry = {
  */
 export function verifyWidgetTdl(tdl: any): void {
     const widgetType = typeof tdl?.type === "string" ? tdl.type : undefined;
+    const widgetKey = typeof tdl?.widgetKey === "string" ? tdl.widgetKey : undefined;
     const schema = widgetType === undefined ? undefined : type_widget_tdl_schema_registry[widgetType as keyof typeof type_widget_tdl_schema_registry];
 
     if (schema === undefined) {
         throw new Error(`No TDL schema registered for widget type ${JSON.stringify(widgetType)}.`);
     }
 
-    if (!isOfType(tdl, schema)) {
-        throw new Error(`TDL ${JSON.stringify(tdl)} is not ${widgetType} type.`);
+    const typeCheckError = getTypeCheckError(tdl, schema);
+    if (typeCheckError !== undefined) {
+        const widgetLabel = [
+            widgetType === undefined ? undefined : `type ${JSON.stringify(widgetType)}`,
+            widgetKey === undefined ? undefined : `widgetKey ${JSON.stringify(widgetKey)}`,
+        ].filter((item): item is string => item !== undefined).join(", ");
+
+        throw new Error(
+            `TDL verification failed for ${widgetLabel || "widget"} at "${typeCheckError.path}": expected ${typeCheckError.expected}, got ${typeCheckError.received} (${typeCheckError.valuePreview}).`
+        );
     }
 }

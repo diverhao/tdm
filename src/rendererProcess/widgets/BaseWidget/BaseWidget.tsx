@@ -212,7 +212,7 @@ export abstract class BaseWidget {
      * used for determining if need to show the primary info input box
      */
     private _numSelectedWidgetsOnMouseDown = 0;
-   
+
 
     constructor(widgetTdl: type_BaseWidget_tdl) {
         // throw if verification does not pass
@@ -1855,13 +1855,13 @@ export abstract class BaseWidget {
     /**
      * Show a thick light gray outline when mouse enters the write widget
      */
-    hanldeMouseEnterWriteWidget = (event: React.MouseEvent<Element>, elementRef: React.RefObject<HTMLElement | null>) => {
+    hanldeMouseEnterWriteWidget = (event: React.MouseEvent<Element>, elementRef: React.RefObject<HTMLElement | null>, checkWritePermission: boolean = true) => {
         event.preventDefault();
         if (!g_widgets1.isEditing() && elementRef.current !== null) {
             elementRef.current.style["outlineStyle"] = "solid";
             elementRef.current.style["outlineWidth"] = "3px";
             elementRef.current.style["outlineColor"] = "rgba(105,105,105,1)";
-            if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE) {
+            if (this._getChannelAccessRight() < Channel_ACCESS_RIGHTS.READ_WRITE && checkWritePermission === true) {
                 elementRef.current.style["cursor"] = "not-allowed";
             } else {
                 elementRef.current.style["cursor"] = "pointer";
@@ -2050,11 +2050,18 @@ export abstract class BaseWidget {
     }
 
     formatArrayValue = (arrayValue: number[] | string[] | boolean[]): string => {
+        const allText = this.getAllText();
+        const format = allText["format"];
+
         const result: string[] = [];
         for (const element of arrayValue) {
             result.push(this.formatScalarValue(element));
         }
-        return result.join(", ");
+        if (format === "string") {
+            return result.join("");
+        } else {
+            return result.join(", ");
+        }
     }
 
     /**
@@ -2125,7 +2132,7 @@ export abstract class BaseWidget {
         return [];
     }
 
-    getItemValues(): number[] {
+    getItemValues(): (number | string)[] {
         return [];
     }
 
@@ -2144,44 +2151,51 @@ export abstract class BaseWidget {
     calcItemIndex = (): number | undefined => {
         const itemValues = this.calcItemValues();
 
-        const channelValue = this._getChannelValue(true);
+        let channelValue = this._getChannelValue(true);
         // if bit < 0, use whole number
         // if bit >= 0, use this bit
         const bit = this.getAllText()["bit"];
         if (typeof bit !== "number") {
             return undefined;
         }
-        if (typeof channelValue === "number") {
-            if (bit < 0) {
-                // use whole value
-                const index = itemValues.indexOf(channelValue);
-                if (index >= 0) {
-                    return index;
-                } else {
-                    return undefined;
-                }
-            } else {
-                const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
-                const index = itemValues.indexOf(value);
-                if (index >= 0) {
-                    return index;
-                } else {
-                    return undefined;
-                }
+        if (bit < 0 && (typeof channelValue === "number" || typeof channelValue === "string")) {
+            const index = itemValues.indexOf(channelValue);
+            if (index >= 0) {
+                return index;
+            }
+        } else if (typeof channelValue === "number") {
+            const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
+            const index = itemValues.indexOf(value);
+            if (index >= 0) {
+                return index;
+            }
+        }
+
+        channelValue = this._getChannelValue(false);
+        if (bit < 0 && (typeof channelValue === "number" || typeof channelValue === "string")) {
+            const index = itemValues.indexOf(channelValue);
+            if (index >= 0) {
+                return index;
+            }
+        } else if (typeof channelValue === "number") {
+            const value = (Math.floor(Math.abs(channelValue)) >> bit) & 0x1;
+            const index = itemValues.indexOf(value);
+            if (index >= 0) {
+                return index;
             }
         }
         return undefined;
     };
 
     /**
-     * provided an array of numeric values
+     * provided an array of values
      * 
      * if we use the channel items, try to find the values defined by the PV,
      * otherwise return the provided values
      */
     calcItemValues = () => {
         const allText = this.getAllText();
-        const defaultValues: number[] = this.getItemValues();
+        const defaultValues: (number | string)[] = this.getItemValues();
         const useChannelItems = allText["useChannelItems"];
 
         if (useChannelItems === true) {
