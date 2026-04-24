@@ -814,10 +814,20 @@ export class BobPropertyConverter {
         try {
             if (propertyValue.length > 0) {
                 if (typeof propertyValue[0] === "string") {
-                    return parseFloat(propertyValue[0]);
+                    const numValue = parseFloat(propertyValue[0]);
+                    if (typeof numValue === "number" && !isNaN(numValue)) {
+                        return numValue;
+                    } else {
+                        return 0;
+                    }
                 } else if (typeof propertyValue[0] === "object") {
                     const valueStr = propertyValue[0]["_"];
-                    return parseFloat(valueStr);
+                    const numValue = parseFloat(valueStr);
+                    if (typeof numValue === "number" && !isNaN(numValue)) {
+                        return numValue;
+                    } else {
+                        return 0;
+                    }
                 }
             } else {
                 return 0;

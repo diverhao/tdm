@@ -94,10 +94,13 @@ export class RepeaterHelper extends BaseWidgetHelper {
         const left0 = tdl["style"]["left"];
         for (const [index, widgetKey] of Object.keys(childrenWidgetsTdl).entries()) {
             tdl["widgetKeys"].push(widgetKey);
-            tdl["widgetsMacros"].push(instanceMacros[index] === undefined ? [] : instanceMacros[index]);
             childrenWidgetsTdl[widgetKey]["style"]["top"] = childrenWidgetsTdl[widgetKey]["style"]["top"] + top0;
             childrenWidgetsTdl[widgetKey]["style"]["left"] = childrenWidgetsTdl[widgetKey]["style"]["left"] + left0;
         }
+        for (const macros of instanceMacros) {
+            tdl["widgetsMacros"].push(macros === undefined ? [] : macros);
+        }
+
 
         const repeaterWidgetTdl: Record<string, any> = {};
         repeaterWidgetTdl[tdl["widgetKey"]] = tdl;

@@ -19,10 +19,6 @@ export class Repeater extends BaseWidget {
     private _widgetsMacros: type_macro_tdl[][] = [];
     private readonly _groupName: string = `repeater_group_${uuidv4()}`;
 
-    getGroupName = () => {
-        return this._groupName;
-    }
-
     constructor(widgetTdl: type_Repeater_tdl) {
         super(widgetTdl);
         this.initStyle(widgetTdl);
@@ -61,11 +57,8 @@ export class Repeater extends BaseWidget {
         );
     };
 
-    // Text area and resizers
     _ElementBodyRaw = (): React.JSX.Element => {
         return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
             <div
                 style={
                     this.getElementBodyRawStyle()
@@ -78,10 +71,20 @@ export class Repeater extends BaseWidget {
     };
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+    _ElementArea = ({ }: any): React.JSX.Element => {
         React.useEffect(() => {
             this._updateCoverage(false);
         }, [])
+
+        const whiteSpace = this.getText().wrapWord ? "pre-line" : "nowrap";
+        const justifyContent = this.getText().horizontalAlign;
+        const alignItems = this.getText().verticalAlign;
+        const fontFamily = this.getStyle().fontFamily;
+        const fontSize = this.getStyle().fontSize;
+        const fontStyle = this.getStyle().fontStyle;
+        const fontWeight = this.getStyle().fontWeight;
+        const outline = this._getElementAreaRawOutlineStyle();
+
 
         return (
             <div
@@ -93,16 +96,16 @@ export class Repeater extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "hidden",
-                    whiteSpace: this.getText().wrapWord ? "pre-line" : "nowrap",
-                    justifyContent: this.getText().horizontalAlign,
-                    alignItems: this.getText().verticalAlign,
-                    fontFamily: this.getStyle().fontFamily,
-                    fontSize: this.getStyle().fontSize,
-                    fontStyle: this.getStyle().fontStyle,
-                    fontWeight: this.getStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    fontFamily: fontFamily,
+                    fontSize: fontSize,
+                    fontStyle: fontStyle,
+                    fontWeight: fontWeight,
+                    outline: outline,
                 }}
-                onMouseDown={(event: any) => { this._handleMouseDown(event); this._updateCoverage(false); }}
+                onMouseDown={(event: any) => { this._updateCoverage(false); this._handleMouseDown(event);  }}
                 onDoubleClick={this._handleMouseDoubleClick}
 
             >
@@ -110,6 +113,10 @@ export class Repeater extends BaseWidget {
         );
     };
 
+    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
+    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
+
+    // -------------------- macros ---------------------
 
     /**
      * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
@@ -140,6 +147,7 @@ export class Repeater extends BaseWidget {
         return result;
     }
 
+    // --------------------- GUI related methods --------------------------
 
     _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
@@ -147,7 +155,6 @@ export class Repeater extends BaseWidget {
             this._updateCoverage(false);
         }
     }
-    // only modify data, nothing about selection
     private _updateCoverage = (doFlush: boolean) => {
         if (!g_widgets1.isEditing()) {
             return;
@@ -204,15 +211,10 @@ export class Repeater extends BaseWidget {
         }
     };
 
-    _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
-    _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // -------------------- helper functions ----------------
-
+    // -------------------- widget lifecycle management ----------------
 
     createDynamicWidgets = () => {
-
         // save template widgets
         const templateWidgetTdls: Record<string, any>[] = [];
         this.getTemplateWidgets().length = 0; // clear temporary storage
@@ -243,6 +245,12 @@ export class Repeater extends BaseWidget {
 
         // create dynamic widgets Tdl
         for (let ii = 0; ii < this.getWidgetsMacros().length; ii++) {
+
+            const macros = this.getWidgetsMacros()[ii];
+            if (macros.length === 0) {
+                continue;
+            }
+
             for (const templateWidgetTdl of templateWidgetTdls) {
 
                 const widgetTdl = structuredClone(templateWidgetTdl);
@@ -323,14 +331,9 @@ export class Repeater extends BaseWidget {
                     const widget = g_widgets1.createWidget(widgetTdl, false);
                     if (widget instanceof BaseWidget) {
                         widget.setMacros(macros);
-                        // widget.setEmbeddedDisplayWidgetKey(widget.getWidgetKey());
                         this.appendDynamicWidgetKey(newWidgetKey);
-                        // widget.jobsAsOperatingModeBegins();
-                        // widget.processChannelNames(macros);
-                        // widgetMapPairs.push([newWidgetKey, widget]);
                     }
                 }
-
             }
         }
 
@@ -425,10 +428,17 @@ export class Repeater extends BaseWidget {
         this.setDynamicWidgetKeys([]);
     }
 
+
+    getGroupName = () => {
+        return this._groupName;
+    }
+
     appendDynamicWidgetKey = (newWidgetKey: string) => {
         this.getDynamicWidgetKeys().push(newWidgetKey);
     }
+
     // -------------------------- sidebar ---------------------------
+
     createSidebar = () => {
         if (this._sidebar === undefined) {
             this._sidebar = new RepeaterSidebar(this);

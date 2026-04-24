@@ -313,6 +313,10 @@ export class TankHelper extends BaseWidgetHelper {
             }
         }
 
+        if (tdl["text"]["maxPvValue"] === 0 && tdl["text"]["minPvValue"] === 0) {
+            tdl["text"]["maxPvValue"] = 10;
+        }
+
         if (horizontalDirection === true) {
             // modify the x, y, width and height
 
