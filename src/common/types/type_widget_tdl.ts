@@ -252,7 +252,7 @@ export const type_Group_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Group_text_tdl_schema = {
@@ -320,7 +320,7 @@ export const defaultGroupTdl: type_Group_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -369,7 +369,7 @@ export const type_Repeater_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Repeater_text_tdl_schema = {
@@ -386,12 +386,7 @@ export const type_Repeater_text_tdl_schema = {
     tabDefaultColor: "string",
     showTab: "boolean",
     gap: "number",
-    useParentMacros: ["boolean", "undefined"],
-} as const satisfies TypeSchema;
-
-export const type_Repeater_widget_tdl_schema = {
-    widgetKey: "string",
-    macro: type_macros_tdl_schema,
+    useParentMacros: "boolean",
 } as const satisfies TypeSchema;
 
 export const type_Repeater_tdl_schema = {
@@ -403,16 +398,14 @@ export const type_Repeater_tdl_schema = {
     channelNames: "string[]",
     groupNames: "string[]",
     rules: { arrayOf: type_rule_tdl_schema },
-    widgets: { arrayOf: type_Repeater_widget_tdl_schema },
+    widgetKeys: "string[]",
+    widgetsMacros:  { arrayOf: type_macros_tdl_schema },
 } as const satisfies TypeSchema;
 
 export type type_Repeater_style_tdl = Mutable<InferType<typeof type_Repeater_style_tdl_schema>>;
 export type type_Repeater_text_tdl = Mutable<InferType<typeof type_Repeater_text_tdl_schema>>;
-export type type_Repeater_widget = Omit<Mutable<InferType<typeof type_Repeater_widget_tdl_schema>>, "macro"> & {
-    macro: type_macros_tdl;
-};
-export type type_Repeater_tdl = Omit<Mutable<InferType<typeof type_Repeater_tdl_schema>>, "widgets"> & {
-    widgets: type_Repeater_widget[];
+export type type_Repeater_tdl = Omit<Mutable<InferType<typeof type_Repeater_tdl_schema>>, "widgetsMacros"> & {
+    widgetsMacros: type_macros_tdl[];
 };
 
 export const defaultRepeaterTdl: type_Repeater_tdl = {
@@ -439,7 +432,7 @@ export const defaultRepeaterTdl: type_Repeater_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -455,12 +448,13 @@ export const defaultRepeaterTdl: type_Repeater_tdl = {
         tabDefaultColor: "rgba(220,220,220,1)",
         showTab: true,
         gap: 5,
-        useParentMacros: undefined,
+        useParentMacros: true,
     },
     channelNames: [],
     groupNames: [],
     rules: [],
-    widgets: [],
+    widgetKeys: [],
+    widgetsMacros: [],
 };
 
 // ======================== Polyline TDL Schema ========================
@@ -831,7 +825,7 @@ export const type_Meter_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Meter_text_tdl_schema = {
@@ -903,7 +897,7 @@ export const defaultMeterTdl: type_Meter_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         showPvValue: true,
@@ -961,7 +955,7 @@ export const type_Thermometer_style_tdl_schema = {
     fontSize: "number",
     fontStyle: "string",
     fontWeight: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Thermometer_text_tdl_schema = {
@@ -1033,7 +1027,7 @@ export const defaultThermometerTdl: type_Thermometer_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         wrapWord: false,
@@ -1087,7 +1081,7 @@ export const type_Spinner_style_tdl_schema = {
     fontSize: "number",
     fontStyle: "string",
     fontWeight: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Spinner_text_tdl_schema = {
@@ -1148,7 +1142,7 @@ export const defaultSpinnerTdl: type_Spinner_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1195,7 +1189,7 @@ export const type_ThumbWheel_style_tdl_schema = {
     fontSize: "number",
     fontStyle: "string",
     fontWeight: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_ThumbWheel_text_tdl_schema = {
@@ -1248,7 +1242,7 @@ export const defaultThumbWheelTdl: type_ThumbWheel_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -1867,7 +1861,7 @@ export const type_Table_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Table_text_tdl_schema = {
@@ -1923,7 +1917,7 @@ export const defaultTableTdl: type_Table_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -2949,7 +2943,7 @@ export const type_ProfilesViewer_style_tdl_schema = {
     top: "number",
     width: ["number", "string"],
     height: ["number", "string"],
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     overflow: ["string", "undefined"],
     outlineStyle: "string",
     transform: "string",
@@ -3015,7 +3009,7 @@ export const type_TdlViewer_style_tdl_schema = {
     top: "number",
     width: ["number", "string"],
     height: ["number", "string"],
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     overflow: ["string", "undefined"],
     outlineStyle: "string",
     transform: "string",
@@ -3093,7 +3087,7 @@ export const type_Terminal_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Terminal_text_tdl_schema = {
@@ -3146,7 +3140,7 @@ export const defaultTerminalTdl: type_Terminal_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -3185,7 +3179,7 @@ export const type_SeqGraph_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_SeqGraph_text_tdl_schema = {
@@ -3243,7 +3237,7 @@ export const defaultSeqGraphTdl: type_SeqGraph_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
-        boxSizing: undefined,
+        boxSizing: "content-box",
     },
     text: {
         horizontalAlign: "flex-start",
@@ -3498,7 +3492,7 @@ export const type_PvTable_style_tdl_schema = {
     top: "number",
     width: ["number", "string"],
     height: ["number", "string"],
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     padding: ["string", "number", "undefined"],
     outlineStyle: "string",
     outlineWidth: "number",
@@ -3558,7 +3552,7 @@ export const defaultPvTableTdl: type_PvTable_tdl = {
         top: 0,
         width: 500,
         height: 500,
-        boxSizing: undefined,
+        boxSizing: "content-box",
         padding: undefined,
         outlineStyle: "none",
         outlineWidth: 1,
@@ -4052,7 +4046,7 @@ export const type_FileConverter_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     padding: ["string", "number", "undefined"],
 } as const satisfies TypeSchema;
 
@@ -4110,7 +4104,7 @@ export const defaultFileConverterTdl: type_FileConverter_tdl = {
         fontSize: GlobalVariables.defaultFontSize,
         fontStyle: GlobalVariables.defaultFontStyle,
         fontWeight: GlobalVariables.defaultFontWeight,
-        boxSizing: undefined,
+        boxSizing: "content-box",
         padding: undefined,
     },
     text: {
@@ -4152,7 +4146,7 @@ export const type_PvMonitor_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     padding: ["string", "number", "undefined"],
     paddingRight: ["string", "number", "undefined"],
 } as const satisfies TypeSchema;
@@ -4208,7 +4202,7 @@ export const defaultPvMonitorTdl: type_PvMonitor_tdl = {
         outlineStyle: "none",
         outlineWidth: 1,
         outlineColor: "black",
-        boxSizing: undefined,
+        boxSizing: "content-box",
         padding: undefined,
         paddingRight: undefined,
     },
@@ -4250,7 +4244,7 @@ export const type_LogViewer_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
     padding: ["string", "number", "undefined"],
     paddingRight: ["string", "number", "undefined"],
     overflow: ["string", "undefined"],
@@ -4623,7 +4617,7 @@ export const type_Talhk_style_tdl_schema = {
     outlineStyle: "string",
     outlineWidth: "number",
     outlineColor: "string",
-    boxSizing: ["string", "undefined"],
+    boxSizing: "string",
 } as const satisfies TypeSchema;
 
 export const type_Talhk_text_tdl_schema = {

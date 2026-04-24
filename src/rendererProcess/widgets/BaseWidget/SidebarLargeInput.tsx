@@ -400,16 +400,18 @@ export class SidebarLargeInput {
 
     _ElementTextarea = () => {
         const [localValue, setLocalValue] = React.useState(this.getValue());
+        const backgroundStyle = this.getBackgroundStyle();
+
         return (
             <div style={{
                 display: "inline-flex",
                 width: "100%",
                 height: "100%",
-                backgroundColor: "rgba(0, 0, 0, 0.2)",
+                backgroundColor: "rgba(0, 0, 0, 0)",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                backdropFilter: "blur(10px)",
+                // backdropFilter: "blur(10px)",
             }}>
                 <div style={{
                     display: "inline-flex",
@@ -418,9 +420,10 @@ export class SidebarLargeInput {
                     justifyContent: "center",
                     width: "85%",
                     height: "80%",
-                    backgroundColor: "rgba(20,20,20,1)",
-                    color: "rgba(210,210,210,1)",
+                    // backgroundColor: "rgba(20,20,20,1)",
+                    // color: "rgba(210,210,210,1)",
                     borderRadius: 6,
+                    ...backgroundStyle
                 }}>
                     <h2>
                         {this.title}

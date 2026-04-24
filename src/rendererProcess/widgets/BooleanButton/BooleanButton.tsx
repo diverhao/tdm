@@ -161,18 +161,21 @@ export class BooleanButton extends BaseWidget {
                     }
                 }}
             >
-                <div
-                    style={{
-                        width: ledCircleDiameter,
-                        height: ledCircleDiameter,
-                        display: "inline-flex",
-                        borderRadius: ledCircleDiameter / 2,
-                        backgroundColor: ledColor,
-                        border: "solid 1px rgba(30,30,30,1)",
-                        opacity: showLED === true ? 1 : 0,
-                    }}
-                ></div>
-                &nbsp;
+                {showLED === true ?
+                    <div
+                        style={{
+                            width: ledCircleDiameter,
+                            height: ledCircleDiameter,
+                            display: "inline-flex",
+                            borderRadius: ledCircleDiameter / 2,
+                            backgroundColor: ledColor,
+                            border: "solid 1px rgba(30,30,30,1)",
+                            opacity: showLED === true ? 1 : 0,
+                            // visibility: showLED === true ? "visible" : "hidden",
+                            marginRight: 4,
+                        }}
+                    ></div>
+                    : null}
                 {itemText}
             </div>
         );
@@ -209,12 +212,14 @@ export class BooleanButton extends BaseWidget {
         let targetValue = allText["onValue"];
 
         let currentValue = this._getChannelValue(true);
+
         if (typeof currentValue !== "number" && typeof currentValue !== "string") {
             return;
         }
         if (typeof currentValue === "number" && typeof offValue === "number" && currentValue !== offValue) {
             currentValue = onValue;
         }
+        console.log("okokok========, donw", currentValue, onValue, offValue, buttonMode)
 
         if (buttonMode === "Toggle") {
             if (direction === "down") {

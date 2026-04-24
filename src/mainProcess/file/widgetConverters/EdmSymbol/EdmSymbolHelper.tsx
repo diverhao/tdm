@@ -6,86 +6,17 @@ import * as fs from "fs";
 import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
+import { defaultLabelTdl, type_Label_tdl } from "../../../../common/types/type_widget_tdl";
 
-
-export type type_Label_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
-
-// export type type_TextUpdate_tdl = {
-// 	type: string;
-// 	widgetKey: string;
-// 	key: string;
-// 	style: Record<string, any>;
-// 	text: Record<string, any>;
-// 	channelNames: string[];
-// 	groupNames: string[];
-// 	rules: type_rules_tdl;
-// };
 
 export class EdmSymbolHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Label_tdl = {
-        type: "Label",
-        widgetKey: "",
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            backgroundColor: "rgba(255,255,255,0)",
-            // angle
-            transform: "rotate(0deg)",
-            // border
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(0, 0, 0, 1)",
-            // font
-            color: "rgba(0,0,0,1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // text contents
-            text: "Labe Text",
-            // text align
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            alarmBorder: true,
-            invisibleInOperation: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): Record<string, any> => {
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Label_tdl => {
+        const widgetKey = generateWidgetKey(defaultLabelTdl.type);
+        return structuredClone({
+            ...defaultLabelTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static interceptSymbolFileJSON = (
@@ -147,7 +78,7 @@ export class EdmSymbolHelper extends BaseWidgetHelper {
         ];
 
         // create an empty background
-        const labelWidgetTdl = this.generateDefaultTdl("Label") as type_Label_tdl;
+        const labelWidgetTdl = this.generateDefaultTdl() as type_Label_tdl;
         labelWidgetTdl["text"]["invisibleInOperation"] = false;
         labelWidgetTdl["text"]["text"] = " ";
         labelWidgetTdl["text"]["alarmBorder"] = false;

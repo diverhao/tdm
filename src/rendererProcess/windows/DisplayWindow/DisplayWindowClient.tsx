@@ -493,9 +493,6 @@ export class DisplayWindowClient {
         return this._webGlSupported;
     }
 
-    isInIframe = () => {
-        return window.self !== window.top;
-    }
 
     setWindowAlwaysOnTop = (state: boolean) => {
         this.getIpcManager().sendFromRendererProcess("set-window-always-on-top", {

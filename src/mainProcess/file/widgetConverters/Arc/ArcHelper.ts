@@ -1,96 +1,23 @@
 import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
+import { generateWidgetKey, rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-
-export type type_Arc_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { defaultArcTdl, type_Arc_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class ArcHelper extends BaseWidgetHelper {
-    static _defaultTdl: type_Arc_tdl = {
-        type: "Arc",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        style: {
-            // basics
-            position: "absolute",
-            display: "inline-flex",
-            // dimensions
-            left: 0,
-            top: 0,
-            width: 0,
-            height: 0,
-            // background color for the whole widget
-            backgroundColor: "rgba(255, 255, 255, 0)",
-            // angle
-            transform: "rotate(0deg)",
-            // line color, there is no text in this widget
-            color: "rgba(0,0,255,1)",
-            // border, it is different from the "alarmBorder" below
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            // shows when the widget is selected
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-        },
-        text: {
-            // arc line styles, line color is in above
-            lineWidth: 3,
-            lineStyle: "solid",
-            lineColor: "rgba(0,0,255,1)",
-            // fill color
-            fillColor: "rgba(30, 144, 255, 1)",
-            // if fill or not
-            fill: true,
-            // angle
-            angleStart: 0,
-            angleRange: 135,
-            // show the none/radius/secant
-            showRadius: "radius",
-            // arrows
-            showArrowTail: false,
-            showArrowHead: false,
-            arrowLength: 6,
-            arrowWidth: 6,
-            // becomes not visible in operation mode, but still clickable
-            invisibleInOperation: false,
-            alarmBorder: true,
-            alarmShape: false,
-            alarmFill: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
-
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Arc_tdl => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type) as type_Arc_tdl;
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Arc_tdl => {
+        const widgetKey = generateWidgetKey(defaultArcTdl.type);
+        return structuredClone({
+            ...defaultArcTdl,
+            widgetKey: widgetKey,
+        });
     };
 
     static convertEdlToTdl = (edl: Record<string, string>, type: "Arc" | "Circle"): type_Arc_tdl => {
         Log.info("\n------------", `Parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Arc") as type_Arc_tdl;
+        const tdl = this.generateDefaultTdl() as type_Arc_tdl;
         // all properties for this widget
         const propertyNames: string[] = [
             "beginObjectProperties", // not in tdm
@@ -190,7 +117,7 @@ export class ArcHelper extends BaseWidgetHelper {
             const colorArray = rgbaStrToRgbaArray(tdl["text"]["fillColor"]);
             colorArray[3] = 0;
             const colorStr = rgbaArrayToRgbaStr(colorArray);
-            tdl["style"]["fillColor"] = colorStr;
+            tdl["text"]["fillColor"] = colorStr;
         }
 
 
@@ -235,7 +162,7 @@ export class ArcHelper extends BaseWidgetHelper {
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>, type: "ellipse" | "arc"): type_Arc_tdl => {
         Log.info("\n------------", `Parsing ${type}`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Arc");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "actions", // not in tdm
@@ -304,7 +231,7 @@ export class ArcHelper extends BaseWidgetHelper {
                     tdl["text"]["angleRange"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "transparent") {
                     tdl["text"]["fill"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-                    tdl["text"]["showRadius"] = false;
+                    tdl["text"]["showRadius"] = "none";
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "background_color") {
@@ -320,7 +247,7 @@ export class ArcHelper extends BaseWidgetHelper {
         if (type === "ellipse") {
             tdl["text"]["angleStart"] = 0;
             tdl["text"]["angleRange"] = 360;
-            tdl["text"]["showRadius"] = false;
+            tdl["text"]["showRadius"] = "none";
         }
         return tdl;
 

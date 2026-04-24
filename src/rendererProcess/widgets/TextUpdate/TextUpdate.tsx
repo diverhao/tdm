@@ -22,7 +22,6 @@ export class TextUpdate extends BaseWidget {
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
 
         this.widgetBeingRendered = true;

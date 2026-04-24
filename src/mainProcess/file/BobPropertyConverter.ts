@@ -395,14 +395,14 @@ export class BobPropertyConverter {
     static convertBobBoolenButtonMode = (propertyValue: any) => {
         const numVal = this.convertBobNum(propertyValue);
         if (numVal === 0) {
-            return "toggle";
+            return "Toggle";
         } else if (numVal === 1) {
-            return "push and reset";
+            return "Push";
         } else if (numVal === 2) {
             // TDM does not have this mode, it can be realized by setting onValue/offValue to 0/1
-            return "push and reset (inverted)";
+            return "Push (inverted)";
         } else {
-            return "toggle";
+            return "Toggle";
         }
     }
 
@@ -805,6 +805,7 @@ export class BobPropertyConverter {
      *     [
      *         "30"
      *     ]
+     * or [ { _: '0', '$': { use_class: 'true' } } ]
      * to 30
      */
     static convertBobNum = (
@@ -812,7 +813,12 @@ export class BobPropertyConverter {
     ) => {
         try {
             if (propertyValue.length > 0) {
-                return parseFloat(propertyValue[0]);
+                if (typeof propertyValue[0] === "string") {
+                    return parseFloat(propertyValue[0]);
+                } else if (typeof propertyValue[0] === "object") {
+                    const valueStr = propertyValue[0]["_"];
+                    return parseFloat(valueStr);
+                }
             } else {
                 return 0;
             }
@@ -820,6 +826,7 @@ export class BobPropertyConverter {
             Log.error(e);
             return 0;
         }
+        return 0;
     };
     /**
      * Convert 

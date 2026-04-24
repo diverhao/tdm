@@ -159,7 +159,7 @@ export class IpcManagerOnMainProcess {
                 || eventName === "focus-window"
                 || eventName === "zoom-window"
                 || eventName === "processes-info"
-                || eventName === "close-iframe-display"
+                // || eventName === "close-iframe-display"
                 || eventName === "bring-up-main-window"
                 || eventName === "websocket-ipc-connected-on-main-window"
                 || eventName === "ssh-password-prompt-result"
@@ -322,9 +322,6 @@ export class IpcManagerOnMainProcess {
 
         // ------------------------- embedded display ------------------------
         this.ipcMain.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl);
-        this.ipcMain.on("obtain-iframe-uuid", this.handleObtainIframeUuid);
-        this.ipcMain.on("close-iframe-display", this.handleCloseIframeDisplay);
-        this.ipcMain.on("switch-iframe-display-tab", this.handleSwitchIframeDisplayTab);
 
         // ------------------------- channel access ------------------------
         this.ipcMain.on("tca-get", this.handleTcaGet);
@@ -1241,36 +1238,6 @@ export class IpcManagerOnMainProcess {
             await displayWindowAgent.getDisplayWindowEmbeddedDisplay().handleReadEmbeddedDisplayTdl(data);
         } else {
             Log.info("Cannot find Display Window Agent for", data["displayWindowId"]);
-        }
-    };
-
-    /**
-     * do not show any error message in display window
-     */
-    handleObtainIframeUuid = async (event: WebSocket | string, options: IpcEventArgType["obtain-iframe-uuid"],) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            await displayWindowAgent.getDisplayWindowEmbeddedDisplay().handleObtainIframeUuid(options);
-        } else {
-            Log.error(`Cannot find display window ${options["displayWindowId"]} to obtain iframe uuid.`);
-        }
-    };
-
-    handleSwitchIframeDisplayTab = async (event: WebSocket | string, options: IpcEventArgType["switch-iframe-display-tab"],) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            await displayWindowAgent.getDisplayWindowEmbeddedDisplay().handleSwitchIframeDisplayTab(options);
-        } else {
-            Log.error(`Cannot find display window ${options["displayWindowId"]} to switch iframe display tab.`);
-        }
-    };
-
-    handleCloseIframeDisplay = (event: WebSocket | string, options: IpcEventArgType["close-iframe-display"]) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
-        if (displayWindowAgent instanceof DisplayWindowAgent) {
-            displayWindowAgent.getDisplayWindowEmbeddedDisplay().handleCloseIframeDisplay();
-        } else {
-            Log.error(`Cannot find iframe display window ${options["displayWindowId"]} to close.`);
         }
     };
 

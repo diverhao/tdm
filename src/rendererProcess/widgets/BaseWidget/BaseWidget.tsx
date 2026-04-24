@@ -1919,19 +1919,19 @@ export abstract class BaseWidget {
             return channelName;
         }
 
-        if (TcaChannel.checkChannelName(channelName) !== undefined) {
+        console.log("this.getEqChannelArray() ============", this.getEqChannelArray())
+
+        if (this.getEqChannelArray().length > 0) {
+            const value = this.evaluateEqChannel();
+            if (value !== undefined) {
+                return value;
+            }
+        } else if (TcaChannel.checkChannelName(channelName) !== undefined) {
             // regular TCA channel
             return g_widgets1.getChannelValue(channelName, raw);
-        } else {
-            // may be a formula channel
-            if (this.getEqChannelArray().length > 0) {
-                const value = this.evaluateEqChannel();
-                if (value !== undefined) {
-                    return value;
-                }
-            }
-            return channelName;
         }
+
+        return channelName;
     };
 
     /**
@@ -2618,6 +2618,7 @@ export abstract class BaseWidget {
     jobsAsEditingModeBegins() {
         this.deactivateRules();
         this.processChannelNames();
+        console.log("create sidebar for", this.getWidgetKey())
         this.createSidebar();
     }
     jobsAsOperatingModeBegins() {

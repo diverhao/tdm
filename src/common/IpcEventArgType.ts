@@ -435,34 +435,6 @@ export type IpcEventArgType = {
         fileName1?: string
     },
 
-    "obtain-iframe-uuid": {
-        displayWindowId: string;
-        widgetKey: string;
-        mode: "editing" | "operating";
-        tdl?: type_tdl,
-        tdlFileName: string;
-        macros: [string, string][];
-        currentTdlFolder: string;
-        replaceMacros: boolean;
-    },
-
-    "close-iframe-display": {
-        displayWindowId: string;
-
-    },
-
-    "switch-iframe-display-tab": {
-        displayWindowId: string;
-        widgetKey: string;
-        mode: "editing" | "operating";
-        tdlFileName: string;
-        macros: [string, string][];
-        currentTdlFolder: string;
-        // old iframe display id
-        iframeDisplayId: string;
-
-    },
-
     "open-webpage": {
         url: string
     },
@@ -689,14 +661,6 @@ export type IpcEventArgType2 = {
 
     "window-will-be-closed": {
 
-    },
-
-    "obtained-iframe-uuid": {
-        widgetKey: string;
-        iframeDisplayId: string;
-        tdlBackgroundColor: string;
-        tdlCanvasWidth: number | string;
-        tdlCanvasHeight: number | string;
     },
 
     "request-epics-dbd": {

@@ -361,7 +361,6 @@ export class IpcManagerOnDisplayWindow {
 
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
 
-        this.ipcRenderer.on("obtained-iframe-uuid", this.handleObtainedIframeUuid);
         this.ipcRenderer.on("read-embedded-display-tdl", this.handleReadEmbeddedDisplayTdl);
 
         this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
@@ -575,16 +574,6 @@ export class IpcManagerOnDisplayWindow {
         }
     };
 
-    handleObtainedIframeUuid = (
-        event: string,
-        options: IpcEventArgType2["obtained-iframe-uuid"]
-    ) => {
-        const widget = g_widgets1.getWidget2(options["widgetKey"]);
-        if (widget instanceof Repeater) {
-            widget.loadHtml(options["iframeDisplayId"]);
-            widget.setIframeBackgroundColor(options["tdlBackgroundColor"]);
-        }
-    };
 
     handleReadEmbeddedDisplayTdl = (
         event: string,

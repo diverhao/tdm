@@ -485,7 +485,6 @@ export class SshClient {
 
         this.tcpEventListenersOn("create-display-window-step-2", this.handleCreateDisplayWindowStep2);
         this.tcpEventListenersOn("create-web-display-window-step-2", this.handleCreateWebDisplayWindowStep2);
-        this.tcpEventListenersOn("create-iframe-display-step-2", this.handleCreateIframeDisplayStep2);
 
         this.tcpEventListenersOn("close-browser-window", this.handleCloseBrowserWindow);
 
@@ -556,16 +555,6 @@ export class SshClient {
         this.getMainProcess().getWindowAgentsManager().createWebDisplayWindow(url, displayWindowId);
     }
 
-    /**
-     * Similar to display window
-     */
-    handleCreateIframeDisplayStep2 = (data: {
-        options: type_options_createDisplayWindow,
-        widgetKey: string,
-        parentDisplayWindowId: string
-    }) => {
-        this.getMainProcess().getWindowAgentsManager().createIframeDisplay(data["options"], data["widgetKey"], data["parentDisplayWindowId"]);
-    }
 
     handleTcpServerHeartBeat = () => {
         this.setLastHeartbeatTime();

@@ -298,6 +298,7 @@ export class LabelHelper extends BaseWidgetHelper {
                 continue;
             } else {
                 if (propertyName === "x") {
+                    console.log("left ==================", propertyValue)
                     tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "y") {
                     tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
@@ -366,7 +367,7 @@ export class LabelHelper extends BaseWidgetHelper {
             tdl["style"]["left"] = x + (w - h) / 2;
             tdl["style"]["top"] = y - (w - h) / 2;
         }
-
+        console.log(tdl)
         return tdl;
     };
 

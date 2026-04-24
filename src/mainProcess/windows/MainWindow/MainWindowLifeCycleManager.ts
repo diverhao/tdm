@@ -90,11 +90,15 @@ export class MainWindowLifeCycleManager {
                 }),
             ));
 
-            await this.getLoadURLPromise();
+            // must be created earlier than load url
             this.websocketIpcConnectedPromise = new Promise((resolve, reject) => {
                 this.websocketIpcConnectedResolve = resolve;
             });
+
+            await this.getLoadURLPromise();
+
             await this.websocketIpcConnectedPromise;
+
             this.refreshWebsocketOpener();
             this.sendBasicMainWindowInfo();
 

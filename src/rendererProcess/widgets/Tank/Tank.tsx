@@ -80,7 +80,7 @@ export class Tank extends BaseWidget {
                     max={scaleParam["max"]}
                     numIntervals={scaleParam["numIntervals"]}
                     position={scaleParam["position"]}
-                    show={position === "left" ? true : false}
+                    show={position === "left" && showScale === true ? true : false}
                     length={scaleParam["length"]}
                     scale={scaleParam["scale"]}
                     color={scaleParam["color"]}
@@ -96,7 +96,7 @@ export class Tank extends BaseWidget {
                     max={scaleParam["max"]}
                     numIntervals={scaleParam["numIntervals"]}
                     position={scaleParam["position"]}
-                    show={position === "right" ? true : false}
+                    show={position === "right" && showScale === true ? true : false}
                     length={scaleParam["length"]}
                     scale={scaleParam["scale"]}
                     color={scaleParam["color"]}

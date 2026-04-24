@@ -84,9 +84,9 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         // tdl["itemLabels"] = ["0", "1"];
 
         if (type === "Button") {
-            tdl["text"]["mode"] = "toggle";
+            tdl["text"]["mode"] = "Toggle";
         } else {
-            tdl["text"]["mode"] = "push and reset";
+            tdl["text"]["mode"] = "Push";
         }
 
         const alarmPropertyNames: string[] = [];
@@ -157,7 +157,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                     tdl["style"]["fontWeight"] = fontWeight;
                 } else if (propertyName === "buttonType") {
                     // exists in EDM Button widget
-                    tdl["text"]["mode"] = propertyValue.replaceAll(`"`, "") === "push" ? "push and reset" : "toggle";
+                    tdl["text"]["mode"] = propertyValue.replaceAll(`"`, "") === "push" ? "Push" : "Toggle";
                 } else if (propertyName === "toggle") {
                     // exists in EDM "Message Button" widget
                     // if the "toggle" does not exist, then the tdm mode depends on the press and release values
@@ -165,7 +165,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
                     //  - if press value is invalid, then it is "push nothing and xxx"
                     //  - if release value is valid, then it is "xxx and (re)set"
                     //  - if release value is invalid, then it is "xxx and no reset"
-                    tdl["text"]["mode"] = "toggle";
+                    tdl["text"]["mode"] = "Toggle";
                 } else if (propertyName === "controlBitPos") {
                     tdl["text"]["bit"] = EdlConverter.convertEdlNumber(propertyValue);
                 } else if (propertyName === "visPv") {
@@ -210,18 +210,21 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             tdl["text"]["useChannelItems"] = true;
         }
 
-        if (type === "Message Button" && tdl["text"]["mode"] === "push and reset") {
+        tdl["text"]["fallbackText"] = tdl["itemNames"][0];
+        tdl["text"]["fallbackColor"] = tdl["itemColors"][0];
+
+        if (type === "Message Button" && tdl["text"]["mode"] === "Push") {
             if (hasPressValue) {
                 if (hasReleaseValue) {
-                    tdl["text"]["mode"] = "push and reset";
+                    tdl["text"]["mode"] = "Push";
                 } else {
-                    tdl["text"]["mode"] = "push no reset";
+                    // undefined behavior in TDM
                 }
             } else {
                 if (hasReleaseValue) {
-                    tdl["text"]["mode"] = "push nothing and set";
+                    tdl["text"]["mode"] = "Push (inverted)";
                 } else {
-                    // wrong thing
+                    // undefined behavior in TDM
                 }
             }
         }
@@ -446,11 +449,11 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             }
         }
 
-        if (tdl["text"]["mode"] === "push and reset (inverted)") {
-            tdl["text"]["mode"] = "push and reset";
-            tdl["itemValues"][1] = 0;
-            tdl["itemValues"][0] = 1;
-        }
+        // if (tdl["text"]["mode"] === "Push (inverted)") {
+        //     tdl["text"]["mode"] = "push and reset";
+        //     tdl["itemValues"][1] = 0;
+        //     tdl["itemValues"][0] = 1;
+        // }
 
         if (offImage !== "" && onImage !== "") {
             tdl["itemNames"][0] = offImage;

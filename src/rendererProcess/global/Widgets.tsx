@@ -1652,14 +1652,12 @@ export class Widgets {
                 Log.error(e);
             }
         }
-        // (6)
 
+        // (6)
         if (newMode === rendererWindowStatus.operating) {
             this.connectAllTcaChannels();
-            this.hideRepeaterTemplateWidgets();
-        } else if (newMode === rendererWindowStatus.editing) {
-            this.showRepeaterTemplateWidgets();
         }
+
         this.addToForceUpdateWidgets("GroupSelection2");
         // (7)
         if (doFlush) {
@@ -1678,38 +1676,38 @@ export class Widgets {
 
     // the template widgets inside a Repeater should be hidden/shown in operating/editing mode
 
-    _repeaterTemplateWidgets: string[] = [];
+    // _repeaterTemplateWidgets: string[] = [];
 
-    getRepeaterTemplateWidgets = () => {
-        return this._repeaterTemplateWidgets;
-    }
+    // getRepeaterTemplateWidgets = () => {
+    //     return this._repeaterTemplateWidgets;
+    // }
 
-    clearRepeaterTemplateWidgets = () => {
-        this._repeaterTemplateWidgets.length = 0;
-    }
+    // clearRepeaterTemplateWidgets = () => {
+    //     this._repeaterTemplateWidgets.length = 0;
+    // }
 
-    hideRepeaterTemplateWidgets = () => {
-        for (const widgetKey of this.getRepeaterTemplateWidgets()) {
-            const widget = this.getWidget2(widgetKey);
-            if (widget instanceof BaseWidget) {
-                widget.getStyle()["display"] = "none";
-                this.addToForceUpdateWidgets(widgetKey);
-            }
-        }
-        // this.clearRepeaterTemplateWidgets();
-    }
+    // hideRepeaterTemplateWidgets = () => {
+    //     for (const widgetKey of this.getRepeaterTemplateWidgets()) {
+    //         const widget = this.getWidget2(widgetKey);
+    //         if (widget instanceof BaseWidget) {
+    //             widget.getStyle()["display"] = "none";
+    //             this.addToForceUpdateWidgets(widgetKey);
+    //         }
+    //     }
+    //     // this.clearRepeaterTemplateWidgets();
+    // }
 
 
-    showRepeaterTemplateWidgets = () => {
-        for (const widgetKey of this.getRepeaterTemplateWidgets()) {
-            const widget = this.getWidget2(widgetKey);
-            if (widget instanceof BaseWidget) {
-                widget.getStyle()["display"] = "inline-flex";
-                this.addToForceUpdateWidgets(widgetKey);
-            }
-        }
-        this.clearRepeaterTemplateWidgets();
-    }
+    // showRepeaterTemplateWidgets = () => {
+    //     for (const widgetKey of this.getRepeaterTemplateWidgets()) {
+    //         const widget = this.getWidget2(widgetKey);
+    //         if (widget instanceof BaseWidget) {
+    //             widget.getStyle()["display"] = "inline-flex";
+    //             this.addToForceUpdateWidgets(widgetKey);
+    //         }
+    //     }
+    //     this.clearRepeaterTemplateWidgets();
+    // }
 
 
 

@@ -59,7 +59,7 @@ export class DisplayWindowEvent {
         /**
          * Move window using mid button
          */
-        if (this.getDisplayWindowClient().getMainProcessMode() === "desktop" && this.getDisplayWindowClient().isInIframe() === false) {
+        if (this.getDisplayWindowClient().getMainProcessMode() === "desktop") {
             window.addEventListener('mousedown', (e) => {
 
                 if ((e.button === 1)) { // middle button

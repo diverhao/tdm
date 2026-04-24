@@ -5,16 +5,23 @@ import { RepeaterSidebar } from "./RepeaterSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
-import { type_tdl } from "../../../common/GlobalVariables";
-import { defaultRepeaterTdl, type_Repeater_tdl, type_Repeater_widget } from "../../../common/types/type_widget_tdl";
+import { defaultRepeaterTdl, type_macro_tdl, type_Repeater_tdl } from "../../../common/types/type_widget_tdl";
+import { v4 as uuidv4 } from "uuid";
+import { rendererWindowStatus } from "../../global/Widgets";
 
 export class Repeater extends BaseWidget {
 
-    // _widgetKeys: string[];
-    // _tabMacros: [string, string][][] = [];
-    private _widgets: type_Repeater_widget[] = [];
+    private _templateWidgetKeys: string[] = [];
+    private _templateWidgets: BaseWidget[] = [];
+    private _dynamicWidgetKeys: string[] = [];
+
+    private _widgetsMacros: type_macro_tdl[][] = [];
+    private readonly _groupName: string = `repeater_group_${uuidv4()}`;
+
+    getGroupName = () => {
+        return this._groupName;
+    }
 
     constructor(widgetTdl: type_Repeater_tdl) {
         super(widgetTdl);
@@ -22,14 +29,12 @@ export class Repeater extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this._widgets = structuredClone(widgetTdl["widgets"]);
-        // this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
-        // this._tabMacros = structuredClone(widgetTdl["macros"]);
+        this._templateWidgetKeys = structuredClone(widgetTdl["widgetKeys"]);
+        this._widgetsMacros = structuredClone(widgetTdl["widgetsMacros"]);
     }
 
     // ------------------------------ elements ---------------------------------
 
-    // Body + sidebar
     _ElementRaw = () => {
 
         // guard the widget from double rendering
@@ -74,6 +79,10 @@ export class Repeater extends BaseWidget {
 
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementAreaRaw = ({ }: any): React.JSX.Element => {
+        React.useEffect(() => {
+            this._updateCoverage(false);
+        }, [])
+
         return (
             <div
                 style={{
@@ -93,31 +102,10 @@ export class Repeater extends BaseWidget {
                     fontWeight: this.getStyle().fontWeight,
                     outline: this._getElementAreaRawOutlineStyle(),
                 }}
+                onMouseDown={(event: any) => { this._handleMouseDown(event); this._updateCoverage(false); }}
+                onDoubleClick={this._handleMouseDoubleClick}
+
             >
-
-                {g_widgets1.isEditing() === true ? <this._ElementGroups></this._ElementGroups> : <this._ElementIframeInOperating></this._ElementIframeInOperating>}
-            </div>
-        );
-    };
-
-    _ElementGroups = () => {
-        // todo: looks like we don't need this, it causes flash when we start to move the Group widget
-        // what does it do?
-        // do it once
-        React.useEffect(() => {
-            this.updateGroup();
-            g_flushWidgets();
-        }, []);
-
-        return (
-            <div
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                }}
-            >
-                <this._ElementGroup></this._ElementGroup>
             </div>
         );
     };
@@ -128,8 +116,7 @@ export class Repeater extends BaseWidget {
      */
     serializeMacros = () => {
         let result: string = "";
-        for (const widget of this.getWidgets()) {
-            const rowMacros = widget["macro"];
+        for (const rowMacros of this.getWidgetsMacros()) {
             const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
             result = result + rowMacrosStr + "\n";
         }
@@ -153,129 +140,23 @@ export class Repeater extends BaseWidget {
         return result;
     }
 
-    _ElementGroup = ({ }: any) => {
-        // when the Group widget is being resized, deselect all its child widgets in all sub-groups,
-        // so that these children won't be resized
-        if (g_widgets1.getRendererWindowStatusStr().includes("resizingWidget")) {
-            this.updateGroup();
-            if (this.isSelected()) {
-                // deselect all insider widgets
-                for (let widget of this.getWidgets()) {
-                    const widgetKey = widget["widgetKey"];
-                    try {
-                        const widget = g_widgets1.getWidget2(widgetKey);
-                        if (widget instanceof BaseWidget) {
-                            widget.simpleDeselect(false);
-                            widget.simpleDeselectGroup(true);
-                        }
-                    } catch (e) {
-                        Log.error(e);
-                    }
-                }
-            }
-        }
-
-        // when the Group widget is being moved, select all its child widgets in all Groups
-        if (g_widgets1.getRendererWindowStatusStr().includes("movingWidget")) {
-            if (this.isSelected()) {
-                for (let widget of this.getWidgets()) {
-                    const widgetKey = widget["widgetKey"];
-                    try {
-                        const widget = g_widgets1.getWidget2(widgetKey);
-                        if (widget instanceof BaseWidget) {
-                            widget.selectOnMouseMove();
-                        }
-                    } catch (e) {
-                        Log.error(e);
-                    }
-                }
-            }
-        }
-        return (
-            <div
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    // backgroundColor: this.getItemBackgroundColors()[index],
-                    // visibility: index === this.getSelectedGroup() ? "visible" : "hidden",
-                }}
-                onMouseDown={(event) => {
-                    this._handleMouseDown(event);
-                    if (g_widgets1.isEditing()) {
-                        this.updateGroup();
-                        // this.selectGroup();
-                    }
-                }}
-                onMouseUp={(event) => {
-                    // todo: why did we need this? It causes unexpected selection of the Group widget
-                    // todo: when the mouse is up, even we are not selecting this widget
-                    if (g_widgets1.isEditing()) {
-                        // this.updateGroup(index);
-                        // thisselectGroup(index, true);
-                    }
-                }}
-                onDoubleClick={this._handleMouseDoubleClick}
-            ></div>
-        );
-    };
-
 
     _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
         if (g_widgets1.isEditing()) {
-            this.updateGroup();
+            this._updateCoverage(false);
         }
     }
-
-    // only update data and visibility, nothing about selection of widgets
-    // (1) find all widgets inside the bound, put their widgetKeys to this._widgetKeys
-    // (2) compare the this._widgetKeys and this._widgetKeys, if the widget is not in this._allWidgetKeys,
-    //     it means this widget is not in-bound, then we remove this widgetKey out of this._widgetKeys
-    //     and set its "visibility" style to "visible", no flush yet
-    // (3) put all visible in-bound widgets to the old selected group's this._widgetKeys, and set their visibility to "hidden",
-    //     before doing it, clear this this._widgetKeys[this.selectedGroup]
-    // (4) update this._selectedGroup
-    // (5) set all widgets that belong to the currently selected to group visible
-    updateGroup = () => {
-        // (1)
-        this._updateCoverage(false);
-        // (5)
-        // for (let widgetKey of this.getWidgetKeys()[this.getSelectedGroup()]) {
-        for (let widget of this.getWidgets()) {
-            const widgetKey = widget["widgetKey"];
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    // if (widget.getStyle()["visibility"] === "hidden") {
-                    // this.widgetKeys[this.getSelectedGroup()].push(widgetKey);
-                    widget.getStyle()["visibility"] = "visible";
-                    g_widgets1.addToForceUpdateWidgets(widgetKey);
-                    // }
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        g_flushWidgets();
-
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        g_flushWidgets();
-    };
-
     // only modify data, nothing about selection
     private _updateCoverage = (doFlush: boolean) => {
-        this.getWidgets().length = 0;
+        if (!g_widgets1.isEditing()) {
+            return;
+        }
+        this.getTemplateWidgetKeys().length = 0;
 
         let selectionChanged = false;
 
         for (let [widgetKey1, widget] of g_widgets1.getWidgets2()) {
-            // only select selectable widget, e.g. TextUpdate
-            //todo: provide a programtic way to determine special widgets
-            // const widgetType = widget1.getType();
 
             if (!(widget instanceof BaseWidget)) {
                 continue;
@@ -296,16 +177,20 @@ export class Repeater extends BaseWidget {
             let regionDown = regionTop + this._style.height;
 
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
-            if (isInside) {
-                // exclude the Repeater widget itself
-                if (widget.getWidgetKey() !== this.getWidgetKey()) {
-                    const widgetWidgetKey = widget.getWidgetKey();
-                    // this.getWidgetKeys().push(widget.getWidgetKey());
-                    this.getWidgets().push({
-                        widgetKey: widgetWidgetKey,
-                        macro: [],
-                    })
+
+            // remove all existing Repeater group assignments
+            for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
+                if (widget.getGroupNames()[ii].startsWith("repeater_group_")) {
+                    widget.getGroupNames().splice(ii, 1);
                 }
+            }
+
+            if (isInside) {
+                const widgetWidgetKey = widget.getWidgetKey();
+                if (widget.getWidgetKey() !== this.getWidgetKey()) {
+                    this.getTemplateWidgetKeys().push(widgetWidgetKey);
+                }
+                widget.getGroupNames().push(this.getGroupName());
             }
         }
 
@@ -326,126 +211,51 @@ export class Repeater extends BaseWidget {
     // -------------------- helper functions ----------------
 
 
-    copyTemplateWidgetsTdls = () => {
-        const result: Record<string, any>[] = [];
-        const widgetKeys = this.getWidgetWidgetKeys();
-
-        if (widgetKeys !== undefined && widgetKeys.length > 0) {
-            for (let widgetKey of widgetKeys) {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    const widgetTdl = widget.getTdlCopy(true);
-                    result.push(widgetTdl);
-                }
-            }
-        }
-        return result;
-    };
-
-    dynamicWidgetKeys: string[] = [];
-
-    getDynamicWidgetKeys = () => {
-        return this.dynamicWidgetKeys;
-    }
-
-    setDynamicWidgetKeys = (newKeys: string[]) => {
-        this.dynamicWidgetKeys = newKeys;
-    }
-
-
-    _ElementIframeInOperating = () => {
-
-        const iframeElementRef = React.useRef<HTMLIFrameElement>(null);
-
-        React.useEffect(() => {
-            if (iframeElementRef.current !== null) {
-                // iframeElementRef.current.style["backgroundColor"] = "rgba(255,255,255,1)"; // always white
-                iframeElementRef.current.style["backgroundColor"] = this.iframeBackgroundColor;
-
-            }
-        });
-
-        const ipcServerPort = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().getIpcServerPort();
-        const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
-
-        let iframeSrc = `../../../mainProcess/windows/DisplayWindow/DisplayWindow.html?ipcServerPort=${ipcServerPort}&displayWindowId=${this.iframeDisplayId}`;
-        if (mainProcessMode === "web") {
-            // const currentSite = `https://${window.location.host}/`;
-            // const currentSite = `${window.location.origin}/`;
-            const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-            const httpScheme = window.location.protocol;
-            const webPath = displayWindowClient.getWebPath();
-            iframeSrc = `${httpScheme}//${webPath}/DisplayWindow.html?displayWindowId=${this.iframeDisplayId}`
-        }
-        return (
-            <iframe
-                ref={iframeElementRef}
-                src={iframeSrc}
-                name="embedded-display"
-                id="embedded-display"
-                width="100%"
-                height="100%"
-
-                referrerPolicy="no-referrer"
-                // ! iframe and its parent share the same sessionStorage, which causes an issue 
-                // ! that we cannot refresh the web page
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                // sandbox="allow-scripts"
-                style={{
-                    border: "none",
-                    // backgroundColor: "rgba(255,255,255,1)", // always white
-                    backgroundColor: this.iframeBackgroundColor,
-
-                }}
-            >
-            </iframe>
-        );
-    };
-
     createDynamicWidgets = () => {
 
-        const templateWidgetsTdls = this.copyTemplateWidgetsTdls();
+        // save template widgets
+        const templateWidgetTdls: Record<string, any>[] = [];
+        this.getTemplateWidgets().length = 0; // clear temporary storage
+        for (const templateWidgetKey of this.getTemplateWidgetKeys()) {
+            const templateWidget = g_widgets1.getWidget(templateWidgetKey);
+            if (templateWidget instanceof BaseWidget) {
+                // remove template widgets from g_widgets1, store them in a temporary place
+                this.getTemplateWidgets().push(templateWidget);
+                g_widgets1.getWidgets().delete(templateWidgetKey);
+                // get tdl copy for these template widgets
+                templateWidgetTdls.push(templateWidget.getTdlCopy(false));
+            }
+        }
+
         const margin = this.getText()["gap"];
 
         // find the range of all tempalte widgets
         let overallTop = 100000000;
         let overallBottom = -1;
         let overallLeft = 10000000;
-        for (const widgetTdlOriginal of templateWidgetsTdls) {
+        for (const widgetTdlOriginal of templateWidgetTdls) {
             overallTop = Math.min(widgetTdlOriginal["style"]["top"], overallTop);
             overallBottom = Math.max(widgetTdlOriginal["style"]["top"] + widgetTdlOriginal["style"]["height"], overallBottom);
             overallLeft = Math.min(widgetTdlOriginal["style"]["left"], overallLeft);
         }
         const overallHeight = overallBottom - overallTop;
-
-        const dY = overallTop;
         const dH = overallHeight + margin;
 
-        const tdl: Record<string, any> = {};
+        // create dynamic widgets Tdl
+        for (let ii = 0; ii < this.getWidgetsMacros().length; ii++) {
+            for (const templateWidgetTdl of templateWidgetTdls) {
 
-        // create Canvas Tdl
-        const canvsWidgetTdl = Canvas.generateDefaultTdl();
-        canvsWidgetTdl["style"]["width"] = this.getStyle()["width"];
-        canvsWidgetTdl["style"]["height"] = this.getStyle()["height"];
-        canvsWidgetTdl["style"]["backgroundColor"] = this.getStyle()["backgroundColor"];
-        tdl["Canvas"] = canvsWidgetTdl;
-
-        // create widgets Tdl
-        for (let ii = 0; ii < this.getWidgets().length; ii++) {
-            for (const widgetTdlOriginal of templateWidgetsTdls) {
-
-                const widgetTdl = structuredClone(widgetTdlOriginal);
+                const widgetTdl = structuredClone(templateWidgetTdl);
                 // create a new widget JSON
                 const newWidgetKey = widgetTdl.type + "_" + GlobalMethods.generateNewWidgetKey();
                 widgetTdl.key = newWidgetKey;
                 widgetTdl.widgetKey = newWidgetKey;
-                widgetTdl.style.top = widgetTdl.style.top - dY + dH * ii;
-                widgetTdl.style.left = widgetTdl.style.left - this.getStyle()["left"];
+                widgetTdl.style.top = this.getStyle()["top"] + dH * ii + margin;
+                // widgetTdl.style.left = widgetTdl.style.left - this.getStyle()["left"] + overallLeft;
                 widgetTdl["groupNames"] = [];
-                tdl[newWidgetKey] = widgetTdl;
+                // tdl[newWidgetKey] = widgetTdl;
 
                 // replace macros
-
                 const canvas = g_widgets1.getWidget2("Canvas");
                 if (!(canvas instanceof Canvas)) {
                     const errMsg = "No Canvas widget";
@@ -508,46 +318,52 @@ export class Repeater extends BaseWidget {
                             widgetTdl["channelNames"][ii] = expandedChannelName;
                         }
                     }
+
+
+                    const widget = g_widgets1.createWidget(widgetTdl, false);
+                    if (widget instanceof BaseWidget) {
+                        widget.setMacros(macros);
+                        // widget.setEmbeddedDisplayWidgetKey(widget.getWidgetKey());
+                        this.appendDynamicWidgetKey(newWidgetKey);
+                        // widget.jobsAsOperatingModeBegins();
+                        // widget.processChannelNames(macros);
+                        // widgetMapPairs.push([newWidgetKey, widget]);
+                    }
                 }
+
             }
         }
 
-        this.iframeDisplayId = "";
+    }
 
-        const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-        ipcManager.sendFromRendererProcess("obtain-iframe-uuid", {
-            displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-            widgetKey: this.getWidgetKey(),
-            mode: "operating",
-            tdl: tdl as type_tdl,
-            tdlFileName: "", // no real file, but it is ok
-            macros: [],
-            currentTdlFolder: "",
-            replaceMacros: this.getText()["useParentMacros"]
-        });
+    restoreTemplateWidgets = () => {
+        for (const templateWidget of this.getTemplateWidgets()) {
+            g_widgets1.getWidgets().set(templateWidget.getWidgetKey(), templateWidget);
+            // run jobsAsEditingModeBegins() for the template widget
+            // the g_widgets1.setMode() cannot capture the newly added widget
+            const newMode = rendererWindowStatus.editing;
+            const oldMode = rendererWindowStatus.operating;
+            templateWidget.jobsAsEditingModeBegins();
+            templateWidget.setMode(newMode, oldMode);
+            g_widgets1.addToForceUpdateWidgets(templateWidget.getWidgetKey());
+        }
+        // clear temporary storage for template widgets
+        this.getTemplateWidgets().length = 0;
+
+
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        g_flushWidgets();
     }
 
     removeDynamicWidgets = () => {
-        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        if (this.iframeDisplayId !== "") {
-            displayWindowClient.getIpcManager().sendFromRendererProcess("close-iframe-display", {
-                displayWindowId: this.iframeDisplayId,
-            })
+        // remove dynamic widgets
+        for (const dynamicWidgetKey of this.getDynamicWidgetKeys()) {
+            g_widgets1.removeWidget(dynamicWidgetKey, true, false, true);
         }
-    }
 
-    iframeDisplayId: string = "";
-    iframeBackgroundColor: string = "rgba(0,0,0,0)";
-
-    loadHtml = (iframeDisplayId: string) => {
-        this.iframeDisplayId = iframeDisplayId;
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
         g_flushWidgets();
-    };
-    setIframeBackgroundColor = (tdlBackgroundColor: string) => {
-        this.iframeBackgroundColor = tdlBackgroundColor;
     }
-
 
     // -------------------------- tdl -------------------------------
 
@@ -564,65 +380,54 @@ export class Repeater extends BaseWidget {
     // defined in super class
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
-        result["widgets"] = structuredClone(this.getWidgets());
+        result["widgetKeys"] = structuredClone(this.getTemplateWidgetKeys());
+        result["widgetsMacros"] = structuredClone(this.getWidgetsMacros());
         return result;
     }
 
     // --------------------- getters -------------------------
 
-    getWidgets = () => {
-        return this._widgets;
-    };
-
-    getWidget = (index: number): type_Repeater_widget | undefined => {
-        return this.getWidgets()[index];
-    }
-
-    getWidgetWidgetKey = (index: number) => {
-        const widget = this.getWidget(index);
-        if (widget === undefined) {
-            return undefined;
-        } else {
-            return widget["widgetKey"];
-        }
+    getWidgetsMacros = () => {
+        return this._widgetsMacros;
     }
 
     getWidgetMacro = (index: number) => {
-        const widget = this.getWidget(index);
-        if (widget === undefined) {
-            return undefined;
-        } else {
-            return widget["macro"];
-        }
+        return this.getWidgetsMacros()[index];
     }
 
-    setWidgetMacro = (index: number, macro: [string, string][]) => {
-        const widget = this.getWidget(index);
-        if (widget === undefined) {
-            return;
-        } else {
-            widget["macro"] = structuredClone(macro);
-        }
-    }
-
-    setWidgetWidgetKey = (index: number, widgetKey: string) => {
-        const widget = this.getWidget(index);
-        if (widget === undefined) {
-            return;
-        } else {
-            widget["widgetKey"] = widgetKey;
-        }
-    }
-
-    getWidgetWidgetKeys = () => {
-        const result: string[] = [];
-        for (const widget of this.getWidgets()) {
-            result.push(widget["widgetKey"]);
-        }
-        return result;
+    setWidgetsMacros = (widgetsMacros: type_macro_tdl[][]) => {
+        this._widgetsMacros = structuredClone(widgetsMacros);
     }
 
 
+    getTemplateWidgetKeys = () => {
+        return this._templateWidgetKeys;
+    }
+
+    setTemplateWidgetKeys = (widgetKeys: string[]) => {
+        this._templateWidgetKeys = structuredClone(widgetKeys);
+    }
+
+    getTemplateWidgets = () => {
+        return this._templateWidgets;
+    }
+
+
+    getDynamicWidgetKeys = () => {
+        return this._dynamicWidgetKeys;
+    }
+
+    setDynamicWidgetKeys = (newChildWidgetKeys: string[]) => {
+        this._dynamicWidgetKeys = newChildWidgetKeys;
+    }
+
+    clearDynamicWidgetKeys = () => {
+        this.setDynamicWidgetKeys([]);
+    }
+
+    appendDynamicWidgetKey = (newWidgetKey: string) => {
+        this.getDynamicWidgetKeys().push(newWidgetKey);
+    }
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
         if (this._sidebar === undefined) {
@@ -631,18 +436,13 @@ export class Repeater extends BaseWidget {
     }
 
     jobsAsEditingModeBegins(): void {
+        this.restoreTemplateWidgets();
         super.jobsAsEditingModeBegins();
         this.removeDynamicWidgets();
-        if (this.getWidgetWidgetKey(0) !== undefined) {
-            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetWidgetKeys());
-        }
     }
 
     jobsAsOperatingModeBegins(): void {
-        super.jobsAsOperatingModeBegins();
         this.createDynamicWidgets();
-        if (this.getWidgetWidgetKey(0) !== undefined) {
-            g_widgets1.getRepeaterTemplateWidgets().push(...this.getWidgetWidgetKeys());
-        }
+        super.jobsAsOperatingModeBegins();
     }
 }
