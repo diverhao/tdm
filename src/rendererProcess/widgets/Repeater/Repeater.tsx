@@ -73,7 +73,7 @@ export class Repeater extends BaseWidget {
     // only shows the text, all other style properties are held by upper level _ElementBodyRaw
     _ElementArea = ({ }: any): React.JSX.Element => {
         React.useEffect(() => {
-            this._updateCoverage(false);
+            this._updateCoverage();
         }, [])
 
         const whiteSpace = this.getText().wrapWord ? "pre-line" : "nowrap";
@@ -84,7 +84,6 @@ export class Repeater extends BaseWidget {
         const fontStyle = this.getStyle().fontStyle;
         const fontWeight = this.getStyle().fontWeight;
         const outline = this._getElementAreaRawOutlineStyle();
-
 
         return (
             <div
@@ -105,9 +104,8 @@ export class Repeater extends BaseWidget {
                     fontWeight: fontWeight,
                     outline: outline,
                 }}
-                onMouseDown={(event: any) => { this._updateCoverage(false); this._handleMouseDown(event);  }}
+                onMouseDown={(event: any) => { this._updateCoverage(); this._handleMouseDown(event); }}
                 onDoubleClick={this._handleMouseDoubleClick}
-
             >
             </div>
         );
@@ -116,76 +114,53 @@ export class Repeater extends BaseWidget {
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // -------------------- macros ---------------------
-
-    /**
-     * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
-     */
-    serializeMacros = () => {
-        let result: string = "";
-        for (const rowMacros of this.getWidgetsMacros()) {
-            const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
-            result = result + rowMacrosStr + "\n";
-        }
-        if (result.endsWith("\n")) {
-            result = result.substring(0, result.length - 1);
-        }
-        return result;
-    }
-
-    /**
-     * "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM" --> [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]]
-     */
-    deserializeMacros = (str: string) => {
-        const macrosStrLines = str.split("\n");
-        const result: [string, string][][] = [];
-
-        for (const rowMacrosStr of macrosStrLines) {
-            const rowMacros = GlobalMethods.deserializeMacros(rowMacrosStr);
-            result.push(rowMacros);
-        }
-        return result;
-    }
-
-    // --------------------- GUI related methods --------------------------
+    // --------------------- GUI related --------------------------
 
     _handleMouseUpOnResizer(event: globalThis.MouseEvent, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
         super._handleMouseUpOnResizer(event, index);
-        if (g_widgets1.isEditing()) {
-            this._updateCoverage(false);
-        }
+        this._updateCoverage();
     }
-    private _updateCoverage = (doFlush: boolean) => {
+
+    /**
+     * update the coverage of this Repeater widget. 2 data are updated:
+     * 
+     * (1) Repeater._templateWidgetKeys. It is for expanding the template widgets.
+     * 
+     * (2) BaseWidget._groupNames, where the BaseWidget is a template widget. 
+     *     It is for selecting the template widgets using mouse.
+     * 
+     */
+    private _updateCoverage = () => {
         if (!g_widgets1.isEditing()) {
             return;
         }
+
+        // for (1)
         this.getTemplateWidgetKeys().length = 0;
 
-        let selectionChanged = false;
+        // Repeater's boundary
+        const style = this.getAllStyle();
+        let regionLeft = style.left;
+        let regionTop = style.top;
+        let regionRight = regionLeft + style.width;
+        let regionDown = regionTop + style.height;
 
-        for (let [widgetKey1, widget] of g_widgets1.getWidgets2()) {
+        for (let [, widget] of g_widgets1.getWidgets2()) {
 
             if (!(widget instanceof BaseWidget)) {
                 continue;
             }
 
-            // widget boundary
-            // todo: more generic
-            // const widget = widget1 as BaseWidget;
+            // widget's boundary
             let widgetLeft = widget.getStyle().left;
             let widgetTop = widget.getStyle().top;
             let widgetRight = widgetLeft + widget.getStyle().width;
             let widgetDown = widgetTop + widget.getStyle().height;
 
-            // "mouse selection region" boundary
-            let regionLeft = this._style.left;
-            let regionTop = this._style.top;
-            let regionRight = regionLeft + this._style.width;
-            let regionDown = regionTop + this._style.height;
-
+            // boundary is included
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
 
-            // remove all existing Repeater group assignments
+            // remove this Repeater's group from widget's group 
             for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
                 if (widget.getGroupNames()[ii].startsWith("repeater_group_")) {
                     widget.getGroupNames().splice(ii, 1);
@@ -195,33 +170,32 @@ export class Repeater extends BaseWidget {
             if (isInside) {
                 const widgetWidgetKey = widget.getWidgetKey();
                 if (widget.getWidgetKey() !== this.getWidgetKey()) {
+                    // for (1)
                     this.getTemplateWidgetKeys().push(widgetWidgetKey);
                 }
+                // for (2)
                 widget.getGroupNames().push(this.getGroupName());
             }
-        }
-
-
-        if (selectionChanged) {
-            // do not flush yet, wait to the end
-            g_widgets1.updateSidebar(false);
-        }
-        if (doFlush) {
-            g_flushWidgets();
         }
     };
 
 
     // -------------------- widget lifecycle management ----------------
 
+    /**
+     * (1) relocate the template widgets, move them to a temporary array Repeater._templateWidgets
+     * 
+     * (2) create dynamic widgets based on template widgets and macros
+     */
     createDynamicWidgets = () => {
-        // save template widgets
+        
+        this.getTemplateWidgets().length = 0; // clear temporary storage first
+
         const templateWidgetTdls: Record<string, any>[] = [];
-        this.getTemplateWidgets().length = 0; // clear temporary storage
         for (const templateWidgetKey of this.getTemplateWidgetKeys()) {
             const templateWidget = g_widgets1.getWidget(templateWidgetKey);
             if (templateWidget instanceof BaseWidget) {
-                // remove template widgets from g_widgets1, store them in a temporary place
+                // (1)
                 this.getTemplateWidgets().push(templateWidget);
                 g_widgets1.getWidgets().delete(templateWidgetKey);
                 // get tdl copy for these template widgets
@@ -327,7 +301,7 @@ export class Repeater extends BaseWidget {
                         }
                     }
 
-
+                    // (2)
                     const widget = g_widgets1.createWidget(widgetTdl, false);
                     if (widget instanceof BaseWidget) {
                         widget.setMacros(macros);
@@ -339,6 +313,10 @@ export class Repeater extends BaseWidget {
 
     }
 
+    /**
+     * move the template widgets back, it is invoked in jobsAsEditingModeBegins() with
+     * removeDynamicWidgets(), but they cannot be invoked together. 
+     */
     restoreTemplateWidgets = () => {
         for (const templateWidget of this.getTemplateWidgets()) {
             g_widgets1.getWidgets().set(templateWidget.getWidgetKey(), templateWidget);
@@ -366,6 +344,37 @@ export class Repeater extends BaseWidget {
 
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
         g_flushWidgets();
+    }
+
+    // -------------------- macros ---------------------
+
+    /**
+     * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
+     */
+    serializeMacros = () => {
+        let result: string = "";
+        for (const rowMacros of this.getWidgetsMacros()) {
+            const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
+            result = result + rowMacrosStr + "\n";
+        }
+        if (result.endsWith("\n")) {
+            result = result.substring(0, result.length - 1);
+        }
+        return result;
+    }
+
+    /**
+     * "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM" --> [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]]
+     */
+    deserializeMacros = (str: string) => {
+        const macrosStrLines = str.split("\n");
+        const result: [string, string][][] = [];
+
+        for (const rowMacrosStr of macrosStrLines) {
+            const rowMacros = GlobalMethods.deserializeMacros(rowMacrosStr);
+            result.push(rowMacros);
+        }
+        return result;
     }
 
     // -------------------------- tdl -------------------------------

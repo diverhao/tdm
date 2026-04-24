@@ -1,104 +1,38 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
-import * as GlobalMethods from "../../../../common/GlobalMethods";
-import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-import { EdlConverter } from "../../EdlConverter";
-import { v4 as uuidv4 } from "uuid";
-
-
-export type type_Group_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-    itemNames: string[];
-    itemBackgroundColors: string[];
-    widgetKeys: string[][];
-};
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
+import { defaultGroupTdl, type_Group_tdl } from "../../../../common/types/type_widget_tdl";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
 
 export class GroupHelper extends BaseWidgetHelper {
 
-
-    // properties when we create a new TextUpdate
-    // the level 1 properties all have corresponding public or private variable in the widget
-    static _defaultTdl: type_Group_tdl = {
-        type: "Group",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(240, 240, 240, 0)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: true,
-            showUnit: false,
-            alarmBorder: true,
-            selectedGroup: 0,
-            tabPosition: "top",
-            tabWidth: 100,
-            tabHeight: 20,
-            tabSelectedColor: "rgba(180,180,180,1)",
-            tabDefaultColor: "rgba(220,220,220,1)",
-            showTab: true,
-            showBox: false,
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-        itemNames: ["Group-1"],
-        itemBackgroundColors: ["rgba(255,255,255,1)"],
-        widgetKeys: [[]],
+    static legacyArraysToItems = (
+        itemNames: string[],
+        itemBackgroundColors: string[],
+        widgetKeys: string[][],
+    ): type_Group_tdl["items"] => {
+        return itemNames.map((itemName, index) => ({
+            name: itemName,
+            backgroundColor: itemBackgroundColors[index] ?? defaultGroupTdl.items[0].backgroundColor,
+            widgetKeys: structuredClone(widgetKeys[index] ?? []),
+        }));
     };
 
-    // not getDefaultTdl(), always generate a new key
-    static generateDefaultTdl = (type: string): type_Group_tdl => {
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        result.itemNames = structuredClone(this._defaultTdl.itemNames);
-        result.itemBackgroundColors = structuredClone(this._defaultTdl.itemBackgroundColors);
-        result.widgetKeys = structuredClone(this._defaultTdl.widgetKeys);
-        return result as type_Group_tdl;
+    static generateDefaultTdl = (): type_Group_tdl => {
+        const widgetKey = generateWidgetKey(defaultGroupTdl.type);
+        return structuredClone({
+            ...defaultGroupTdl,
+            widgetKey: widgetKey,
+            key: widgetKey,
+        });
     };
 
     /**
      * "group" and "tabs" are converted to Group
      */
-    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs", convertBobSuffix: boolean): Promise<type_Group_tdl> => {
+    static convertBobToTdl = async (bobWidgetJson: Record<string, any>, type: "group" | "tabs", convertBobSuffix: boolean): Promise<Record<string, any>> => {
         Log.info("\n------------", `Parsing "${type}"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Group");
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "name",
@@ -136,6 +70,8 @@ export class GroupHelper extends BaseWidgetHelper {
 
         let transparent = false;
         let groupStyle = 0;
+        let itemNames = tdl["items"].map((item) => item["name"]);
+        let itemWidgetKeys = tdl["items"].map((item) => structuredClone(item["widgetKeys"]));
         if (type === "group") {
             tdl["text"]["showTab"] = false;
             tdl["text"]["showBox"] = true;
@@ -160,7 +96,7 @@ export class GroupHelper extends BaseWidgetHelper {
                 } else if (propertyName === "y") {
                     tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "name") {
-                    tdl["itemNames"][0] = BobPropertyConverter.convertBobString(propertyValue);
+                    itemNames[0] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "width") {
                     tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "height") {
@@ -189,9 +125,9 @@ export class GroupHelper extends BaseWidgetHelper {
                 } else if (propertyName === "tabs" && type === "tabs") {
                     const tabsData = propertyValue;
                     const tabsResult = await BobPropertyConverter.convertBobTabsTabs(tabsData, convertBobSuffix);
-                    tdl["itemNames"] = tabsResult["itemNames"];
+                    itemNames = tabsResult["itemNames"];
                     widgetsTdl = tabsResult["widgetsTdl"];
-                    tdl["widgetKeys"] = tabsResult["widgetKeys"];
+                    itemWidgetKeys = tabsResult["widgetKeys"];
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
@@ -199,10 +135,7 @@ export class GroupHelper extends BaseWidgetHelper {
         }
 
 
-        tdl["itemBackgroundColors"] = [];
-        for (const itemName of tdl["itemNames"]) {
-            tdl["itemBackgroundColors"].push(tdl["style"]["backgroundColor"]);
-        }
+        const itemBackgroundColors = itemNames.map(() => tdl["style"]["backgroundColor"]);
 
         if (transparent === true) {
             const originalRgbaColor = tdl["style"]["backgroundColor"];
@@ -210,15 +143,19 @@ export class GroupHelper extends BaseWidgetHelper {
             rgbaColorArray[3] = "0)";
             const newColor = rgbaColorArray.join(",");
             tdl["style"]["backgroundColor"] = newColor;
-            tdl["itemBackgroundColors"][0] = newColor;
+            if (itemBackgroundColors[0] !== undefined) {
+                itemBackgroundColors[0] = newColor;
+            }
         }
+
+        tdl["items"] = this.legacyArraysToItems(itemNames, itemBackgroundColors, itemWidgetKeys);
 
 
         if (type === "tabs") {
             // if a widget is not in the selected tab, hide it
-            for (let index = 0; index < tdl["widgetKeys"].length; index++) {
+            for (let index = 0; index < itemWidgetKeys.length; index++) {
                 if (index !== tdl["text"]["selectedGroup"]) {
-                    for (const widgetKey of tdl["widgetKeys"][index]) {
+                    for (const widgetKey of itemWidgetKeys[index]) {
                         widgetsTdl[widgetKey]["style"]["visibility"] = "hidden";
                     }
                 }
@@ -250,7 +187,7 @@ export class GroupHelper extends BaseWidgetHelper {
             return {
                 ...groupWidgetTdl, // group widget tdl
                 ...widgetsTdl, // children widget tdls
-            } as any;
+            };
 
         }
     };

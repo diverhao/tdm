@@ -11,11 +11,7 @@ import { defaultGroupTdl, type_Group_item_tdl as type_Group_item, type_Group_tdl
 
 export class Group extends BaseWidget {
 
-    // _itemNames: string[];
-    // _itemBackgroundColors: string[];
-    // _widgetKeys: string[][];
     private _items: type_Group_item[] = [];
-
     _allWidgetKeys: string[] = [];
     _tmp_itemBackgroundColor = "rgba(0,0,0,0.14159265358979323846264338327)";
 
@@ -27,9 +23,6 @@ export class Group extends BaseWidget {
 
         this.setSelectedGroup(this.getText()["selectedGroup"]);
 
-        // this._itemNames = structuredClone(widgetTdl["itemNames"]);
-        // this._itemBackgroundColors = structuredClone(widgetTdl["itemBackgroundColors"]);
-        // this._widgetKeys = structuredClone(widgetTdl["widgetKeys"]);
         this._items = structuredClone(widgetTdl["items"]);
     }
 
@@ -55,11 +48,8 @@ export class Group extends BaseWidget {
         );
     };
 
-    // Text area and resizers
     _ElementBodyRaw = (): React.JSX.Element => {
         return (
-            // always update the div below no matter the TextUpdateBody is .memo or not
-            // TextUpdateResizer does not update if it is .memo
             <div
                 style={
                     this.getElementBodyRawStyle()
@@ -71,22 +61,18 @@ export class Group extends BaseWidget {
         );
     };
 
-    removeGroupMembers = () => {
-        for (const widgetKey of this.getAllWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    g_widgets1.removeWidget(widgetKey, false, false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        g_flushWidgets();
-    };
+    _ElementArea = ({ }: any): React.JSX.Element => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const whiteSpace = allText.wrapWord ? "pre-line" : "nowrap";
+        const justifyContent = allText.horizontalAlign;
+        const alignItems = allText.verticalAlign;
+        const fontFamily = allStyle.fontFamily;
+        const fontSize = allStyle.fontSize;
+        const fontStyle = allStyle.fontStyle;
+        const fontWeight = allStyle.fontWeight;
+        const outline = this._getElementAreaRawOutlineStyle();
 
-    // only shows the text, all other style properties are held by upper level _ElementBodyRaw
-    _ElementAreaRaw = ({ }: any): React.JSX.Element => {
         return (
             <div
                 style={{
@@ -97,14 +83,14 @@ export class Group extends BaseWidget {
                     height: "100%",
                     userSelect: "none",
                     overflow: "hidden",
-                    whiteSpace: this.getText().wrapWord ? "pre-line" : "nowrap",
-                    justifyContent: this.getText().horizontalAlign,
-                    alignItems: this.getText().verticalAlign,
-                    fontFamily: this.getStyle().fontFamily,
-                    fontSize: this.getStyle().fontSize,
-                    fontStyle: this.getStyle().fontStyle,
-                    fontWeight: this.getStyle().fontWeight,
-                    outline: this._getElementAreaRawOutlineStyle(),
+                    whiteSpace: whiteSpace,
+                    justifyContent: justifyContent,
+                    alignItems: alignItems,
+                    fontFamily: fontFamily,
+                    fontSize: fontSize,
+                    fontStyle: fontStyle,
+                    fontWeight: fontWeight,
+                    outline: outline,
                 }}
             >
                 <this._ElementGroups></this._ElementGroups>
@@ -113,15 +99,6 @@ export class Group extends BaseWidget {
     };
 
     _ElementGroups = () => {
-        const [, forceUpdate] = React.useState({});
-        // todo: looks like we don't need this, it causes flash when we start to move the Group widget
-        // what does it do?
-        // do it once
-        React.useEffect(() => {
-            // this.updateGroup(this.getSelectedGroup());
-            // g_flushWidgets();
-        }, []);
-
         return (
             <div
                 style={{
@@ -137,135 +114,7 @@ export class Group extends BaseWidget {
             </div>
         );
     };
-
-    calcTabsLeft = () => {
-        switch (this.getText()["tabPosition"]) {
-            case "top":
-                return 0;
-            case "left":
-                return -1 * this.getText()["tabWidth"] - 8 - this.getStyle()["borderWidth"];
-            case "bottom":
-                return 0;
-            case "right":
-                return this.getStyle()["width"] + 8 + this.getStyle()["borderWidth"];
-            default:
-                Log.error("Error in tab calculation");
-        }
-    };
-    calcTabsTop = () => {
-        switch (this.getText()["tabPosition"]) {
-            case "top":
-                return -1 * this.getText()["tabHeight"] - 8 - this.getStyle()["borderWidth"];
-            case "left":
-                return 0;
-            case "bottom":
-                return this.getStyle()["height"] + 8 + this.getStyle()["borderWidth"];
-            case "right":
-                return 0;
-            default:
-                Log.error("Error in tab calculation");
-        }
-    };
-
-    _ElementTabs = () => {
-        const [, forceUpdate] = React.useState({});
-        return (
-            <div
-                style={{
-                    display: "inline-flex",
-                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    width:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
-                    height:
-                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
-                    position: "absolute",
-                    left: this.calcTabsLeft(),
-                    top: this.calcTabsTop(),
-                }}
-            >
-                {
-                    this.getAllText()["showTab"] === false ? null :
-                        this.getItems().map((item: type_Group_item, index: number) => {
-                            const itemName = item["name"];
-                            return (
-                                <div
-                                    key={`${itemName}-${index}`}
-                                    style={{
-                                        display: "inline-flex",
-                                        justifyContent: this.getText()["horizontalAlign"],
-                                        alignItems: "center",
-                                        width:
-                                            this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
-                                                ? this.getText()["tabWidth"]
-                                                : "100%",
-                                        height: this.getText()["tabHeight"],
-                                        backgroundColor:
-                                            this.getSelectedGroup() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
-                                        // border: "solid 1px black",
-                                        fontWeight: this.getSelectedGroup() === index ? "bold" : "normal",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        padding: 4,
-                                        borderRadius: 4,
-                                        margin: 3,
-                                        // marginBottom: 5,
-                                        // marginTop: 15,
-                                        // marginLeft: 15,
-                                    }}
-                                    onMouseDown={(event) => {
-                                        // event.preventDefault();
-                                        // forceUpdate({});
-                                        // this.selectTab(index);
-                                        event.stopPropagation();
-                                        this.updateGroup(index);
-
-                                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-
-                                        if (g_widgets1.isEditing()) {
-                                            this.selectGroup(index, true);
-                                        }
-                                        g_widgets1.updateSidebar(true);
-                                        g_flushWidgets();
-                                    }}
-                                >
-                                    {itemName}
-                                </div>
-                            );
-                        })}
-            </div>
-        );
-    };
-
-    selectGroup = (index: number, doFlush: boolean = false) => {
-        // select this widget first
-        this.simpleSelect(false);
-        // this widget may have been selected, we must do it again to successfully refresh it when we click the
-        // tab
-        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
-        // then selection others, why??
-        const widgetKeys = this.getItemWidgetKeys(index);
-        if (widgetKeys === undefined) {
-            return;
-        }
-        for (let widgetKey of widgetKeys) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    widget.simpleSelect(false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
-        g_widgets1.updateSidebar(true);
-        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-        if (doFlush) {
-            g_flushWidgets();
-        }
-    };
-
+    
     _ElementGroup = ({ index }: any) => {
         // when the Group widget is being resized, deselect all its child widgets in all sub-groups,
         // so that these children won't be resized
@@ -359,6 +208,147 @@ export class Group extends BaseWidget {
                 }
             </div>
         );
+    };
+    _ElementTabs = () => {
+        return (
+            <div
+                style={{
+                    display: "inline-flex",
+                    flexDirection: this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "row" : "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    width:
+                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? "100%" : this.getText()["tabWidth"],
+                    height:
+                        this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom" ? this.getText()["tabHeight"] : "100%",
+                    position: "absolute",
+                    left: this.calcTabsLeft(),
+                    top: this.calcTabsTop(),
+                }}
+            >
+                {
+                    this.getAllText()["showTab"] === false ? null :
+                        this.getItems().map((item: type_Group_item, index: number) => {
+                            const itemName = item["name"];
+                            return (
+                                <div
+                                    key={`${itemName}-${index}`}
+                                    style={{
+                                        display: "inline-flex",
+                                        justifyContent: this.getText()["horizontalAlign"],
+                                        alignItems: "center",
+                                        width:
+                                            this.getText()["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
+                                                ? this.getText()["tabWidth"]
+                                                : "100%",
+                                        height: this.getText()["tabHeight"],
+                                        backgroundColor:
+                                            this.getSelectedGroup() === index ? this.getText()["tabSelectedColor"] : this.getText()["tabDefaultColor"],
+                                        // border: "solid 1px black",
+                                        fontWeight: this.getSelectedGroup() === index ? "bold" : "normal",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        padding: 4,
+                                        borderRadius: 4,
+                                        margin: 3,
+                                        // marginBottom: 5,
+                                        // marginTop: 15,
+                                        // marginLeft: 15,
+                                    }}
+                                    onMouseDown={(event) => {
+                                        // event.preventDefault();
+                                        // forceUpdate({});
+                                        // this.selectTab(index);
+                                        event.stopPropagation();
+                                        this.updateGroup(index);
+
+                                        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+
+                                        if (g_widgets1.isEditing()) {
+                                            this.selectGroup(index, true);
+                                        }
+                                        g_widgets1.updateSidebar(true);
+                                        g_flushWidgets();
+                                    }}
+                                >
+                                    {itemName}
+                                </div>
+                            );
+                        })}
+            </div>
+        );
+    };
+
+
+    calcTabsLeft = () => {
+        switch (this.getText()["tabPosition"]) {
+            case "top":
+                return 0;
+            case "left":
+                return -1 * this.getText()["tabWidth"] - 8 - this.getStyle()["borderWidth"];
+            case "bottom":
+                return 0;
+            case "right":
+                return this.getStyle()["width"] + 8 + this.getStyle()["borderWidth"];
+            default:
+                Log.error("Error in tab calculation");
+        }
+    };
+    calcTabsTop = () => {
+        switch (this.getText()["tabPosition"]) {
+            case "top":
+                return -1 * this.getText()["tabHeight"] - 8 - this.getStyle()["borderWidth"];
+            case "left":
+                return 0;
+            case "bottom":
+                return this.getStyle()["height"] + 8 + this.getStyle()["borderWidth"];
+            case "right":
+                return 0;
+            default:
+                Log.error("Error in tab calculation");
+        }
+    };
+
+    removeGroupMembers = () => {
+        for (const widgetKey of this.getAllWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    g_widgets1.removeWidget(widgetKey, false, false);
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+        g_flushWidgets();
+    };
+
+    selectGroup = (index: number, doFlush: boolean = false) => {
+        // select this widget first
+        this.simpleSelect(false);
+        // this widget may have been selected, we must do it again to successfully refresh it when we click the
+        // tab
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        // then selection others, why??
+        const widgetKeys = this.getItemWidgetKeys(index);
+        if (widgetKeys === undefined) {
+            return;
+        }
+        for (let widgetKey of widgetKeys) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.simpleSelect(false);
+                }
+            } catch (e) {
+                Log.error(e);
+            }
+        }
+        g_widgets1.updateSidebar(true);
+        g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+        if (doFlush) {
+            g_flushWidgets();
+        }
     };
 
     _handleMouseDownOnResizer(event: React.MouseEvent<HTMLElement, MouseEvent>, index: "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H") {
@@ -572,47 +562,9 @@ export class Group extends BaseWidget {
     };
 
     _Element = React.memo(this._ElementRaw, () => this._useMemoedElement());
-    _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
     _ElementBody = React.memo(this._ElementBodyRaw, () => this._useMemoedElement());
 
-    // defined in super class
-    // getElement()
-    // getSidebarElement()
-    // _ElementResizerRaw
-    // _ElementResizer
-
     // -------------------- helper functions ----------------
-
-    // defined in super class
-    // showSidebar()
-    // showResizers()
-    // _useMemoedElement()
-    // hasChannel()
-    // isInGroup()
-    // isSelected()
-    // _getElementAreaRawOutlineStyle()
-
-    _getChannelValue = () => {
-        const value = this._getFirstChannelValue();
-        if (value === undefined) {
-            return "";
-        } else {
-            return value;
-        }
-    };
-
-    _getChannelSeverity = () => {
-        return this._getFirstChannelSeverity();
-    };
-
-    _getChannelUnit = () => {
-        const unit = this._getFirstChannelUnit();
-        if (unit === undefined) {
-            return "";
-        } else {
-            return unit;
-        }
-    };
 
     // -------------------------- tdl -------------------------------
 
