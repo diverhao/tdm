@@ -44,7 +44,7 @@ export class SidebarGroupItem {
                 >
                     <b>{`# ${this.getIndex()}`}</b>
                     <div>
-                        {/* <this.StyledButton
+                        <this.StyledButton
 							onClick={(event) => {
 								this.updateWidgetMoveUpItem(event);
 							}}
@@ -57,22 +57,7 @@ export class SidebarGroupItem {
 							}}
 						>
 							&#11107;{" "}
-						</this.StyledButton> */}
-                        {/* {mainWidget.getSelectedItem() === this.getIndex() ? (
-                            <this.StyledButton
-                                onClick={(event) => {
-                                    this.updateWidgetRemoveItem(event);
-                                }}
-                            >
-                                <img
-                                    src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
-                                    style={{
-                                        width: "50%",
-                                        height: "50%",
-                                    }}
-                                ></img>
-                            </this.StyledButton>
-                        ) : null} */}
+						</this.StyledButton>
                         <this.StyledButton
                             onClick={(event) => {
                                 this.updateWidgetRemoveItem(event);
@@ -206,108 +191,52 @@ export class SidebarGroupItem {
 
     // maybe enable them
 
-    // updateWidgetMoveUpItem = (event: any) => {
-    // 	if (event) {
-    // 		event.preventDefault();
-    // 	}
-    // 	const mainWidget = this.getMainWidget();
+    updateWidgetMoveUpItem = (event: any) => {
+    	if (event) {
+    		event.preventDefault();
+    	}
+    	const mainWidget = this.getMainWidget();
 
-    // 	if (this.getIndex() === 0) {
-    // 		return;
-    // 	}
+    	if (this.getIndex() === 0) {
+    		return;
+    	}
 
-    // 	const thisIndex = this.getIndex();
+        const newIndex = this.getIndex() - 1;
+        const item = mainWidget.getItems()[this.getIndex()];
+        mainWidget.moveItem(item, newIndex);
 
-    // 	const itemName = mainWidget.getItemNames()[thisIndex];
-    // 	mainWidget.getItemNames().splice(thisIndex, 1);
-    // 	mainWidget.getItemNames().splice(thisIndex - 1, 0, itemName);
+    	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+    	history.registerAction();
 
-    // 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
-    // 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
-    // 	mainWidget.getItemBackgroundColors().splice(thisIndex - 1, 0, itemBackgroundColor);
+    	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+    	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-    // 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
-    // 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
-    // 	mainWidget.getWidgetKeys().splice(thisIndex - 1, 0, itemWidgetKeys);
+    	g_flushWidgets();
+    };
 
-    // 	mainWidget.updateGroup(thisIndex);
-    // 	mainWidget.selectGroup(thisIndex, true);
-    // 	mainWidget.updateGroup(thisIndex - 1);
-    // 	mainWidget.selectGroup(thisIndex - 1, true);
+    updateWidgetMoveDownItem = (event: any) => {
+    	if (event) {
+    		event.preventDefault();
+    	}
+    	const mainWidget = this.getMainWidget();
 
-    // 	const member = this.getItems().getMembers()[thisIndex];
-    // 	const member2 = this.getItems().getMembers()[thisIndex - 1];
+    	if (this.getIndex() === mainWidget.getItems().length - 1) {
+    		return;
+    	}
 
-    // 	member.setIndex(thisIndex - 1);
-    // 	member2.setIndex(thisIndex);
+        const newIndex = this.getIndex() + 1;
+        const item = mainWidget.getItems()[this.getIndex()];
+        mainWidget.moveItem(item, newIndex);
 
-    // 	this.getItems().getMembers().splice(thisIndex, 1);
-    // 	this.getItems()
-    // 		.getMembers()
-    // 		.splice(thisIndex - 1, 0, member);
+    	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+    	history.registerAction();
 
-    // 	this.getItems()._forceUpdate();
+    	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
+    	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
 
-    // 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-    // 	history.registerAction();
+    	g_flushWidgets();
+    };
 
-    // 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-    // 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-    // 	g_flushWidgets();
-    // };
-
-    // updateWidgetMoveDownItem = (event: any) => {
-    // 	if (event) {
-    // 		event.preventDefault();
-    // 	}
-    // 	const mainWidget = this.getMainWidget();
-
-    // 	if (this.getIndex() >= mainWidget.getItemNames().length - 1) {
-    // 		return;
-    // 	}
-
-    // 	const thisIndex = this.getIndex();
-
-    // 	const itemName = mainWidget.getItemNames()[thisIndex];
-    // 	mainWidget.getItemNames().splice(thisIndex, 1);
-    // 	mainWidget.getItemNames().splice(thisIndex + 1, 0, itemName);
-
-    // 	const itemBackgroundColor = mainWidget.getItemBackgroundColors()[thisIndex];
-    // 	mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
-    // 	mainWidget.getItemBackgroundColors().splice(thisIndex + 1, 0, itemBackgroundColor);
-
-    // 	const itemWidgetKeys = mainWidget.getWidgetKeys()[thisIndex];
-    // 	mainWidget.getWidgetKeys().splice(thisIndex, 1);
-    // 	mainWidget.getWidgetKeys().splice(thisIndex + 1, 0, itemWidgetKeys);
-
-    // 	mainWidget.updateGroup(thisIndex);
-    // 	mainWidget.selectGroup(thisIndex, true);
-
-    // 	mainWidget.updateGroup(thisIndex + 1);
-    // 	mainWidget.selectGroup(thisIndex + 1, true);
-
-    // 	const member = this.getItems().getMembers()[thisIndex];
-    // 	const member2 = this.getItems().getMembers()[thisIndex + 1];
-
-    // 	member.setIndex(thisIndex + 1);
-    // 	member2.setIndex(thisIndex);
-
-    // 	this.getItems().getMembers().splice(thisIndex, 1);
-    // 	this.getItems()
-    // 		.getMembers()
-    // 		.splice(thisIndex + 1, 0, member);
-
-    // 	this.getItems()._forceUpdate();
-
-    // 	const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
-    // 	history.registerAction();
-
-    // 	g_widgets1.addToForceUpdateWidgets(mainWidget.getWidgetKey());
-    // 	g_widgets1.addToForceUpdateWidgets("GroupSelection2");
-
-    // 	g_flushWidgets();
-    // };
 
     updateWidgetRemoveItem = (event: React.SyntheticEvent | null | undefined) => {
         if (event) {

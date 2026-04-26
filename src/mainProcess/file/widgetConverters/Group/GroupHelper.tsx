@@ -165,14 +165,22 @@ export class GroupHelper extends BaseWidgetHelper {
             tdl["style"]["height"] = tdl["style"]["height"] - 40;
         }
 
+        if (type === "group") {
+            const fontSize = tdl["style"]["fontSize"];
+            tdl["style"]["left"] = tdl["style"]["left"] + fontSize * 0.6 + 1;
+            // tdl["style"]["top"] = tdl["style"]["top"] + fontSize * 0.6 + 1;
+            tdl["style"]["width"] = tdl["style"]["width"] - fontSize * 1.2 - 2;
+            tdl["style"]["height"] = tdl["style"]["height"] - fontSize * 0.6 - 1;
+        }
+
         // reposition the children widgets
         const left0 = tdl["style"]["left"];
         const top0 = tdl["style"]["top"];
         for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
             // tdl["widgetKeys"][0].push(widgetKey);
-            const offset = tdl["text"]["showBox"] === true ? 15 : 0;
-            widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0 + offset;
-            widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + offset;
+            // const offset = tdl["text"]["showBox"] === true ? 15 : 0;
+            widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0 + tdl["style"]["fontSize"] * 0.6 + 1;
+            widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + tdl["style"]["fontSize"] * 1.2 + 2;
         }
 
         // result is an object that contains the Group widget and all its children widgets

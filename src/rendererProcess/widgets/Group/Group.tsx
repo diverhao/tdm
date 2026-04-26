@@ -1,13 +1,11 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { GroupSidebar } from "./GroupSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { Log } from "../../../common/Log";
-import { defaultGroupTdl, type_Group_item_tdl as type_Group_item, type_Group_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultGroupTdl, type_Group_tdl } from "../../../common/types/type_widget_tdl";
 import { GroupItem } from "./GroupItem";
 import { v4 as uuidv4 } from "uuid";
 
@@ -127,10 +125,6 @@ export class Group extends BaseWidget {
 
     _ElementGroup = () => {
 
-        // if (this.getItems().length > 1) {
-        //     return null;
-        // }
-
         const allStyle = this.getAllStyle();
         const item = this.getSelectedItem();
         const borderColor = allStyle["color"];
@@ -179,7 +173,6 @@ export class Group extends BaseWidget {
                         alignItems: "center",
                         height: labelHeight,
                         width: "100%",
-                        // background: "blue",
                         lineHeight: `${labelHeight}px`
                     }}
                 >
@@ -189,7 +182,6 @@ export class Group extends BaseWidget {
                         if (this.getSelectedItem() === item && this.getItems().length > 1) {
                             textDecoration = "underline";
                         }
-                        console.log("text decoration", index)
 
                         return (
                             <>
@@ -278,9 +270,6 @@ export class Group extends BaseWidget {
      *  - if this widget is included in an item of this Group widget, then exclude (remove) it from this item
      */
     updateCoverage = () => {
-
-        console.log("update coverage, \n\n\n");
-        console.log(this.getTdlCopy(false))
 
         const style = this.getStyle();
         // "mouse selection region" boundary
@@ -395,6 +384,31 @@ export class Group extends BaseWidget {
         this.updateAppearance();
     }
 
+    moveItem = (item: GroupItem, newIndex: number) => {
+        const items = this.getItems();
+        if (newIndex > items.length - 1 || newIndex < 0) {
+            return;
+        }
+
+        let oldIndex = -1;
+        for (let ii = 0; ii < items.length ; ii++) {
+            if (items[ii] === item) {
+                oldIndex = ii;
+                break;
+            }
+        }
+        if (oldIndex === newIndex || oldIndex === -1) {
+            return;
+        }
+
+        items.splice(oldIndex, 1);
+        items.splice(newIndex, 0, item);
+
+        this.setSelectedItem(item);
+        this.updateCoverage();
+        this.updateAppearance();
+    }
+
     updateAppearance = () => {
 
         for (const item of this.getItems()) {
@@ -406,13 +420,8 @@ export class Group extends BaseWidget {
     calcTabMaxWidth = () => {
 
         const allStyle = this.getAllStyle();
-        const item = this.getItems()[0];
-        const height = allStyle["height"];
-        const fontSize = allStyle["fontSize"];
         const width = allStyle["width"];
-
         const numTabs = this.getItems().length;
-
         const maxWidth = (width - 10) / numTabs;
         return maxWidth;
     }
