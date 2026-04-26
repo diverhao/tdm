@@ -6,6 +6,7 @@ import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
+import { GroupItem } from "../../widgets/Group/GroupItem";
 
 export class SidebarGroupItems extends SidebarComponent {
     _members: SidebarGroupItem[] = [];
@@ -79,23 +80,24 @@ export class SidebarGroupItems extends SidebarComponent {
         if (event) {
             event.preventDefault();
         }
-        const mainWidget = this.getMainWidget() as Group;
+        const mainWidget = this.getMainWidget();
+        if (!(mainWidget instanceof Group)) {
+            return;
+        }
 
         const newIndex = mainWidget.getItems().length;
 
-        const newItem = {
+        const newItemTdl = {
             name: `item-${newIndex}`,
-            backgroundColor: `rgba(255,255,255,1)`,
+            backgroundColor: `rgba(0,0,0,0)`,
             widgetKeys: [],
         };
+
+        const newItem = new GroupItem(mainWidget, newItemTdl)
         mainWidget.getItems().push(newItem);
-        // mainWidget.getItemNames().push(`item-${newIndex}`);
-        // mainWidget.getItemBackgroundColors().push("rgba(255,255,255,1)");
-        // mainWidget.getWidgetKeys().push([])
-
-        mainWidget.updateGroup(newIndex);
-        mainWidget.selectGroup(newIndex, true);
-
+        mainWidget.setSelectedItem(newItem);
+        mainWidget.updateCoverage();
+        mainWidget.updateAppearance();
 
         this.getMembers().push(new SidebarGroupItem(this, newIndex));
 

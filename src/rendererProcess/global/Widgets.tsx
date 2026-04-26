@@ -894,12 +894,12 @@ export class Widgets {
             return;
         }
 
-        // (0) special case: embedded display widget
+        // (0) special case: Group widget
         if (widgetKey.includes("Group_")) {
             try {
                 const widget = this.getWidget2(widgetKey);
                 if (widget instanceof Group) {
-                    widget.removeGroupMembers();
+                    widget.removeThisWidget();
                 }
             } catch (e) {
                 Log.error(e);
@@ -907,7 +907,6 @@ export class Widgets {
         }
 
         // (0.5) remove all intervals and timeouts
-
 
         // (1)
         if (deselectAllWidgets) {

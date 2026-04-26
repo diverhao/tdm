@@ -314,7 +314,7 @@ export const defaultGroupTdl: type_Group_tdl = {
         transform: "rotate(0deg)",
         color: "rgba(0,0,0,1)",
         borderStyle: "solid",
-        borderWidth: 1,
+        borderWidth: 0,
         borderColor: "rgba(0, 0, 0, 1)",
         fontFamily: GlobalVariables.defaultFontFamily,
         fontSize: GlobalVariables.defaultFontSize,

@@ -29,7 +29,7 @@ export class SidebarGroupItem {
 
     _Element = () => {
         const mainWidget = this.getMainWidget();
-        const [itemName, setItemName] = React.useState(mainWidget.getItemName(this.getIndex()));
+        const [itemName, setItemName] = React.useState(mainWidget.getItems()[this.getIndex()].getName());
 
         return (
             <this._BlockBody>
@@ -58,7 +58,7 @@ export class SidebarGroupItem {
 						>
 							&#11107;{" "}
 						</this.StyledButton> */}
-                        {mainWidget.getSelectedGroup() === this.getIndex() ? (
+                        {/* {mainWidget.getSelectedItem() === this.getIndex() ? (
                             <this.StyledButton
                                 onClick={(event) => {
                                     this.updateWidgetRemoveItem(event);
@@ -72,7 +72,20 @@ export class SidebarGroupItem {
                                     }}
                                 ></img>
                             </this.StyledButton>
-                        ) : null}
+                        ) : null} */}
+                        <this.StyledButton
+                            onClick={(event) => {
+                                this.updateWidgetRemoveItem(event);
+                            }}
+                        >
+                            <img
+                                src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
+                                style={{
+                                    width: "50%",
+                                    height: "50%",
+                                }}
+                            ></img>
+                        </this.StyledButton>
                     </div>
                 </div>
 
@@ -112,7 +125,8 @@ export class SidebarGroupItem {
                             }}
                             // must use enter to change the value
                             onBlur={(event) => {
-                                const orig = mainWidget.getItemName(this.getIndex());
+                                const item = mainWidget.getItems()[this.getIndex()];
+                                const orig = item.getName();
                                 if (orig !== itemName) {
                                     setItemName(orig);
                                 }
@@ -130,7 +144,7 @@ export class SidebarGroupItem {
                     }}
                 >
                     <Collapsible
-                        rgbColorStr={`${mainWidget.getItemBackgroundColor(this.getIndex())}`}
+                        rgbColorStr={`${mainWidget.getItems()[this.getIndex()].getBackgroundColor()}`}
                         updateFromSidebar={(
                             event: React.SyntheticEvent | null | undefined,
                             propertyName: string,
@@ -151,11 +165,11 @@ export class SidebarGroupItem {
         }
 
         const mainWidget = this.getMainWidget();
-        const oldVal = mainWidget.getItemName(this.getIndex());
+        const oldVal = mainWidget.getItems()[this.getIndex()].getName();
         if (propertyValue === oldVal) {
             return;
         } else {
-            mainWidget.setItemName(this.getIndex(), `${propertyValue}`);
+            mainWidget.getItems()[this.getIndex()].setName(`${propertyValue}`);
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -174,11 +188,11 @@ export class SidebarGroupItem {
 
         const mainWidget = this.getMainWidget();
         const newVal = GlobalMethods.rgbaArrayToRgbaStr(propertyValue as number[]);
-        const oldVal = `${mainWidget.getItemBackgroundColor(this.getIndex())}`;
+        const oldVal = `${mainWidget.getItems()[this.getIndex()].getBackgroundColor()}`;
         if (newVal === oldVal) {
             return;
         } else {
-            mainWidget.setItemBackgroundColor(this.getIndex(), newVal);
+            mainWidget.getItems()[this.getIndex()].setBackgroundColor(newVal);
         }
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
@@ -304,37 +318,8 @@ export class SidebarGroupItem {
             return;
         }
 
-        // console.log("==++++>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
-        const thisIndex = this.getIndex();
-
-        // mainWidget.getItemNames().splice(thisIndex, 1);
-
-        // mainWidget.getItemBackgroundColors().splice(thisIndex, 1);
-
-        // remove all widgets
-        const widgetKeys = mainWidget.getItemWidgetKeys(thisIndex);
-        if (widgetKeys !== undefined) {
-            for (let widgetKey of widgetKeys) {
-                g_widgets1.removeWidget(widgetKey, true, false);
-            }
-        }
-        g_widgets1.updateSidebar(false);
-
-        // mainWidget.getWidgetKeys().splice(thisIndex, 1);
-        mainWidget.getItems().splice(thisIndex, 1);
-
-        this.getItems().getMembers().splice(thisIndex, 1);
-        for (let ii = thisIndex; ii < mainWidget.getItems().length; ii++) {
-            const item = this.getItems().getMembers()[ii];
-            item.setIndex(ii);
-        }
-
-        this.getItems()._forceUpdate();
-
-        // focus to new Group tab
-        const newIndex = Math.max(thisIndex - 1, 0);
-        mainWidget.updateGroup(newIndex);
-        mainWidget.selectGroup(newIndex, true);
+        const index = this.getIndex();
+        mainWidget.removeItem(index);
 
         const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
         history.registerAction();
@@ -344,14 +329,13 @@ export class SidebarGroupItem {
 
         g_flushWidgets();
 
-        // console.log("===>", mainWidget.getItemBackgroundColors(), mainWidget.getWidgetKeys(), mainWidget.getAllWidgetKeys())
     };
 
     // --------------------------- getters -----------------------------
 
     getElement = () => {
         const mainWidget = this.getMainWidget();
-        return <this._Element key={`${mainWidget.getItemName(this.getIndex())}-${this.getIndex()}`}></this._Element>;
+        return <this._Element key={`${mainWidget.getItems()[this.getIndex()].getName()}-${this.getIndex()}`}></this._Element>;
     };
 
     getIndex = () => {

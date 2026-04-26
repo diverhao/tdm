@@ -93,25 +93,6 @@ export class GroupSidebar extends BaseWidgetSidebar {
                     {this.getSidebarAngle().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />
-                {/* ---------------- channel -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Channel</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* {this.getSidebarChannelName().getElement()} */}
-                {/* {this.getSidebarShowUnit().getElement()} */}
-                {/* {this.getSidebarAlarmBorder().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
-                {/* ---------------- background -------------------------- */}
-                {/* <this._BlockTitle> */}
-                {/* <b>Background</b> */}
-                {/* </this._BlockTitle> */}
-                {/* <this._BlockBody> */}
-                {/* color */}
-                {/* {this.getSidebarBackgroundColor().getElement()} */}
-                {/* </this._BlockBody> */}
-                {/* <this._HorizontalLine /> */}
                 {/* ---------------- text -------------------------- */}
                 <this._BlockTitle>
                     <b>Text</b>
@@ -119,13 +100,10 @@ export class GroupSidebar extends BaseWidgetSidebar {
                 <this._BlockBody>
                     {/* color */}
                     {this.getSidebarTextColor().getElement()}
-                    {/* {this.getSidebarXAlign().getElement()} */}
-                    {/* {this.getSidebarYAlign().getElement()} */}
-                    {/* {this.getSidebarWrapWord().getElement()} */}
                 </this._BlockBody>
                 <this._HorizontalLine />
                 {/* ---------------------------- tab ------------------------ */}
-                <this._BlockTitle>
+                {/* <this._BlockTitle>
                     <b>Tabs</b>
                 </this._BlockTitle>
                 <this._BlockBody>
@@ -137,7 +115,7 @@ export class GroupSidebar extends BaseWidgetSidebar {
                     {this.getSidebarEmbeddedDisplayShowTab().getElement()}
                     {this.getSidebarGroupShowBox().getElement()}
                 </this._BlockBody>
-                <this._HorizontalLine />
+                <this._HorizontalLine /> */}
 
                 {/* ----------------------- font --------------------------- */}
                 <this._BlockTitle>
