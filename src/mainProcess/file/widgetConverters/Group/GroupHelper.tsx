@@ -56,6 +56,7 @@ export class GroupHelper extends BaseWidgetHelper {
             "direction", // in Tabs, not in tdm
             "tab_height", // in Tabs, not in tdm
             "tabs", // in Tabs
+            "line_color",
         ];
 
         tdl["style"]["width"] = 300;
@@ -77,6 +78,8 @@ export class GroupHelper extends BaseWidgetHelper {
             tdl["text"]["showBox"] = true;
             tdl["style"]["borderWidth"] = 0;
         }
+
+        let tabHeight = 30;
 
 
 
@@ -115,6 +118,11 @@ export class GroupHelper extends BaseWidgetHelper {
                 } else if (propertyName === "foreground_color") {
                     const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
                     tdl["style"]["color"] = rgbaColor;
+                } else if (propertyName === "tab_height") {
+                    tabHeight = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "line_color") {
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["style"]["borderColor"] = rgbaColor;
                 } else if (propertyName === "transparent") {
                     transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "style") {
@@ -153,34 +161,62 @@ export class GroupHelper extends BaseWidgetHelper {
 
         if (type === "tabs") {
             // if a widget is not in the selected tab, hide it
-            for (let index = 0; index < itemWidgetKeys.length; index++) {
-                if (index !== tdl["text"]["selectedGroup"]) {
-                    for (const widgetKey of itemWidgetKeys[index]) {
-                        widgetsTdl[widgetKey]["style"]["visibility"] = "hidden";
-                    }
-                }
-            }
+            // for (let index = 0; index < itemWidgetKeys.length; index++) {
+            //     if (index !== tdl["text"]["selectedGroup"]) {
+            //         for (const widgetKey of itemWidgetKeys[index]) {
+            //             widgetsTdl[widgetKey]["style"]["visibility"] = "hidden";
+            //         }
+            //     }
+            // }
             // the tab is part of the widget size in bob file
-            tdl["style"]["top"] = tdl["style"]["top"] + 40;
-            tdl["style"]["height"] = tdl["style"]["height"] - 40;
+            // tdl["style"]["top"] = tdl["style"]["top"] + 40;
+            // tdl["style"]["height"] = tdl["style"]["height"] - 40;
+            const fontSize = tdl["style"]["fontSize"];
+            const left0 = tdl["style"]["left"];
+            const top0 = tdl["style"]["top"];
+            for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
+                widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + 8 + tabHeight;
+            }
         }
 
         if (type === "group") {
             const fontSize = tdl["style"]["fontSize"];
-            tdl["style"]["left"] = tdl["style"]["left"] + fontSize * 0.6 + 1;
-            // tdl["style"]["top"] = tdl["style"]["top"] + fontSize * 0.6 + 1;
-            tdl["style"]["width"] = tdl["style"]["width"] - fontSize * 1.2 - 2;
-            tdl["style"]["height"] = tdl["style"]["height"] - fontSize * 0.6 - 1;
-        }
-
-        // reposition the children widgets
-        const left0 = tdl["style"]["left"];
-        const top0 = tdl["style"]["top"];
-        for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
-            // tdl["widgetKeys"][0].push(widgetKey);
-            // const offset = tdl["text"]["showBox"] === true ? 15 : 0;
-            widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0 + tdl["style"]["fontSize"] * 0.6 + 1;
-            widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + tdl["style"]["fontSize"] * 1.2 + 2;
+            const left0 = tdl["style"]["left"];
+            const top0 = tdl["style"]["top"];
+            if (groupStyle === 0) {
+                tdl["style"]["left"] = tdl["style"]["left"] + fontSize * 0.6 + 1;
+                tdl["style"]["width"] = tdl["style"]["width"] - fontSize * 1.2 - 2;
+                tdl["style"]["height"] = tdl["style"]["height"] - fontSize * 0.6 - 1;
+                // reposition the children widgets
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0 + tdl["style"]["fontSize"] * 1.2 + 2;
+                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + tdl["style"]["fontSize"] * 1.2 + 2;
+                }
+            } else if (groupStyle === 1) {
+                tdl["style"]["left"] = tdl["style"]["left"];
+                tdl["style"]["width"] = tdl["style"]["width"];
+                tdl["style"]["height"] = tdl["style"]["height"];
+                // reposition the children widgets
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
+                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0 + tdl["style"]["fontSize"] * 1.2 + 2;
+                }
+            } else if (groupStyle === 2) {
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
+                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0;
+                }
+                tdl["style"]["borderWidth"] = 1;
+                tdl["style"]["color"] = "rgba(0,0,0,0)";
+            } else if (groupStyle === 3) {
+                for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
+                    widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0;
+                }
+                tdl["style"]["borderWidth"] = 0;
+                tdl["style"]["color"] = "rgba(0,0,0,0)";
+            }
         }
 
         // result is an object that contains the Group widget and all its children widgets
@@ -188,7 +224,7 @@ export class GroupHelper extends BaseWidgetHelper {
         groupWidgetTdl[tdl["widgetKey"]] = tdl;
 
 
-        if (transparent === true && groupStyle === 3) {
+        if (transparent === true && groupStyle === 3 && false) {
             // this is a group, not a group widget
             return widgetsTdl as any;
         } else {

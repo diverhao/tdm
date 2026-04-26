@@ -147,6 +147,7 @@ export class BooleanButton extends BaseWidget {
                     justifyContent: justifyContent,
                     backgroundColor: buttonColor,
                     outline: outline,
+                    overflow: "hidden",
                     ...threeDStyle,
                 }}
                 onMouseDown={(event) => { this.handleMouseActionOnButton(event, "down") }}
