@@ -2278,11 +2278,11 @@ export const defaultSlideButtonTdl: type_SlideButton_tdl = {
     },
     text: {
         horizontalAlign: "flex-start",
-        verticalAlign: "flex-start",
+        verticalAlign: "center",
         wrapWord: false,
         showUnit: false,
         alarmBorder: true,
-        boxWidth: 100,
+        boxWidth: 37,
         text: "Label",
         invisibleInOperation: false,
         confirmOnWrite: false,

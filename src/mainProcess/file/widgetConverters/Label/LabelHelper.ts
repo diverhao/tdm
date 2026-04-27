@@ -298,7 +298,6 @@ export class LabelHelper extends BaseWidgetHelper {
                 continue;
             } else {
                 if (propertyName === "x") {
-                    console.log("left ==================", propertyValue)
                     tdl["style"]["left"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "y") {
                     tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
@@ -346,7 +345,9 @@ export class LabelHelper extends BaseWidgetHelper {
         }
 
         // the TDM default font is slightly wider
-        tdl["style"]["fontSize"] = tdl["style"]["fontSize"] - 1;
+        if (tdl["style"]["fontFamily"] === "TDM Default") {
+            tdl["style"]["fontSize"] = tdl["style"]["fontSize"] - 1;
+        }
 
         if (transparent === true) {
             const originalRgbaColor = tdl["style"]["backgroundColor"];
@@ -367,7 +368,7 @@ export class LabelHelper extends BaseWidgetHelper {
             tdl["style"]["left"] = x + (w - h) / 2;
             tdl["style"]["top"] = y - (w - h) / 2;
         }
-        console.log(tdl)
+
         return tdl;
     };
 

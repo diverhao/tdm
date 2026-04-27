@@ -159,6 +159,8 @@ export class SlideButtonSidebar extends BaseWidgetSidebar {
                     <b>Text</b>
                 </this._BlockTitle>
                 <this._BlockBody>
+                    {this.getSidebarXAlign().getElement()}
+                    {this.getSidebarYAlign().getElement()}
                     {this.getSidebarTextColor().getElement()}
                 </this._BlockBody>
                 <this._HorizontalLine />

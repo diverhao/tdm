@@ -105,7 +105,7 @@ export class Arc extends BaseWidget {
         const points = this.calcPoints();
 
         // if the arc is larger than 180 degrees
-        const angleRange = allText["angleRange"];
+        const angleRange = Math.min(allText["angleRange"], 359.5);
         const largeArcFlag = Math.abs(angleRange) > 180 ? "1" : "0";
 
         // show radius lines or not
@@ -192,7 +192,7 @@ export class Arc extends BaseWidget {
         const b = this.getAllStyle()["height"] / 2;
 
         let angleStart = this.getAllText()["angleStart"];
-        let angleEnd = this.getAllText()["angleRange"] + angleStart;
+        let angleEnd = Math.min(this.getAllText()["angleRange"], 359.5) + angleStart;
         if (this.getAllText()["angleRange"] < 0) {
             const tmp = angleEnd;
             angleEnd = angleStart;

@@ -189,6 +189,7 @@ export class ArcHelper extends BaseWidgetHelper {
 
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
+        tdl["style"]["backgroundColor"] = "rgba(0,0,0,0)";
 
         if (type === "arc") {
             tdl["text"]["angleRange"] = 90;
@@ -197,7 +198,7 @@ export class ArcHelper extends BaseWidgetHelper {
         } else if (type === "ellipse") {
             tdl["style"]["width"] = 100;
             tdl["style"]["height"] = 50;
-            tdl["text"]["angleRange"] = 360;
+            tdl["text"]["angleRange"] = 359;
             tdl["text"]["showRadius"] = "none";
         }
 

@@ -264,10 +264,11 @@ export class ScaledSliderHelper extends BaseWidgetHelper {
         ];
 
         let isHorizontal = true;
-        let isTransparent = false;
+        let isTransparent = true;
         tdl["style"]["left"] = 0;
         tdl["style"]["top"] = 0;
         tdl["text"]["usePvLimits"] = true;
+        tdl["text"]["showPvValue"] = false;
 
         if (type === "scaledslider") {
             tdl["text"]["appearance"] = "contemporary";

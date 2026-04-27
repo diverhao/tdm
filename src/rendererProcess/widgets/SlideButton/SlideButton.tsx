@@ -97,7 +97,7 @@ export class SlideButton extends BaseWidget {
 
 
     _ElementSlideButton = () => {
-        const boxHeight = this.getAllText()["boxWidth"] / 3;
+        const boxHeight = this.getAllText()["boxWidth"] * 0.54;
         const elementRef = React.useRef<HTMLDivElement>(null);
         const backgroundColor = this.calcItemColor();
         const buttonPosition = this.calcButtonPosition();

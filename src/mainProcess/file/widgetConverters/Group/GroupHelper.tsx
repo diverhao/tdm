@@ -79,9 +79,10 @@ export class GroupHelper extends BaseWidgetHelper {
             tdl["style"]["borderWidth"] = 0;
         }
 
+        tdl["style"]["backgroundColor"] = "rgba(255,255,255,1)";
+
         let tabHeight = 30;
-
-
+        let groupWidgetItemName = "";
 
         let widgetsTdl: Record<string, any> = {};
         for (const propertyName of propertyNames) {
@@ -99,7 +100,9 @@ export class GroupHelper extends BaseWidgetHelper {
                 } else if (propertyName === "y") {
                     tdl["style"]["top"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "name") {
-                    itemNames[0] = BobPropertyConverter.convertBobString(propertyValue);
+                    if (type === "group") {
+                        itemNames[0] = BobPropertyConverter.convertBobString(propertyValue);
+                    }
                 } else if (propertyName === "width") {
                     tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "height") {
@@ -211,6 +214,7 @@ export class GroupHelper extends BaseWidgetHelper {
                 tdl["style"]["color"] = "rgba(0,0,0,0)";
             } else if (groupStyle === 3) {
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
+                    console.log("widgetTDL ==================", widgetTdl["style"]["left"], widgetTdl["style"]["top"], left0, top0)
                     widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
                     widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0;
                 }

@@ -151,6 +151,7 @@ export class RadioButtonHelper extends BaseWidgetHelper {
         tdl["style"]["height"] = 60;
         tdl["text"]["useChannelItems"] = false;
         tdl["text"]["direction"] = "horizontal";
+        // tdl["text"]["direction"] = "vertical";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

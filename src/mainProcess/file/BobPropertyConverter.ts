@@ -1068,7 +1068,10 @@ export class BobPropertyConverter {
             const data = propertyValue[0]["font"][0]["$"];
             const fontFamily = data["family"];
             const fontStyleRaw = data["style"];
-            const fontSize = parseInt(data["size"]);
+            let fontSize = parseFloat(data["size"]);
+            if (!isNaN(fontSize)) {
+                fontSize = Math.round(fontSize);
+            }
             let fontStyle = "normal";
             let fontWeight = "normal";
             if (fontStyleRaw === "REGULAR") {
@@ -1994,8 +1997,9 @@ export class BobPropertyConverter {
         },
         convertBobSufffix: boolean
     ) => {
+        let itemName = "";
         try {
-            const itemName = this.convertBobString(tabData["name"]);
+            itemName = this.convertBobString(tabData["name"]);
             const widgetsData = tabData["children"][0]["widget"];
             const widgetsTdl = await this.convertBobGroupWidgets(widgetsData, convertBobSufffix)
             return {
@@ -2004,8 +2008,9 @@ export class BobPropertyConverter {
                 widgetKeys: Object.keys(widgetsTdl),
             }
         } catch (e) {
+            console.log("you catch me")
             return {
-                itemName: "",
+                itemName: itemName,
                 widgetsTdl: {},
                 widgetKeys: [],
             }

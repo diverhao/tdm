@@ -185,7 +185,7 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
             "password", // not in tdm
         ];
 
-        tdl["text"]["useChannelItems"] = false;
+        tdl["text"]["useChannelItems"] = true;
 
         tdl["style"]["left"] = 0;
         tdl["style"]["top"] = 0;
@@ -229,7 +229,8 @@ export class ChoiceButtonHelper extends BaseWidgetHelper {
                 } else if (propertyName === "foreground_color") {
                     tdl["style"]["color"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "background_color") {
-                    tdl["style"]["backgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
+                    // no background color in TDL
+                    tdl["text"]["unselectedBackgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "selected_color") {
                     tdl["text"]["selectedBackgroundColor"] = BobPropertyConverter.convertBobColor(propertyValue);
                 } else if (propertyName === "items") {

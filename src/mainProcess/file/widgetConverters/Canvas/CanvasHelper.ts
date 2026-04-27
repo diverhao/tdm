@@ -1,6 +1,7 @@
 import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { EdlConverter } from "../../EdlConverter";
+import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 
 export type type_Canvas_tdl = Record<string, any> & {
     type: "Canvas";
@@ -57,142 +58,162 @@ export class CanvasHelper {
         return result;
     };
 
-	// ------------------------------- converter ---------------------
+    // ------------------------------- converter ---------------------
 
-	static convertEdlToTdl = (edl: Record<string, string>): type_Canvas_tdl => {
-		Log.info("\n------------", `Parsing "ScreenProperties"`, "------------------\n");
-		const tdl = this.generateDefaultTdl() as type_Canvas_tdl;
-		// all properties for this widget
-		// from act_win.cc
-		const propertyNames: string[] = [
-			"beginScreenProperties", // not in tdm
-			"major", // not in tdm
-			"minor", // not in tdm
-			"release", // not in tdm
-			"x",
-			"y",
-			"w",
-			"h",
-			"font", // not in tdm
-			"fontAlign", // not in tdm
-			"ctlFont", // not in tdm
-			"ctlFontAlign", // not in tdm
-			"btnFont", // not in tdm
-			"btnFontAlign", // not in tdm
-			"fgColor", // not in tdm
-			"bgColor",
-			"textColor", // not in tdm
-			"ctlFgColor1", // not in tdm
-			"ctlFgColor2", // not in tdm
-			"ctlBgColor1", // not in tdm
-			"ctlBgColor2", // not in tdm
-			"topShadowColor", // not in tdm
-			"botShadowColor", // not in tdm
-			"title",
-			"showGrid", // not in tdm
-			"snapToGrid", // not in tdm
-			"gridSize", // not in tdm
-			"orthoLineDraw", // not in tdm
-			"pvType", // not in tdm
-			"disableScroll", // not in tdm
-			"pixmapFlag", // not in tdm
-			"templateParams", // not in tdm
-			"templateInfo", // not in tdm
-			"endScreenProperties", // not in tdm
-		];
+    static convertEdlToTdl = (edl: Record<string, string>): type_Canvas_tdl => {
+        Log.info("\n------------", `Parsing "ScreenProperties"`, "------------------\n");
+        const tdl = this.generateDefaultTdl() as type_Canvas_tdl;
+        // all properties for this widget
+        // from act_win.cc
+        const propertyNames: string[] = [
+            "beginScreenProperties", // not in tdm
+            "major", // not in tdm
+            "minor", // not in tdm
+            "release", // not in tdm
+            "x",
+            "y",
+            "w",
+            "h",
+            "font", // not in tdm
+            "fontAlign", // not in tdm
+            "ctlFont", // not in tdm
+            "ctlFontAlign", // not in tdm
+            "btnFont", // not in tdm
+            "btnFontAlign", // not in tdm
+            "fgColor", // not in tdm
+            "bgColor",
+            "textColor", // not in tdm
+            "ctlFgColor1", // not in tdm
+            "ctlFgColor2", // not in tdm
+            "ctlBgColor1", // not in tdm
+            "ctlBgColor2", // not in tdm
+            "topShadowColor", // not in tdm
+            "botShadowColor", // not in tdm
+            "title",
+            "showGrid", // not in tdm
+            "snapToGrid", // not in tdm
+            "gridSize", // not in tdm
+            "orthoLineDraw", // not in tdm
+            "pvType", // not in tdm
+            "disableScroll", // not in tdm
+            "pixmapFlag", // not in tdm
+            "templateParams", // not in tdm
+            "templateInfo", // not in tdm
+            "endScreenProperties", // not in tdm
+        ];
 
-		for (const propertyName of propertyNames) {
-			const propertyValue = edl[propertyName];
-			if (propertyValue === undefined) {
-				Log.info("Property", `"${propertyName}"`, "is not in edl file");
-				continue;
-			} else {
-				if (propertyName === "x") {
-					// tdl["style"]["left"] = parseInt(propertyValue);
-				} else if (propertyName === "y") {
-					// tdl["style"]["top"] = parseInt(propertyValue);
-				} else if (propertyName === "w") {
-					tdl["style"]["width"] = parseInt(propertyValue);
-				} else if (propertyName === "h") {
-					tdl["style"]["height"] = parseInt(propertyValue);
-				} else if (propertyName === "title") {
-					tdl["windowName"] = propertyValue;
-				} else if (propertyName === "bgColor") {
-					tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
-				} else {
-					Log.info("Skip property", `"${propertyName}"`);
-				}
-			}
-		}
+        for (const propertyName of propertyNames) {
+            const propertyValue = edl[propertyName];
+            if (propertyValue === undefined) {
+                Log.info("Property", `"${propertyName}"`, "is not in edl file");
+                continue;
+            } else {
+                if (propertyName === "x") {
+                    // tdl["style"]["left"] = parseInt(propertyValue);
+                } else if (propertyName === "y") {
+                    // tdl["style"]["top"] = parseInt(propertyValue);
+                } else if (propertyName === "w") {
+                    tdl["style"]["width"] = parseInt(propertyValue);
+                } else if (propertyName === "h") {
+                    tdl["style"]["height"] = parseInt(propertyValue);
+                } else if (propertyName === "title") {
+                    tdl["windowName"] = propertyValue;
+                } else if (propertyName === "bgColor") {
+                    tdl["style"]["backgroundColor"] = EdlConverter.convertEdlColor(propertyValue);
+                } else {
+                    Log.info("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
 
-		return tdl;
-	};
-	/**
-	 * Convert .bob to .tdl
-	 */
-	static convertBobToTdl = (bobJson: Record<string, any>): type_Canvas_tdl => {
-		Log.info("---------------", `Parsing "display to Canvas"`, "------------------\n");
-		const tdl = this.generateDefaultTdl();
-		// all properties for this widget
-		const propertyNames: string[] = [
-			"background_color",
-			"class", // not in tdm
-			"grid_color", // not in tdm
-			"grid_step_x",
-			"grid_step_y",
-			"grid_visible",
-			"height",
-			"macros",
-			"name",
-			"actions", // todo
-			"rules", // todo
-			"scripts", // todo
-			"type", // not in tdm
-			"width",
-			"x", // always 0 in tdm
-			"y", // alwasy 0 in tdm
-		];
+        return tdl;
+    };
+    /**
+     * Convert .bob to .tdl
+     */
+    static convertBobToTdl = (bobJson: Record<string, any>): type_Canvas_tdl => {
+        Log.info("---------------", `Parsing "display to Canvas"`, "------------------\n");
+        const tdl = this.generateDefaultTdl();
+        // all properties for this widget
+        const propertyNames: string[] = [
+            "background_color",
+            "class", // not in tdm
+            "grid_color",
+            "grid_step_x",
+            "grid_step_y",
+            "grid_visible",
+            "height",
+            "macros",
+            "name",
+            "actions", // todo
+            "rules", // todo
+            "scripts", // todo
+            "type", // not in tdm
+            "width",
+            "x", // always 0 in tdm
+            "y", // alwasy 0 in tdm
+        ];
+
 
         tdl["style"]["width"] = 800;
         tdl["style"]["height"] = 600;
+        tdl["showGrid"] = true;
+        tdl["xGridSize"] = 10;
+        tdl["yGridSize"] = 10;
+        tdl["gridColor"] = "rgba(128, 128, 128, 10)";
 
-		for (const propertyName of propertyNames) {
-			const propertyValue = bobJson[propertyName];
-			if (propertyValue === undefined) {
-				if (propertyName === "widget") {
-					Log.info(`There are one or more widgets inside "display"`);
-				} else {
-					Log.info("Property", `"${propertyName}"`, "is not in bob file");
-				}
-				continue;
-			} else {
-				if (propertyName === "name") {
-					tdl["windowName"] = BobPropertyConverter.convertBobString(propertyValue);
-				} else if (propertyName === "width") {
-					tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
-				} else if (propertyName === "height") {
+        for (const propertyName of propertyNames) {
+            const propertyValue = bobJson[propertyName];
+            if (propertyValue === undefined) {
+                if (propertyName === "widget") {
+                    Log.info(`There are one or more widgets inside "display"`);
+                } else {
+                    Log.info("Property", `"${propertyName}"`, "is not in bob file");
+                }
+                continue;
+            } else {
+                if (propertyName === "name") {
+                    tdl["windowName"] = BobPropertyConverter.convertBobString(propertyValue);
+                } else if (propertyName === "width") {
+                    tdl["style"]["width"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "height") {
                     tdl["style"]["height"] = BobPropertyConverter.convertBobNum(propertyValue);
-				} else if (propertyName === "background_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
-					tdl["style"]["backgroundColor"] = rgbaColor;
-				} else if (propertyName === "grid_color") {
-					const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
-					tdl["gridColor"] = rgbaColor;
-				} else if (propertyName === "grid_step_x") {
-					tdl["xGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
-				} else if (propertyName === "grid_step_y") {
-					tdl["yGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
-				} else if (propertyName === "grid_visible") {
-					tdl["showGrid"] = BobPropertyConverter.convertBobBoolean(propertyValue);
-				} else if (propertyName === "macros") {
-					tdl["macros"] = BobPropertyConverter.convertBobMacros(propertyValue);
-				} else if (propertyName === "rules") {
-					tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
-				} else {
-					Log.info("Skip property", `"${propertyName}"`);
-				}
-			}
-		}
-		return tdl;
-	};
+                } else if (propertyName === "background_color") {
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["style"]["backgroundColor"] = rgbaColor;
+                } else if (propertyName === "grid_color") {
+                    const rgbaColor = BobPropertyConverter.convertBobColor(propertyValue);
+                    tdl["gridColor"] = rgbaColor;
+                } else if (propertyName === "grid_step_x") {
+                    tdl["xGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "grid_step_y") {
+                    tdl["yGridSize"] = BobPropertyConverter.convertBobNum(propertyValue);
+                } else if (propertyName === "grid_visible") {
+                    tdl["showGrid"] = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "macros") {
+                    tdl["macros"] = BobPropertyConverter.convertBobMacros(propertyValue);
+                } else if (propertyName === "rules") {
+                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                } else {
+                    Log.info("Skip property", `"${propertyName}"`);
+                }
+            }
+        }
+
+        const backgroundColorNum = rgbaStrToRgbaArray(`${tdl["style"]["backgroundColor"]}`);
+        if (Array.isArray(backgroundColorNum) && backgroundColorNum.length === 4) {
+            backgroundColorNum[3] = 100;
+            tdl["style"]["backgroundColor"] = rgbaArrayToRgbaStr(backgroundColorNum);
+        }
+
+        const rgbaColorArray = rgbaStrToRgbaArray(tdl["gridColor"]);
+        if (Array.isArray(rgbaColorArray) && rgbaColorArray.length === 4) {
+            rgbaColorArray[3] = 10;
+            const rgbaColorStr = rgbaArrayToRgbaStr(rgbaColorArray);
+            tdl["gridColor"] = rgbaColorStr;
+        }
+
+
+        return tdl;
+    };
 }

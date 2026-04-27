@@ -1,93 +1,23 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
+import * as GlobalMethods from "../../../../common/GlobalMethods";
+import { defaultSpinnerTdl, type_Spinner_tdl } from "../../../../common/types/type_widget_tdl";
 import { BobPropertyConverter } from "../../BobPropertyConverter";
-import { type_rules_tdl, BaseWidgetHelper, type_BaseWidget_tdl } from "../BaseWidget/BaseWidgetHelper";
-
-export type type_Spinner_tdl = {
-    type: string;
-    widgetKey: string;
-    key: string;
-    style: Record<string, any>;
-    text: Record<string, any>;
-    channelNames: string[];
-    groupNames: string[];
-    rules: type_rules_tdl;
-};
+import { BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
 
 
 export class SpinnerHelper extends BaseWidgetHelper {
-
-
-    // override BaseWidget
-    static _defaultTdl: type_Spinner_tdl = {
-        type: "Spinner",
-        widgetKey: "", // "key" is a reserved keyword
-        key: "",
-        // the style for outmost div
-        // these properties are explicitly defined in style because they are
-        // (1) different from default CSS settings, or
-        // (2) they may be modified
-        style: {
-            position: "absolute",
-            display: "inline-flex",
-            backgroundColor: "rgba(128, 255, 255, 1)",
-            left: 100,
-            top: 100,
-            width: 150,
-            height: 80,
-            outlineStyle: "none",
-            outlineWidth: 1,
-            outlineColor: "black",
-            transform: "rotate(0deg)",
-            color: "rgba(0,0,0,1)",
-            borderStyle: "solid",
-            borderWidth: 0,
-            borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
-        },
-        // the ElementBody style
-        text: {
-            horizontalAlign: "flex-start",
-            verticalAlign: "flex-start",
-            wrapWord: false,
-            showUnit: true,
-            stepSize: 1,
-            invisibleInOperation: false,
-            // decimal, exponential, hexadecimal
-            format: "default",
-            // scale, >= 0
-            scale: 0,
-            alarmBorder: true,
-            alarmText: false,
-            alarmBackground: false,
-            alarmLevel: "MINOR",
-            confirmOnWrite: false,
-            confirmOnWriteUsePassword: false,
-            confirmOnWritePassword: "",
-        },
-        channelNames: [],
-        groupNames: [],
-        rules: [],
-    };
-
-    // override
-    static generateDefaultTdl = (type: string) => {
-        // defines type, widgetKey, and key
-        const result = super.generateDefaultTdl(type);
-        result.style = structuredClone(this._defaultTdl.style);
-        result.text = structuredClone(this._defaultTdl.text);
-        result.channelNames = structuredClone(this._defaultTdl.channelNames);
-        result.groupNames = structuredClone(this._defaultTdl.groupNames);
-        return result;
+    static generateDefaultTdl = (): type_Spinner_tdl => {
+        const widgetKey = GlobalMethods.generateWidgetKey(defaultSpinnerTdl.type);
+        return structuredClone({
+            ...defaultSpinnerTdl,
+            widgetKey: widgetKey,
+        });
     };
 
 
     static convertBobToTdl = (bobWidgetJson: Record<string, any>): type_Spinner_tdl => {
         Log.info("\n------------", `Parsing "spinner"`, "------------------\n");
-        const tdl = this.generateDefaultTdl("Spinner") as type_Spinner_tdl;
+        const tdl = this.generateDefaultTdl();
         // all properties for this widget
         const propertyNames: string[] = [
             "type", // not in tdm
@@ -120,8 +50,8 @@ export class SpinnerHelper extends BaseWidgetHelper {
             "vertical_alignment",
         ];
 
-        tdl["style"]["x"] = 0;
-        tdl["style"]["y"] = 0;
+        tdl["style"]["left"] = 0;
+        tdl["style"]["top"] = 0;
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 20;
 
