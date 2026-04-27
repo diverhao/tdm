@@ -1566,9 +1566,9 @@ export const generateRgbaColor = (index: number): string => {
 
 
 
-export const generateDisplayWindowHtml = (option: {basePath: string, displayWindowId: string}) => {
+export const generateDisplayWindowHtml = (option: { basePath: string, displayWindowId: string }) => {
 
-    const {basePath, displayWindowId} = option;
+    const { basePath, displayWindowId } = option;
 
     return (
         `
@@ -1627,3 +1627,20 @@ export const generateDisplayWindowHtml = (option: {basePath: string, displayWind
 
 
 export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+
+export const adjustRgba = (color: string, delta: number) => {
+    const match = color.match(
+        /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/i
+    );
+    if (!match) {
+        return color;
+    }
+
+    const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+    const [, r, g, b, a = "1"] = match;
+
+    return `rgba(${clamp(Number(r) + delta)}, ${clamp(Number(g) + delta)}, ${clamp(
+        Number(b) + delta
+    )}, ${a})`;
+};

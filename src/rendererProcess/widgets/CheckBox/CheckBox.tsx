@@ -114,21 +114,34 @@ export class CheckBox extends BaseWidget {
                 onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}
             >
-                <input
-                    type="checkbox"
-                    name="checkbox"
-                    id={widgetKey}
-                    onClick={(event) => {
-                        this.handleMouseClick(event);
-                    }}
+                <div
                     style={{
-                        width: size,
-                        height: size,
+                        display: "inline-flex",
+                        padding: 0,
+                        border: "1px solid #444",
+                        borderRadius: 3,
+                        lineHeight: 0,
+                        marginRight: 3,
                     }}
-                    checked={this.calcCheckState()}
-                ></input>
+                >
+                    <input
+                        type="checkbox"
+                        name="checkbox"
+                        id={widgetKey}
+                        onClick={(event) => {
+                            this.handleMouseClick(event);
+                        }}
+                        style={{
+                            width: size,
+                            height: size,
+                            accentColor: "rgba(240,240,240,1)",
+                            margin: 0,
+                        }}
+                        checked={this.calcCheckState()}
+                    ></input>
+                </div>
                 <label htmlFor={widgetKey}>{text}</label>
-            </form>
+            </form >
         );
     };
 

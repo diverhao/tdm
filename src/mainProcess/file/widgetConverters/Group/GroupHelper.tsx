@@ -214,7 +214,6 @@ export class GroupHelper extends BaseWidgetHelper {
                 tdl["style"]["color"] = "rgba(0,0,0,0)";
             } else if (groupStyle === 3) {
                 for (const [widgetKey, widgetTdl] of Object.entries(widgetsTdl)) {
-                    console.log("widgetTDL ==================", widgetTdl["style"]["left"], widgetTdl["style"]["top"], left0, top0)
                     widgetTdl["style"]["left"] = widgetTdl["style"]["left"] + left0;
                     widgetTdl["style"]["top"] = widgetTdl["style"]["top"] + top0;
                 }

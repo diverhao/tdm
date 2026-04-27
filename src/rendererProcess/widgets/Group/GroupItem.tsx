@@ -1,3 +1,4 @@
+import { Log } from "../../../common/Log";
 import { type_Group_item_tdl } from "../../../common/types/type_widget_tdl";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
@@ -86,11 +87,15 @@ export class GroupItem {
     updateWidgets = (flush: boolean = false) => {
         // (1)
         for (const widgetKey of this.getWidgetKeys()) {
-            const widget = g_widgets1.getWidget2(widgetKey);
-            if (widget instanceof BaseWidget) {
-                const style = widget.getStyle();
-                style["display"] = "inline-flex";
-                g_widgets1.addToForceUpdateWidgets(widget.getWidgetKey());
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    const style = widget.getStyle();
+                    style["display"] = "inline-flex";
+                    g_widgets1.addToForceUpdateWidgets(widget.getWidgetKey());
+                }
+            } catch (e) {
+                Log.error(e);
             }
         }
 
@@ -101,10 +106,14 @@ export class GroupItem {
         }
         // if this item is not selected, hide them
         for (const widgetKey of this.getWidgetKeys()) {
-            const widget = g_widgets1.getWidget2(widgetKey);
-            if (widget instanceof BaseWidget) {
-                const style = widget.getStyle();
-                style["display"] = "none";
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    const style = widget.getStyle();
+                    style["display"] = "none";
+                }
+            } catch (e) {
+                Log.error(e);
             }
         }
 

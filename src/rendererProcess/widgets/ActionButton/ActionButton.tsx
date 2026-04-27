@@ -130,6 +130,14 @@ export class ActionButton extends BaseWidget {
 
         const outline = this.calcOutline();
 
+        // ----------------------
+        const backgroundColor = this.getAllStyle()["backgroundColor"];
+        const topColor = GlobalMethods.adjustRgba(backgroundColor, 8);
+        const bottomColor = GlobalMethods.adjustRgba(backgroundColor, -18);
+        const borderColor = GlobalMethods.adjustRgba(backgroundColor, -18);
+        const lightEdge = GlobalMethods.adjustRgba(backgroundColor, 26);
+        const darkEdge = GlobalMethods.adjustRgba(backgroundColor, -18);
+
         return (
             <div
                 ref={elementRef}
@@ -154,6 +162,7 @@ export class ActionButton extends BaseWidget {
                     }
                 }}
             >
+
                 < this._ElementActionButtonText ></this._ElementActionButtonText>
                 <this._ElementActionButtonMulti></this._ElementActionButtonMulti>
             </div>

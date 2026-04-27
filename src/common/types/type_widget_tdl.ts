@@ -2193,7 +2193,7 @@ export const defaultCheckBoxTdl: type_CheckBox_tdl = {
         wrapWord: false,
         showUnit: false,
         alarmBorder: true,
-        size: 12,
+        size: 18,
         text: "Label",
         invisibleInOperation: false,
         confirmOnWrite: false,

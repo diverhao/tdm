@@ -280,6 +280,7 @@ export class LabelHelper extends BaseWidgetHelper {
         ];
 
         let transparent = true;
+        let autoSize = false;
         tdl["text"]["wrapWord"] = true;
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
@@ -326,6 +327,8 @@ export class LabelHelper extends BaseWidgetHelper {
                     tdl["text"]["text"] = BobPropertyConverter.convertBobString(propertyValue);
                 } else if (propertyName === "transparent") {
                     transparent = BobPropertyConverter.convertBobBoolean(propertyValue);
+                } else if (propertyName === "auto_size") {
+                    autoSize = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "font") {
                     const font = BobPropertyConverter.convertBobFont(propertyValue);
                     tdl["style"]["fontSize"] = font["fontSize"];
@@ -342,6 +345,10 @@ export class LabelHelper extends BaseWidgetHelper {
                     Log.info("Skip property", `"${propertyName}"`);
                 }
             }
+        }
+
+        if (autoSize === true) {
+            tdl["text"]["wrapWord"] = false;
         }
 
         // the TDM default font is slightly wider

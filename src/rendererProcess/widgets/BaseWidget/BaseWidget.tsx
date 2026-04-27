@@ -2297,23 +2297,23 @@ export abstract class BaseWidget {
      * 
      * this is used for widgets with traditional button, such as BooleanButton, ActionButton
      */
-    get3dButtonStyle = (buttonPressed: boolean) => {
+    get3dButtonStyle = (buttonPressed: boolean, backgroundColor?: string) => {
         const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
         const appearance = allText["appearance"];
-        // console.log("appearance", appearance)
+
         if (appearance !== "traditional") {
-            return {
-                width: "",
-                height: "",
-                borderBottom: "none",
-                borderTop: "none",
-                borderRight: "none",
-                borderLeft: "none",
-
-            };
+            // if contemporary or undefined
+            return this.get3dButtonStyleContemporary(backgroundColor);
+        } else {
+            return this.get3dButtonStyleTraditional(buttonPressed);
         }
+    }
 
+
+
+    private get3dButtonStyleTraditional = (buttonPressed: boolean) => {
+        const allStyle = this.getAllStyle();
+        
         const shadowWidth = 2;
         const highlightColor = "rgba(255,255,255,1)";
         const shadowColor = "rgba(100,100,100,1)";
@@ -2349,6 +2349,38 @@ export abstract class BaseWidget {
             borderRight: borderBottomAndRight,
             borderLeft: borderTopAndLeft,
         }
+
+    }
+
+    private get3dButtonStyleContemporary = (backgroundColor?: string) => {
+        let bgColor = backgroundColor;
+        if (bgColor === undefined) {
+            bgColor = `${this.getAllStyle()["backgroundColor"]}`;
+        }
+
+        const borderRadius = this.getAllStyle()["borderRadius"];
+        const topColor = GlobalMethods.adjustRgba(bgColor, 8);
+        const bottomColor = GlobalMethods.adjustRgba(bgColor, -18);
+        const borderColor = GlobalMethods.adjustRgba(bgColor, -18);
+        const lightEdge = GlobalMethods.adjustRgba(bgColor, 26);
+        const darkEdge = GlobalMethods.adjustRgba(bgColor, -18);
+
+        return {
+            width: "",
+            height: "",
+            borderBottom: "none",
+            borderTop: "none",
+            borderRight: "none",
+            borderLeft: "none",
+
+            background: `linear-gradient(to bottom, ${topColor} 0%, ${bottomColor} 100%)`,
+            border: `1px solid ${borderColor}`,
+            boxShadow: `
+            inset 1px 1px 0 ${lightEdge},
+            inset -1px -1px 0 ${darkEdge}
+        `,
+            borderRadius: 3,
+        };
 
     }
 

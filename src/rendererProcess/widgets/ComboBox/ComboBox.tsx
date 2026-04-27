@@ -116,14 +116,17 @@ export class ComboBox extends BaseWidget {
                 ? "right"
                 : "center";
 
+        const threeDButtonStyle = this.get3dButtonStyle(true);
+
         return (
             <div
                 ref={elementRef}
                 style={{
                     display: "inline-flex",
+                    backgroundColor: "rgba(0,0,0,0)",
+                    ...threeDButtonStyle,
                     width: "100%",
                     height: "100%",
-                    backgroundColor: "rgba(0,0,0,0)",
                 }}
                 onMouseEnter={(event) => this.hanldeMouseEnterWriteWidget(event, elementRef)}
                 onMouseLeave={(event) => this.handleMouseLeaveWriteWidget(event, elementRef)}

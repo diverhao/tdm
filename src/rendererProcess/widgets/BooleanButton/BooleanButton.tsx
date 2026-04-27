@@ -70,6 +70,8 @@ export class BooleanButton extends BaseWidget {
         const whiteSpace = allText.wrapWord ? "normal" : "pre";
         const outline = this._getElementAreaRawOutlineStyle();
         const backgroundColor = this._getElementAreaRawBackgroundStyle();
+        const alignItems = allText["verticalAlign"];
+        const justifyContent = allText["horizontalAlign"];
 
         return (
             <div
@@ -84,6 +86,8 @@ export class BooleanButton extends BaseWidget {
                     whiteSpace: whiteSpace,
                     outline: outline,
                     backgroundColor: backgroundColor,
+                    alignItems: alignItems,
+                    justifyContent: justifyContent,
                 }}
                 onMouseDown={this._handleMouseDown}
                 onDoubleClick={this._handleMouseDoubleClick}
@@ -145,10 +149,13 @@ export class BooleanButton extends BaseWidget {
                     display: "inline-flex",
                     alignItems: alignItems,
                     justifyContent: justifyContent,
-                    backgroundColor: buttonColor,
+                    // backgroundColor: buttonColor,
                     outline: outline,
                     overflow: "hidden",
                     ...threeDStyle,
+                    width: "100%",
+                    height: "100%",
+                    boxSizing: "border-box",
                 }}
                 onMouseDown={(event) => { this.handleMouseActionOnButton(event, "down") }}
                 onMouseUp={(event) => { this.handleMouseActionOnButton(event, "up") }}

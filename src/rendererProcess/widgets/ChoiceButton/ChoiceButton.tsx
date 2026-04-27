@@ -161,8 +161,6 @@ export class ChoiceButton extends BaseWidget {
         const unselectedBackgroundColor = allText["unselectedBackgroundColor"];
         const appearance = allText["appearance"];
 
-        // calculate the style for each item
-        const threeDButtonStyle = this.get3dButtonStyle(isSelected);
         // if the item is selected, honor the severity color
         const color = isSelected
             ? this._getElementAreaRawTextStyle()
@@ -172,6 +170,9 @@ export class ChoiceButton extends BaseWidget {
             : unselectedBackgroundColor;
         const borderRadius = appearance === "traditional" ? 0 : 3;
         const whiteSpace = this.getAllText().wrapWord ? "normal" : "pre";
+
+        // calculate the style for each item
+        const threeDButtonStyle = this.get3dButtonStyle(isSelected, backgroundColor);
 
         return (
             <div
@@ -257,9 +258,9 @@ export class ChoiceButton extends BaseWidget {
             }
         } else {
             if (direction === "horizontal") {
-                return Math.floor(1 / itemNames.length * width - 2 * itemMarginWidth);
+                return Math.floor(1 / itemNames.length * width - 2 * itemMarginWidth) - 1;
             } else {
-                return width - 2 * itemMarginWidth;
+                return width - 2 * itemMarginWidth - 1;
             }
         }
     }
@@ -282,9 +283,9 @@ export class ChoiceButton extends BaseWidget {
             }
         } else {
             if (direction === "horizontal") {
-                return height - 2 * itemMarginWidth;
+                return height - 2 * itemMarginWidth - 1;
             } else {
-                return Math.floor(1 / itemNames.length * height - 2 * itemMarginWidth);
+                return Math.floor(1 / itemNames.length * height - 2 * itemMarginWidth) - 1;
             }
         }
     }
