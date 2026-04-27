@@ -394,6 +394,7 @@ export class DisplayWindowUtilities {
         windowName: string | undefined = undefined,
         tdlFileName: string | undefined = undefined
     ) => {
+
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainWindowAgent = displayWindowAgent.getWindowAgentsManager().getMainWindowAgent();
         const result: Record<string, { image: string; windowName?: string; tdlFileName?: string; } | null> = {};
@@ -414,13 +415,15 @@ export class DisplayWindowUtilities {
         }
 
         if (mainWindowAgent !== undefined && displayWindowAgent.hiddenWindow === false) {
+            // for periodic thumbnail polling of each display window
+            // the results are shown in main dinwo
             mainWindowAgent.sendFromMainProcess("new-thumbnail",
                 {
                     data: result
                 }
             );
         } else {
-            Log.error("Main window not ready");
+            // this thumbnail is for FileBrowser window
         }
     };
 

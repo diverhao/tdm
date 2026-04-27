@@ -1189,13 +1189,15 @@ export class IpcManagerOnMainProcess {
         displayWindowAgent.getDisplayWindowFileBrowser().executeFileBrowserCommand(message);
     };
 
+    /**
+     * the client wants a thumbnail of a TDL file
+     */
     handleFetchThumbnail = async (event: WebSocket | string, message: IpcEventArgType["fetch-thumbnail"]) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(message["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             Log.error(`No such display window ${message["displayWindowId"]}. Cancel fetching thumbnail.`);
             return;
         }
-
         await displayWindowAgent.getDisplayWindowFileBrowser().fetchThumbnail(message);
     };
 

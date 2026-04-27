@@ -185,6 +185,10 @@ export class DisplayWindowLifeCycleManager {
 
             mainProcess.getWindowAgentsManager().setDockMenu();
         } else if (displayWindowAgent === windowAgentsManager.previewDisplayWindowAgent) {
+            // the TDL rendering is in the (hidden) preview window
+            // in this case, the thumbnail image of the current display window
+            // should be sent to a FileBrowser window
+            // this FileBrowser window and widget are registered in the preview window
             await displayWindowAgent.takeThumbnail();
             const tdlFileName = displayWindowAgent.getTdlFileName();
             const fileBrowserDisplayWindowId = displayWindowAgent.getForFileBrowserWindowId();

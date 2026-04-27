@@ -298,8 +298,8 @@ export class EmbeddedDisplayHelper extends BaseWidgetHelper {
             "show_toolbar", // not in tdm
         ];
 
-        tdl["style"]["width"] = 100;
-        tdl["style"]["height"] = 30;
+        tdl["style"]["width"] = type === "embedded" ? 400: type === "navtabs" ? 500: 800;
+        tdl["style"]["height"] = type === "webbrowser"? 600: 300;
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
         let tdlFileNames: string[] = [];

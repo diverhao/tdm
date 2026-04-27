@@ -33,7 +33,7 @@ export class SidebarNumberChoices extends SidebarComponent {
                         onChange={(event) => {
                             this.updateWidget(event, event.target.value);
                         }}
-                        defaultValue={this.getPropertyValue()}
+                        defaultValue={this.getDefaultValue()}
                     >
                         {Object.entries(this.getOptions()).map(([groupName, groupMembers]: [string, Record<string, number>], index: number) => {
                             return (
@@ -69,7 +69,7 @@ export class SidebarNumberChoices extends SidebarComponent {
                             }
                             this.updateWidget(event, num);
                         }}
-                        defaultValue={this.getPropertyValue()}
+                        defaultValue={this.getDefaultValue()}
                     >
                         {Object.entries(this.getOptions()).map(([optionName, optionValue]: [string, number], index: number) => {
                             return (
@@ -134,6 +134,44 @@ export class SidebarNumberChoices extends SidebarComponent {
     
     getPropertyValue = (): any => {
         return this.getObj()[this.getPropertyName()];
+    }
+
+    getDefaultValue = (): number | undefined => {
+        const propertyValue = Number(this.getPropertyValue());
+        const optionValues = this.getOptionValues();
+
+        if (optionValues.length < 1) {
+            return undefined;
+        }
+
+        if (isNaN(propertyValue)) {
+            return optionValues[0];
+        }
+
+        return optionValues.reduce((closestOptionValue: number, optionValue: number) => {
+            if (Math.abs(optionValue - propertyValue) < Math.abs(closestOptionValue - propertyValue)) {
+                return optionValue;
+            }
+
+            return closestOptionValue;
+        }, optionValues[0]);
+    }
+
+    getOptionValues = (): number[] => {
+        const options = this.getOptions();
+        const firstOptionValue = Object.values(options)[0];
+
+        if (typeof firstOptionValue === "object") {
+            const optionValues: number[] = [];
+
+            for (const groupMembers of Object.values(options)) {
+                optionValues.push(...Object.values(groupMembers as Record<string, number>));
+            }
+
+            return optionValues;
+        } else {
+            return Object.values(options) as number[];
+        }
     }
 
     setPropertyValue = (newValue: number): void => {

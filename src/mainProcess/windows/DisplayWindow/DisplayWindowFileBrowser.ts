@@ -76,7 +76,6 @@ export class DisplayWindowFileBrowser {
         if (this.isAllowedToWriteInWebMode(folderPath)) {
             return true;
         }
-
         this.getDisplayWindowAgent().showError([`You are not allowed to ${message["command"].replaceAll("-", " ")} for ${folderPath}.`]);
         return false;
     };

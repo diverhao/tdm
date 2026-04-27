@@ -536,7 +536,7 @@ export class DisplayWindowFile {
             this.getDisplayWindowAgent().showError([result["reason"]]);
         }
     };
-    
+
     /**
      * the read/write permission from TDM's point of view, it is not about the file/folder's permission
      * from operating system's point of view
@@ -549,7 +549,9 @@ export class DisplayWindowFile {
         const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
         const displayWindowAgent = this.getDisplayWindowAgent();
         let allowToRead = false;
-        if (mainProcess.getMainProcessMode() === "web") {
+        if (this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop") {
+            return "read-write";
+        } else if (mainProcess.getMainProcessMode() === "web") {
             const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
             if (selectedProfile !== undefined) {
                 const bookmarks = selectedProfile.getEntry("EPICS Custom Environment", "File Browser Bookmarks");
