@@ -165,8 +165,8 @@ export class ByteMonitorHelper extends BaseWidgetHelper {
                 continue;
             } else {
                 if (propertyName === "bitReverse") {
-                    const sequencePositive = BobPropertyConverter.convertBobBoolean(propertyValue);
-                    tdl["text"]["sequence"] = sequencePositive === true ? "positive" : "reverse";
+                    const bitReversed = BobPropertyConverter.convertBobBoolean(propertyValue);
+                    tdl["text"]["sequence"] = bitReversed === true ? "reverse" : "positive";
                 } else if (propertyName === "border_alarm_sensitive") {
                     tdl["text"]["alarmBorder"] = BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "font") {

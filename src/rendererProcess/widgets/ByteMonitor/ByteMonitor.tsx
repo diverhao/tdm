@@ -95,12 +95,13 @@ export class ByteMonitor extends BaseWidget {
         const verticalElementNumber = allText["direction"] === "horizontal" ? 1 : allText["bitLength"];
         const direction = allText["direction"];
         const flexDirection = direction === "horizontal" ? "row" : "column"
+        const flexDirectionBitElement = direction === "vertical" ? "row" : "column"
         const bitValues = this.calcBitValues();
         const width = allStyle["width"];
         const height = allStyle["height"];
 
-        const ledWidth = width / horizontalElementNumber;
-        const ledHeight = height / verticalElementNumber;
+        const bitElementWidth = width / horizontalElementNumber;
+        const bitElementHeight = height / verticalElementNumber;
 
         return (
             <div
@@ -112,6 +113,7 @@ export class ByteMonitor extends BaseWidget {
                     width: "100%",
                     height: "100%",
                     position: "relative",
+                    overflow: "visible",
                 }}
             >
                 {bitValues.map((bitValue: number | undefined, index: number) => {
@@ -121,8 +123,10 @@ export class ByteMonitor extends BaseWidget {
                             // a small square/circle -- one LED
                             style={{
                                 position: "relative",
-                                width: ledWidth,
-                                height: ledHeight,
+                                display: "inline-flex",
+                                width: bitElementWidth,
+                                height: bitElementHeight,
+                                flexDirection: flexDirectionBitElement,
                             }}
                         >
                             {/* both elements are absolute position with 100% width and height */}
@@ -137,30 +141,47 @@ export class ByteMonitor extends BaseWidget {
     };
 
     _ElementLED = ({ bitValue }: { bitValue: number | undefined }) => {
+        const allText = this.getAllText();
+        const allStyle = this.getAllStyle();
+        const direction = allText["direction"];
+        const bitLength = allText["bitLength"];
+        const width = allStyle["width"];
+        const height = allStyle["height"];
+        const horizontalElementNumber = direction === "horizontal" ? bitLength : 1;
+        const verticalElementNumber = direction === "horizontal" ? 1 : bitLength;
+
+        // calculate LED size
+        let ledWidth = width / horizontalElementNumber;
+        let ledHeight = height / verticalElementNumber;
+        let dimension = ledWidth;
+        if (direction === "vertical") {
+            dimension = ledHeight;
+        }
+
         if (this.getAllText()["shape"] === "round") {
             return (
-                <this._ElementLEDRound bitValue={bitValue}></this._ElementLEDRound>
+                <this._ElementLEDRound bitValue={bitValue} dimension={dimension}></this._ElementLEDRound>
             )
         } else {
             return (
-                <this._ElementLEDSquare bitValue={bitValue}></this._ElementLEDSquare>
+                <this._ElementLEDSquare bitValue={bitValue} dimension={dimension}></this._ElementLEDSquare>
             )
         }
     }
 
-    _ElementLEDSquare = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDSquare = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         if (g_widgets1.isEditing()) {
             return (
-                <this._ElementLEDSquareEditing bitValue={bitValue}></this._ElementLEDSquareEditing>
+                <this._ElementLEDSquareEditing bitValue={bitValue} dimension={dimension}></this._ElementLEDSquareEditing>
             )
         } else {
             return (
-                <this._ElementLEDSquareOperating bitValue={bitValue}></this._ElementLEDSquareOperating>
+                <this._ElementLEDSquareOperating bitValue={bitValue} dimension={dimension}></this._ElementLEDSquareOperating>
             )
         }
     };
 
-    _ElementLEDSquareEditing = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDSquareEditing = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         const allText = this.getAllText();
         const allStyle = this.getAllStyle();
         const direction = allText["direction"];
@@ -173,15 +194,16 @@ export class ByteMonitor extends BaseWidget {
         const horizontalElementNumber = direction === "horizontal" ? bitLength : 1;
         const verticalElementNumber = direction === "horizontal" ? 1 : bitLength;
 
-        // calculate half square
-        const point1X = width / horizontalElementNumber;
-        const point1Y = 0;
-        const point2X = width / horizontalElementNumber;
-        const point2Y = height / verticalElementNumber;
-        const point3X = 0;
-        const point3Y = height / verticalElementNumber;
-        const point4X = 0;
-        const point4Y = 0;
+        let point1X = dimension;
+        let point1Y = 0;
+        let point2X = dimension;
+        let point2Y = dimension;
+        let point3X = 0;
+        let point3Y = dimension;
+        let point4X = 0;
+        let point4Y = 0;
+
+
         const d0 = `M ${point1X} ${point1Y} L ${point4X} ${point4Y} L ${point3X} ${point3Y}`;
         const d1 = `M ${point1X} ${point1Y} L ${point2X} ${point2Y} L ${point3X} ${point3Y}`;
 
@@ -197,12 +219,12 @@ export class ByteMonitor extends BaseWidget {
 
         return (
             <svg
-                width="100%"
-                height="100%"
+                width={`${dimension}px`}
+                height={`${dimension}px`}
                 x="0"
                 y="0"
                 style={{
-                    position: "absolute",
+                    // position: "absolute",
                     overflow: "visible",
                 }}
             >
@@ -230,19 +252,11 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementLEDSquareOperating = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDSquareOperating = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
-        const direction = allText["direction"];
-        const bitLength = allText["bitLength"];
-        const width = allStyle["width"];
-        const height = allStyle["height"];
         const lineWidth = allText["lineWidth"];
         const lineColor = allText["lineColor"];
         const fallbackColor = allText["fallbackColor"];
-
-        const horizontalElementNumber = direction === "horizontal" ? bitLength : 1;
-        const verticalElementNumber = direction === "horizontal" ? 1 : bitLength;
 
         // if there is a rule on the background color, the mechanism of setting the background color does not work
         // as the fill color of <rect /> is by default from the bit-0/1 color settings
@@ -255,23 +269,20 @@ export class ByteMonitor extends BaseWidget {
             }
         }
 
-        const ledWidth = width / horizontalElementNumber;
-        const ledHeight = height / verticalElementNumber;
-
         return (
             <svg
-                width="100%"
-                height="100%"
+                width={`${dimension}px`}
+                height={`${dimension}px`}
                 x="0"
                 y="0"
                 style={{
-                    position: "absolute",
+                    // position: "absolute",
                     overflow: "visible",
                 }}
             >
                 <rect
-                    width={`${ledWidth}`}
-                    height={`${ledHeight}`}
+                    width={`${dimension}`}
+                    height={`${dimension}`}
                     strokeWidth={`${lineWidth}`}
                     stroke={lineColor}
                     fill={fillColor}
@@ -281,33 +292,26 @@ export class ByteMonitor extends BaseWidget {
 
     };
 
-    _ElementLEDRound = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDRound = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         if (g_widgets1.isEditing()) {
             return (
-                <this._ElementLEDRoundEditing bitValue={bitValue}></this._ElementLEDRoundEditing>
+                <this._ElementLEDRoundEditing bitValue={bitValue} dimension={dimension}></this._ElementLEDRoundEditing>
             )
         } else {
             return (
-                <this._ElementLEDRoundOperating bitValue={bitValue}></this._ElementLEDRoundOperating>
+                <this._ElementLEDRoundOperating bitValue={bitValue} dimension={dimension}></this._ElementLEDRoundOperating>
             )
         }
     };
 
-    _ElementLEDRoundEditing = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDRoundEditing = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
-        const direction = allText["direction"];
-        const bitLength = allText["bitLength"];
-        const width = allStyle["width"];
-        const height = allStyle["height"];
         const lineWidth = allText["lineWidth"];
         const lineColor = allText["lineColor"];
 
         // calculate the half-circle
-        const horizontalElementNumber = direction === "horizontal" ? bitLength : 1;
-        const verticalElementNumber = direction === "horizontal" ? 1 : bitLength;
-        const rX = width / 2 / horizontalElementNumber;
-        const rY = height / 2 / verticalElementNumber;
+        const rX = dimension / 2;
+        const rY = dimension / 2;
         const point1X = rX + rX * 0.70711;
         const point1Y = rY - rY * 0.70711;
         const point2X = rX - rX * 0.70711;
@@ -323,12 +327,11 @@ export class ByteMonitor extends BaseWidget {
 
         return (
             <svg
-                width="100%"
-                height="100%"
+                width={`${dimension}px`}
+                height={`${dimension}px`}
                 x="0"
                 y="0"
                 style={{
-                    position: "absolute",
                     overflow: "visible",
                 }}
             >
@@ -350,19 +353,11 @@ export class ByteMonitor extends BaseWidget {
         );
     };
 
-    _ElementLEDRoundOperating = ({ bitValue }: { bitValue: number | undefined }) => {
+    _ElementLEDRoundOperating = ({ bitValue, dimension }: { bitValue: number | undefined, dimension: number }) => {
         const allText = this.getAllText();
-        const allStyle = this.getAllStyle();
-        const direction = allText["direction"];
-        const bitLength = allText["bitLength"];
-        const width = allStyle["width"];
-        const height = allStyle["height"];
         const lineWidth = allText["lineWidth"];
         const lineColor = allText["lineColor"];
         const fallbackColor = allText["fallbackColor"];
-
-        const horizontalElementNumber = direction === "horizontal" ? bitLength : 1;
-        const verticalElementNumber = direction === "horizontal" ? 1 : bitLength;
 
         // if there is a rule on the background color, the mechanism of setting the background color does not work
         // as the fill color of <rect /> is by default from the bit-0/1 color settings
@@ -375,19 +370,18 @@ export class ByteMonitor extends BaseWidget {
             }
         }
 
-        const cx = width / 2 / horizontalElementNumber;
-        const cy = height / 2 / verticalElementNumber;
-        const rx = width / 2 / horizontalElementNumber;
-        const ry = height / 2 / verticalElementNumber;
+        const cx = dimension / 2;
+        const cy = dimension / 2;
+        const rx = dimension / 2;
+        const ry = dimension / 2;
 
         return (
             <svg
-                width="100%"
-                height="100%"
+                width={`${dimension}px`}
+                height={`${dimension}px`}
                 x="0"
                 y="0"
                 style={{
-                    position: "absolute",
                     overflow: "visible",
                 }}
             >
@@ -407,6 +401,7 @@ export class ByteMonitor extends BaseWidget {
 
     _ElementText = ({ index }: { index: number }) => {
         const allText = this.getAllText();
+        const direction = allText["direction"];
 
         // fill in bit names
         const bitNames = [...this.getBitNames()];
@@ -419,15 +414,22 @@ export class ByteMonitor extends BaseWidget {
             fullBitNames.reverse();
         }
 
+        const writingMode = direction === "horizontal" ? "vertical-rl" : undefined;
+        const paddingTop = direction === "horizontal"? 5 : 0;
+        const paddingLeft = direction === "horizontal"? 0 : 5;
+
         return (
             <div
                 style={{
-                    position: "absolute",
+                    // position: "absolute",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: "100%",
-                    height: "100%",
+                    // width: "100%",
+                    // height: "100%",
+                    writingMode: writingMode,
+                    paddingLeft: paddingLeft,
+                    paddingTop: paddingTop,
                 }}
             >
                 {fullBitNames[index]}
