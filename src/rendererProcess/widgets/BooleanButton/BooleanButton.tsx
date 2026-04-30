@@ -141,6 +141,8 @@ export class BooleanButton extends BaseWidget {
         }
         const outline = this.calcOutline();
 
+        const ledTextSpacing = itemText.trim() === "" ? 0 : 4;
+
         return (
             <div
                 ref={elementRef}
@@ -180,7 +182,7 @@ export class BooleanButton extends BaseWidget {
                             border: "solid 1px rgba(30,30,30,1)",
                             opacity: showLED === true ? 1 : 0,
                             // visibility: showLED === true ? "visible" : "hidden",
-                            marginRight: 4,
+                            marginRight: ledTextSpacing,
                         }}
                     ></div>
                     : null}
@@ -227,7 +229,6 @@ export class BooleanButton extends BaseWidget {
         if (typeof currentValue === "number" && typeof offValue === "number" && currentValue !== offValue) {
             currentValue = onValue;
         }
-        console.log("okokok========, donw", currentValue, onValue, offValue, buttonMode)
 
         if (buttonMode === "Toggle") {
             if (direction === "down") {

@@ -90,9 +90,7 @@ export class GroupItem {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
-                    const style = widget.getStyle();
-                    style["display"] = "inline-flex";
-                    g_widgets1.addToForceUpdateWidgets(widget.getWidgetKey());
+                    widget.unhide(false);
                 }
             } catch (e) {
                 Log.error(e);
@@ -109,8 +107,7 @@ export class GroupItem {
             try {
                 const widget = g_widgets1.getWidget2(widgetKey);
                 if (widget instanceof BaseWidget) {
-                    const style = widget.getStyle();
-                    style["display"] = "none";
+                    widget.hide(false);
                 }
             } catch (e) {
                 Log.error(e);

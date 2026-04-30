@@ -51,6 +51,7 @@ export class LEDMultiStateHelper extends BaseWidgetHelper {
         tdl["style"]["height"] = 20;
         tdl["itemNames"][0] = "State 1";
         tdl["itemNames"][1] = "State 2";
+        tdl["text"]["useChannelItems"] = false;
         
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

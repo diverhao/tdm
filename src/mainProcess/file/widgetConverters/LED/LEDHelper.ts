@@ -256,6 +256,7 @@ export class LEDHelper extends BaseWidgetHelper {
         tdl["style"]["left"] = 0;
         tdl["style"]["width"] = 20;
         tdl["style"]["height"] = 20;
+        tdl["text"]["useChannelItems"] = false;
         tdl["text"]["fallbackText"] = "";
 
         for (const propertyName of propertyNames) {

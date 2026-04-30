@@ -250,7 +250,6 @@ export class Widgets {
         // create other widgets
         for (let widgetKey in tdl) {
             const widgetTdl = tdl[widgetKey];
-            console.log("widgetTdl", JSON.stringify(widgetTdl))
             this.createWidget(widgetTdl, false);
         }
         // create last widget GroupSelection2, it is always at last

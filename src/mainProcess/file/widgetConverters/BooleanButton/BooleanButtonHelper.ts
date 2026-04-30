@@ -382,6 +382,7 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
         tdl["style"]["width"] = 100;
         tdl["style"]["height"] = 30;
         tdl["text"]["appearance"] = "contemporary";
+        tdl["text"]["useChannelItems"] = false;
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];

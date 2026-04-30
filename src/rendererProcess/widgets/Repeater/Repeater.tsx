@@ -188,7 +188,7 @@ export class Repeater extends BaseWidget {
      * (2) create dynamic widgets based on template widgets and macros
      */
     createDynamicWidgets = () => {
-        
+
         this.getTemplateWidgets().length = 0; // clear temporary storage first
 
         const templateWidgetTdls: Record<string, any>[] = [];
@@ -345,6 +345,65 @@ export class Repeater extends BaseWidget {
         g_widgets1.addToForceUpdateWidgets("GroupSelection2");
         g_flushWidgets();
     }
+
+
+    hide(flush: boolean) {
+        super.hide(false);
+        // hide all children widgets
+        for (const widgetKey of this.getDynamicWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.hide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        for (const widgetKey of this.getTemplateWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.hide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    unhide(flush: boolean) {
+        super.unhide(false);
+        // hide all children widgets
+        for (const widgetKey of this.getDynamicWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.unhide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        for (const widgetKey of this.getTemplateWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.unhide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+
 
     // -------------------- macros ---------------------
 

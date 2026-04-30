@@ -199,7 +199,7 @@ export class EmbeddedDisplay extends BaseWidget {
                 {displays.map((display: type_EmbeddedDisplay_display_tdl, index: number) => {
                     const key = `${display.name}-${index}-${display.tdlFileName}`;
 
-                    const justifyContent =  this.getText()["horizontalAlign"];
+                    const justifyContent = this.getText()["horizontalAlign"];
                     const width = text["tabPosition"] === "top" || this.getText()["tabPosition"] === "bottom"
                         ? this.getText()["tabWidth"]
                         : "100%";
@@ -467,6 +467,9 @@ export class EmbeddedDisplay extends BaseWidget {
                     widget.jobsAsOperatingModeBegins();
                     widget.processChannelNames(allMacros);
                     widgetMapPairs.push([newWidgetKey, widget]);
+                    if (this.isHidden()) {
+                        widget.hide(false);
+                    }
                 }
             }
         }
@@ -523,6 +526,42 @@ export class EmbeddedDisplay extends BaseWidget {
             tcaChannel.monitor();
         }
     };
+
+    hide(flush: boolean) {
+        super.hide(false);
+        // hide all children widgets
+        for (const widgetKey of this.getChildWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.hide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    unhide(flush: boolean) {
+        super.unhide(false);
+        // hide all children widgets
+        for (const widgetKey of this.getChildWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.unhide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
 
 
     // -------------------------- tdl -------------------------------

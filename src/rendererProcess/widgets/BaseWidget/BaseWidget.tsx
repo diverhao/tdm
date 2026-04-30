@@ -2313,7 +2313,7 @@ export abstract class BaseWidget {
 
     private get3dButtonStyleTraditional = (buttonPressed: boolean) => {
         const allStyle = this.getAllStyle();
-        
+
         const shadowWidth = 2;
         const highlightColor = "rgba(255,255,255,1)";
         const shadowColor = "rgba(100,100,100,1)";
@@ -2434,6 +2434,28 @@ export abstract class BaseWidget {
             }
         }
     };
+
+    hide(flush: boolean) {
+        const style = this.getStyle();
+        style["display"] = "none";
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    unhide(flush: boolean) {
+        const style = this.getStyle();
+        style["display"] = "inline-flex";
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    isHidden = () => {
+        return this.getStyle()["display"] === "none";
+    }
 
 
     // -------------------- putters ----------------------------------
