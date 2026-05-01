@@ -260,7 +260,7 @@ export abstract class BaseWidget {
      * (1) select this widget or whole group, flush widgets
      * (2) tell main process to show context menu
      */
-    _handleMouseDown = (event: React.MouseEvent): void => {
+    _handleMouseDown = (event: React.MouseEvent): void  => {
         // hide context menu
         g_widgets1.getRoot().getDisplayWindowClient().getContextMenu().hideElement();
 

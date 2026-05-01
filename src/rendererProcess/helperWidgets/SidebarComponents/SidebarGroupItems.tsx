@@ -95,6 +95,7 @@ export class SidebarGroupItems extends SidebarComponent {
 
         const newItem = new GroupItem(mainWidget, newItemTdl)
         mainWidget.getItems().push(newItem);
+        mainWidget.getSelectedItem().hideWidgets(false);
         mainWidget.setSelectedItem(newItem);
         mainWidget.updateCoverage();
         mainWidget.shuffleWidgets();

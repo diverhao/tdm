@@ -72,6 +72,51 @@ export class GroupItem {
         return this._widgets;
     }
 
+    hideWidgets = (flush: boolean) => {
+        for (const widgetKey of this.getWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.hide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    unhideWidgets = (flush: boolean) => {
+        for (const widgetKey of this.getWidgetKeys()) {
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+                if (widget instanceof BaseWidget) {
+                    widget.unhide(false);
+                }
+            } catch (e) {
+
+            }
+        }
+        if (flush === true) {
+            g_flushWidgets();
+        }
+    }
+
+    cleanWidgetKeys = () => {
+        const widgetKeys = this.getWidgetKeys();
+        for (let ii = widgetKeys.length - 1; ii >= 0; ii--) {
+            const widgetKey = widgetKeys[ii];
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey);
+            } catch (e) {
+                widgetKeys.splice(ii, 1);
+            }
+        }
+
+    }
+
     /**
      * update all the widget's appearance in this item: if this item
      * is selected, then show these widgets, if not hide them.
@@ -84,41 +129,41 @@ export class GroupItem {
      * 
      * (3) flush widgets
      */
-    updateWidgets = (flush: boolean = false) => {
-        // (1)
-        for (const widgetKey of this.getWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    widget.unhide(false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
+    // updateWidgets = (flush: boolean = false) => {
+    //     // (1)
+    //     for (const widgetKey of this.getWidgetKeys()) {
+    //         try {
+    //             const widget = g_widgets1.getWidget2(widgetKey);
+    //             if (widget instanceof BaseWidget) {
+    //                 widget.unhide(false);
+    //             }
+    //         } catch (e) {
+    //             Log.error(e);
+    //         }
+    //     }
 
-        // (2)
-        if (this === this.getGroup().getSelectedItem()) {
-            // if this item is selected, keep showing these widgets
-            return;
-        }
-        // if this item is not selected, hide them
-        for (const widgetKey of this.getWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof BaseWidget) {
-                    widget.hide(false);
-                }
-            } catch (e) {
-                Log.error(e);
-            }
-        }
+    //     // (2)
+    //     if (this === this.getGroup().getSelectedItem()) {
+    //         // if this item is selected, keep showing these widgets
+    //         return;
+    //     }
+    //     // if this item is not selected, hide them
+    //     for (const widgetKey of this.getWidgetKeys()) {
+    //         try {
+    //             const widget = g_widgets1.getWidget2(widgetKey);
+    //             if (widget instanceof BaseWidget) {
+    //                 widget.hide(false);
+    //             }
+    //         } catch (e) {
+    //             Log.error(e);
+    //         }
+    //     }
 
-        // (3)
-        if (flush) {
-            g_flushWidgets();
-        }
-    }
+    //     // (3)
+    //     if (flush) {
+    //         g_flushWidgets();
+    //     }
+    // }
 
     removeWidgetKey = (widgetKey: string) => {
         for (let ii = 0; ii < this.getWidgetKeys().length; ii++) {

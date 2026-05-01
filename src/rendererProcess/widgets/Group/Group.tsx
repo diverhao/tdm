@@ -88,9 +88,9 @@ export class Group extends BaseWidget {
         const outline = this._getElementAreaRawOutlineStyle();
 
         React.useEffect(() => {
-            this.updateCoverage();
-            this.shuffleWidgets();
-            this.updateAppearance()
+            // this.updateCoverage();
+            // this.shuffleWidgets();
+            // this.updateAppearance()
         }, [])
 
         return (
@@ -112,7 +112,21 @@ export class Group extends BaseWidget {
                     fontWeight: fontWeight,
                     outline: outline,
                 }}
-                onMouseDown={(event: any) => { this.updateCoverage(); this.shuffleWidgets(); this.updateAppearance(); this._handleMouseDown(event); }}
+                onMouseDown={(event: any) => {
+                    console.log("on mouse down")
+                    this.updateCoverage();
+                    console.log("step 1")
+                    // this.shuffleWidgets();
+                    this.updateAppearance();
+                    console.log("step 2")
+                    this._handleMouseDown(event);
+                    console.log("step 3")
+                    if (g_widgets1.isEditing()) {
+                        this.selectChildWidgets()
+                    }
+                    console.log("step 4")
+
+                }}
                 onDoubleClick={this._handleMouseDoubleClick}
 
             >
@@ -222,10 +236,16 @@ export class Group extends BaseWidget {
                                     onMouseDown={(event: React.MouseEvent<HTMLDivElement>) => {
                                         // event.preventDefault();
                                         event.stopPropagation();
-                                        const item = this.getItems()[index];
-                                        this.setSelectedItem(item);
+
                                         this.updateCoverage();
-                                        this.shuffleWidgets();
+                                        // const selectedItem = this.getSelectedItem();
+                                        // selectedItem.hideWidgets(true);
+
+                                        // const item = this.getItems()[index];
+                                        this.setSelectedItem(item);
+                                        // item.unhideWidgets(true)
+                                        // this.updateCoverage();
+                                        // this.shuffleWidgets();
                                         this.updateAppearance();
                                         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                                         g_widgets1.updateSidebar(true);
@@ -272,7 +292,12 @@ export class Group extends BaseWidget {
      *  - if this widget is included in an item of this Group widget, then exclude (remove) it from this item
      */
     updateCoverage = () => {
+        console.log("---------------------------")
 
+        for (const item of this.getItems()) {
+            console.log(item.getWidgetKeys())
+        }
+        console.log("=====================")
         const style = this.getStyle();
         // "mouse selection region" boundary
         let regionLeft = style.left;
@@ -280,7 +305,16 @@ export class Group extends BaseWidget {
         let regionRight = regionLeft + style.width;
         let regionDown = regionTop + style.height;
 
-        for (const widget of g_widgets1.getWidgets().values()) {
+        const selectedItem = this.getSelectedItem();
+
+        // if the widget does not exist, remove it from item.widgetKeys
+        for (const item of this.getItems()) {
+            item.cleanWidgetKeys();
+        }
+
+        const widgets = g_widgets1.getWidgets2().values();
+
+        for (const widget of widgets) {
             if (!(widget instanceof BaseWidget)) {
                 continue;
             }
@@ -291,65 +325,122 @@ export class Group extends BaseWidget {
 
             const widgetStyle = widget.getStyle();
             const widgetKey = widget.getWidgetKey();
+            // console.log("widgetKey", widgetKey)
             let widgetLeft = widgetStyle.left;
             let widgetTop = widgetStyle.top;
             let widgetRight = widgetLeft + widgetStyle.width;
             let widgetDown = widgetTop + widgetStyle.height;
+
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
-            let includedItem: undefined | GroupItem = undefined;
-            for (const item of this.getItems()) {
-                const widgetKeys = item.getWidgetKeys();
-                if (widgetKeys.includes(widgetKey)) {
-                    includedItem = item;
-                    break;
-                }
-            }
-            if (includedItem !== undefined && isInside === true) {
+            const item = this.getItemFromWidgetKey(widgetKey);
+            
+
+            const isHidden = widget.isHidden();
+            // console.log(isHidden, isInside)
+            if (isHidden === true && isInside === true) {
                 // do nothing
-                this.includeWidget(includedItem, widget);
-            } else if (includedItem !== undefined && isInside === false) {
-                this.excludeWidget(includedItem, widget);
-            } else if (includedItem === undefined && isInside === true) {
-                this.includeWidget(this.getSelectedItem(), widget);
-            } else if (includedItem === undefined && isInside === false) {
+            } else if (isHidden === true && isInside === false) {
                 // do nothing
+            } else if (isHidden === false && isInside === true) {
+                this.includeWidget(selectedItem, widget);
+            } else if (isHidden === false && isInside === false) {
+                this.excludeWidget(widget);
             }
         }
+
+        for (const item of this.getItems()) {
+            console.log(item.getWidgetKeys())
+        }
     };
+
+    getItemFromWidgetKey = (widgetKey: string): GroupItem | undefined => {
+        for (const item of this.getItems()) {
+            if (item.getWidgetKeys().includes(widgetKey)) {
+                return item;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * (1) select this widget (skip, it is done by )
+     * 
+     * (2) select all children widgets
+     */
+
+    selectChildWidgets = () => {
+        for (const item of this.getItems()) {
+            for (const widgetKey of item.getWidgetKeys()) {
+                try {
+                    const widget = g_widgets1.getWidget2(widgetKey);
+                    if (widget instanceof BaseWidget) {
+                        widget.simpleSelect(false);
+                    }
+                } catch (e) {
+
+                }
+            }
+        }
+        g_flushWidgets();
+    }
 
     includeWidget = (item: GroupItem, widget: BaseWidget) => {
         const widgetKey = widget.getWidgetKey();
         if (!item.getWidgetKeys().includes(widgetKey)) {
             item.getWidgetKeys().push(widgetKey);
         }
-        for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
-            if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
-                widget.getGroupNames().splice(ii, 1);
-            }
-        }
-        widget.getGroupNames().push(this.getGroupKey());
+        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
+        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
+        //         widget.getGroupNames().splice(ii, 1);
+        //     }
+        // }
+        // widget.getGroupNames().push(this.getGroupKey());
 
-        if (widget instanceof Group) {
-            widget.updateCoverage();
-        }
+        // if (widget instanceof Group) {
+        //     widget.updateCoverage();
+        // }
 
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
 
-    excludeWidget = (item: GroupItem, widget: BaseWidget) => {
+    excludeWidget1 = (item: GroupItem, widget: BaseWidget) => {
         const widgetKey = widget.getWidgetKey();
         item.removeWidgetKey(widgetKey);
         // the widget may have been invisible
         widget.getStyle()["display"] = "inline-flex";
-        for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
-            if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
-                widget.getGroupNames().splice(ii, 1);
+        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
+        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
+        //         widget.getGroupNames().splice(ii, 1);
+        //     }
+        // }
+
+        // if (widget instanceof Group) {
+        //     widget.updateCoverage();
+        // }
+
+        g_widgets1.addToForceUpdateWidgets(widgetKey);
+    }
+
+    excludeWidget = (widget: BaseWidget) => {
+        const widgetKey = widget.getWidgetKey();
+        for (const item of this.getItems()) {
+            const index = item.getWidgetKeys().indexOf(widgetKey);
+            if (index > -1) {
+                item.getWidgetKeys().splice(index, 1);
             }
         }
+        // item.removeWidgetKey(widgetKey);
+        // the widget may have been invisible
+        // widget.getStyle()["display"] = "inline-flex";
+        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
+        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
+        //         widget.getGroupNames().splice(ii, 1);
+        //     }
+        // }
 
-        if (widget instanceof Group) {
-            widget.updateCoverage();
-        }
+        // if (widget instanceof Group) {
+        //     widget.updateCoverage();
+        // }
 
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
@@ -425,8 +516,15 @@ export class Group extends BaseWidget {
 
     updateAppearance = () => {
 
+        // for (const item of this.getItems()) {
+        //     item.updateWidgets(false);
+        // }
         for (const item of this.getItems()) {
-            item.updateWidgets(false);
+            if (item === this.getSelectedItem()) {
+                item.unhideWidgets(false);
+            } else {
+                item.hideWidgets(false);
+            }
         }
         g_flushWidgets();
     }
@@ -524,74 +622,74 @@ export class Group extends BaseWidget {
      * shuffle children widgets to make sure they are not behind this widget
      */
     shuffleWidgets = (parentWidget: Group | undefined = undefined) => {
-        // move the current widget to the front, or right after the parentWidget
-        const widgets = g_widgets1.getWidgets();
-        if (parentWidget === undefined) {
-            const widgetKey = this.getWidgetKey();
-            this.moveMapKeyToIndex(widgets, this.getWidgetKey(), 1);
-        } else if (parentWidget instanceof Group) {
-            const parentWidgetKey = parentWidget.getWidgetKey();
-            this.moveMapKeyAfter(widgets, this.getWidgetKey(), parentWidgetKey);
-        } else {
-            return;
-        }
+        // // move the current widget to the front, or right after the parentWidget
+        // const widgets = g_widgets1.getWidgets();
+        // if (parentWidget === undefined) {
+        //     const widgetKey = this.getWidgetKey();
+        //     this.moveMapKeyToIndex(widgets, this.getWidgetKey(), 1);
+        // } else if (parentWidget instanceof Group) {
+        //     const parentWidgetKey = parentWidget.getWidgetKey();
+        //     this.moveMapKeyAfter(widgets, this.getWidgetKey(), parentWidgetKey);
+        // } else {
+        //     return;
+        // }
 
-        // shuffle children Group widgets for the selected item
-        for (const widgetKey of this.getSelectedItem().getWidgetKeys()) {
-            try {
-                const widget = g_widgets1.getWidget2(widgetKey);
-                if (widget instanceof Group) {
-                    widget.shuffleWidgets(this);
-                }
-            } catch (e) {
+        // // shuffle children Group widgets for the selected item
+        // for (const widgetKey of this.getSelectedItem().getWidgetKeys()) {
+        //     try {
+        //         const widget = g_widgets1.getWidget2(widgetKey);
+        //         if (widget instanceof Group) {
+        //             widget.shuffleWidgets(this);
+        //         }
+        //     } catch (e) {
 
-            }
-        }
+        //     }
+        // }
 
     }
 
-    hide(flush: boolean) {
-        super.hide(false);
-        // hide all children widgets
-        for (const item of this.getItems()) {
-            for (const widgetKey of item.getWidgetKeys()) {
-                try {
-                    const widget = g_widgets1.getWidget2(widgetKey);
-                    if (widget instanceof BaseWidget) {
-                        widget.hide(false);
-                    }
-                } catch (e) {
+    // hide(flush: boolean) {
+    //     super.hide(false);
+    //     // hide all children widgets
+    //     for (const item of this.getItems()) {
+    //         for (const widgetKey of item.getWidgetKeys()) {
+    //             try {
+    //                 const widget = g_widgets1.getWidget2(widgetKey);
+    //                 if (widget instanceof BaseWidget) {
+    //                     widget.hide(false);
+    //                 }
+    //             } catch (e) {
 
-                }
-            }
-        }
-        if (flush === true) {
-            g_flushWidgets();
-        }
-    }
+    //             }
+    //         }
+    //     }
+    //     if (flush === true) {
+    //         g_flushWidgets();
+    //     }
+    // }
 
 
-    unhide(flush: boolean) {
-        super.unhide(false);
-        // hide all children widgets
-        for (const item of this.getItems()) {
-            if (item !== this.getSelectedItem()) {
-                continue;
-            }
-            for (const widgetKey of item.getWidgetKeys()) {
-                try {
-                    const widget = g_widgets1.getWidget2(widgetKey);
-                    if (widget instanceof BaseWidget) {
-                        widget.unhide(false);
-                    }
-                } catch (e) {
-                }
-            }
-        }
-        if (flush === true) {
-            g_flushWidgets();
-        }
-    }
+    // unhide(flush: boolean) {
+    //     super.unhide(false);
+    //     // hide all children widgets
+    //     for (const item of this.getItems()) {
+    //         if (item !== this.getSelectedItem()) {
+    //             continue;
+    //         }
+    //         for (const widgetKey of item.getWidgetKeys()) {
+    //             try {
+    //                 const widget = g_widgets1.getWidget2(widgetKey);
+    //                 if (widget instanceof BaseWidget) {
+    //                     widget.unhide(false);
+    //                 }
+    //             } catch (e) {
+    //             }
+    //         }
+    //     }
+    //     if (flush === true) {
+    //         g_flushWidgets();
+    //     }
+    // }
 
 
     // -------------------- helper functions ----------------
@@ -641,7 +739,7 @@ export class Group extends BaseWidget {
 
     jobsAsOperatingModeBegins(): void {
         this.updateCoverage();
-        this.shuffleWidgets();
+        // this.shuffleWidgets();
         this.updateAppearance();
         super.jobsAsOperatingModeBegins()
     }
