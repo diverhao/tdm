@@ -357,6 +357,7 @@ export class Group extends BaseWidget {
                 }
             }
         }
+        this.shuffleWidgets();
     };
 
     /**
@@ -489,7 +490,6 @@ export class Group extends BaseWidget {
         }
         // (4)
         this.updateCoverage();
-        this.shuffleWidgets();
         this.updateAppearance();
     }
 
@@ -515,7 +515,6 @@ export class Group extends BaseWidget {
 
         this.setSelectedItem(item);
         this.updateCoverage();
-        this.shuffleWidgets();
         this.updateAppearance();
     }
 
@@ -629,35 +628,81 @@ export class Group extends BaseWidget {
         }
     }
 
+    moveMapKeyBefore<K, V>(map: Map<K, V>, keyToMove: K, beforeKey: K) {
+        if (!map.has(keyToMove) || !map.has(beforeKey) || keyToMove === beforeKey) {
+            return;
+        }
+
+        const valueToMove = map.get(keyToMove)!;
+        map.delete(keyToMove);
+
+        const entries: [K, V][] = [];
+
+        for (const [key, value] of map) {
+            if (key === beforeKey) {
+                entries.push([keyToMove, valueToMove]);
+            }
+
+            entries.push([key, value]);
+        }
+
+        map.clear();
+        for (const [key, value] of entries) {
+            map.set(key, value);
+        }
+    }
+
 
 
     /**
-     * shuffle children widgets to make sure they are not behind this widget
+     * move the current Group widget behind any of its child widget, and child Group's children
      */
     shuffleWidgets = (parentWidget: Group | undefined = undefined) => {
-        // // move the current widget to the front, or right after the parentWidget
-        // const widgets = g_widgets1.getWidgets();
-        // if (parentWidget === undefined) {
-        //     const widgetKey = this.getWidgetKey();
-        //     this.moveMapKeyToIndex(widgets, this.getWidgetKey(), 1);
-        // } else if (parentWidget instanceof Group) {
-        //     const parentWidgetKey = parentWidget.getWidgetKey();
-        //     this.moveMapKeyAfter(widgets, this.getWidgetKey(), parentWidgetKey);
-        // } else {
-        //     return;
-        // }
+        const thisWidgetKey = this.getWidgetKey();
+        const parentWidgetKey = parentWidget?.getWidgetKey();
+        const childWidgetKeys = new Set<string>();
+        for (const item of this.getItems()) {
+            for (const widgetKey of item.getWidgetKeys()) {
+                if (widgetKey !== thisWidgetKey && widgetKey !== parentWidgetKey) {
+                    childWidgetKeys.add(widgetKey);
+                }
+            }
+        }
 
-        // // shuffle children Group widgets for the selected item
-        // for (const widgetKey of this.getSelectedItem().getWidgetKeys()) {
-        //     try {
-        //         const widget = g_widgets1.getWidget2(widgetKey);
-        //         if (widget instanceof Group) {
-        //             widget.shuffleWidgets(this);
-        //         }
-        //     } catch (e) {
+        if (childWidgetKeys.size === 0) {
+            return;
+        }
 
-        //     }
-        // }
+        for (const childWidgetKey of childWidgetKeys) {
+            try {
+                const widget = g_widgets1.getWidget2(childWidgetKey);
+                if (widget instanceof Group) {
+                    widget.shuffleWidgets(this);
+                }
+            } catch (e) {
+
+            }
+        }
+
+        const widgets = g_widgets1.getWidgets();
+        const widgetKeys = [...widgets.keys()];
+        let thisWidgetIndex = -1;
+        let firstChildWidgetIndex = -1;
+        let firstChildWidgetKey: string | undefined = undefined;
+
+        for (let ii = 0; ii < widgetKeys.length; ii++) {
+            const widgetKey = widgetKeys[ii];
+            if (widgetKey === thisWidgetKey) {
+                thisWidgetIndex = ii;
+            } else if (firstChildWidgetKey === undefined && childWidgetKeys.has(widgetKey)) {
+                firstChildWidgetIndex = ii;
+                firstChildWidgetKey = widgetKey;
+            }
+        }
+
+        if (firstChildWidgetKey !== undefined && thisWidgetIndex > firstChildWidgetIndex) {
+            this.moveMapKeyBefore(widgets, thisWidgetKey, firstChildWidgetKey);
+        }
 
     }
 
@@ -700,16 +745,12 @@ export class Group extends BaseWidget {
     }
 
     jobsAsEditingModeBegins() {
-        // this.updateCoverage();
-        this.shuffleWidgets();
         this.updateAppearance();
         super.jobsAsEditingModeBegins();
     }
 
 
     jobsAsOperatingModeBegins(): void {
-        // this.updateCoverage();
-        // this.shuffleWidgets();
         this.updateAppearance();
         super.jobsAsOperatingModeBegins()
     }
