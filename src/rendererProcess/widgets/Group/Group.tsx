@@ -87,12 +87,6 @@ export class Group extends BaseWidget {
         const fontWeight = allStyle.fontWeight;
         const outline = this._getElementAreaRawOutlineStyle();
 
-        React.useEffect(() => {
-            // this.updateCoverage();
-            // this.shuffleWidgets();
-            // this.updateAppearance()
-        }, [])
-
         return (
             <div
                 style={{
@@ -114,7 +108,9 @@ export class Group extends BaseWidget {
                 }}
                 onMouseDown={(event: any) => {
                     console.log("on mouse down")
-                    this.updateCoverage();
+                    if (g_widgets1.isEditing()) {
+                        this.updateCoverage();
+                    }
                     console.log("step 1")
                     // this.shuffleWidgets();
                     this.updateAppearance();
@@ -234,18 +230,13 @@ export class Group extends BaseWidget {
                                         textUnderlineOffset: labelHeight / 4,
                                     }}
                                     onMouseDown={(event: React.MouseEvent<HTMLDivElement>) => {
-                                        // event.preventDefault();
+
                                         event.stopPropagation();
-
-                                        this.updateCoverage();
-                                        // const selectedItem = this.getSelectedItem();
-                                        // selectedItem.hideWidgets(true);
-
-                                        // const item = this.getItems()[index];
+                                        this.getSelectedItem().hideWidgets(false);
+                                        if (g_widgets1.isEditing()) {
+                                            this.updateCoverage();
+                                        }
                                         this.setSelectedItem(item);
-                                        // item.unhideWidgets(true)
-                                        // this.updateCoverage();
-                                        // this.shuffleWidgets();
                                         this.updateAppearance();
                                         g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
                                         g_widgets1.updateSidebar(true);
@@ -292,12 +283,11 @@ export class Group extends BaseWidget {
      *  - if this widget is included in an item of this Group widget, then exclude (remove) it from this item
      */
     updateCoverage = () => {
-        console.log("---------------------------")
 
-        for (const item of this.getItems()) {
-            console.log(item.getWidgetKeys())
-        }
-        console.log("=====================")
+        // if (!g_widgets1.isEditing()) {
+        // return;
+        // }
+
         const style = this.getStyle();
         // "mouse selection region" boundary
         let regionLeft = style.left;
@@ -332,26 +322,65 @@ export class Group extends BaseWidget {
             let widgetDown = widgetTop + widgetStyle.height;
 
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
-            const item = this.getItemFromWidgetKey(widgetKey);
-            
+            if (isInside === false) {
+                // if the widget belonged to this Group, but not anymore
+                // remove and unhide it
+                const widgetKeyRemoved = this.removeWidgetKey(widgetKey);
+                if (widgetKeyRemoved) {
+                    widget.unhide(false);
+                }
+            } else {
+                // the widget is inside the Group
+                this.cleanUpWidgetKey(widgetKey);
+                const item = this.getItemFromWidgetKey(widgetKey);
+                const widgetIsHidden = widget.isHidden();
+                if (item === undefined) {
+                    // the widget was not in any item
+                    if (widgetIsHidden === false) {
+                        // the widget did not belong to this Group
+                        // and the widget is not hidden, 
+                        // then include this widget to the currently selected item
+                        // the 2nd condition is to prevent a hidden widget from being included
 
-            const isHidden = widget.isHidden();
-            // console.log(isHidden, isInside)
-            if (isHidden === true && isInside === true) {
-                // do nothing
-            } else if (isHidden === true && isInside === false) {
-                // do nothing
-            } else if (isHidden === false && isInside === true) {
-                this.includeWidget(selectedItem, widget);
-            } else if (isHidden === false && isInside === false) {
-                this.excludeWidget(widget);
+                        // explictly exclude the widget from all items
+                        this.excludeWidget(widget);
+                        // then include it
+                        this.includeWidget(selectedItem, widget);
+                    } else {
+                        // if the widget does not belong to any item --> this item must belong to another Group
+                    }
+                } else if (item === selectedItem) {
+                    // the widget is already included in the selected item
+                    // do nothing
+                } else {
+                    // this widget already belongs to an item
+                    // do nothing
+                }
             }
         }
-
-        for (const item of this.getItems()) {
-            console.log(item.getWidgetKeys())
-        }
     };
+
+    /**
+     * clean up a widget's key in all items' widgetKeys array: 
+     * only keep the first occurance of this widget key, remove this widgetKey in all other item's widgetKeys
+     */
+    cleanUpWidgetKey = (widgetKey: string) => {
+        let count = 0;
+        for (const item of this.getItems()) {
+            if (item.getWidgetKeys().includes(widgetKey)) {
+                const widgetKeys = item.getWidgetKeys();
+                if (count === 1) {
+                    for (let ii = widgetKeys.length - 1; ii >= 0; ii--) {
+                        if (widgetKeys[ii] === widgetKey) {
+                            widgetKeys.splice(ii, 1);
+                        }
+                    }
+                } else {
+                    count++;
+                }
+            }
+        }
+    }
 
     getItemFromWidgetKey = (widgetKey: string): GroupItem | undefined => {
         for (const item of this.getItems()) {
@@ -360,6 +389,21 @@ export class Group extends BaseWidget {
             }
         }
         return undefined;
+    }
+
+    /**
+     * @returns {boolean} `true` if the widget key was found and removed; otherwise `false`.
+     */
+    removeWidgetKey = (widgetKey: string): boolean => {
+        for (const item of this.getItems()) {
+            const widgetKeys = item.getWidgetKeys();
+            const index = widgetKeys.indexOf(widgetKey);
+            if (index > -1) {
+                widgetKeys.splice(index, 1);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -389,17 +433,6 @@ export class Group extends BaseWidget {
         if (!item.getWidgetKeys().includes(widgetKey)) {
             item.getWidgetKeys().push(widgetKey);
         }
-        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
-        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
-        //         widget.getGroupNames().splice(ii, 1);
-        //     }
-        // }
-        // widget.getGroupNames().push(this.getGroupKey());
-
-        // if (widget instanceof Group) {
-        //     widget.updateCoverage();
-        // }
-
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
 
@@ -408,16 +441,6 @@ export class Group extends BaseWidget {
         item.removeWidgetKey(widgetKey);
         // the widget may have been invisible
         widget.getStyle()["display"] = "inline-flex";
-        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
-        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
-        //         widget.getGroupNames().splice(ii, 1);
-        //     }
-        // }
-
-        // if (widget instanceof Group) {
-        //     widget.updateCoverage();
-        // }
-
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
 
@@ -429,19 +452,6 @@ export class Group extends BaseWidget {
                 item.getWidgetKeys().splice(index, 1);
             }
         }
-        // item.removeWidgetKey(widgetKey);
-        // the widget may have been invisible
-        // widget.getStyle()["display"] = "inline-flex";
-        // for (let ii = widget.getGroupNames().length - 1; ii >= 0; ii--) {
-        //     if (widget.getGroupNames()[ii].startsWith("group_widget_group_")) {
-        //         widget.getGroupNames().splice(ii, 1);
-        //     }
-        // }
-
-        // if (widget instanceof Group) {
-        //     widget.updateCoverage();
-        // }
-
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
 
@@ -516,12 +526,20 @@ export class Group extends BaseWidget {
 
     updateAppearance = () => {
 
-        // for (const item of this.getItems()) {
-        //     item.updateWidgets(false);
-        // }
+        const thisWidgetIsHidden = this.isHidden();
         for (const item of this.getItems()) {
-            if (item === this.getSelectedItem()) {
+            if (item === this.getSelectedItem() && thisWidgetIsHidden === false) {
                 item.unhideWidgets(false);
+                // if the child widget is a Group, update its appearance
+                for (const widgetKey of item.getWidgetKeys()) {
+                    try {
+                        const widget = g_widgets1.getWidget2(widgetKey);
+                        if (widget instanceof Group) {
+                            widget.updateAppearance();
+                        }
+                    } catch (e) {
+                    }
+                }
             } else {
                 item.hideWidgets(false);
             }
@@ -648,49 +666,6 @@ export class Group extends BaseWidget {
 
     }
 
-    // hide(flush: boolean) {
-    //     super.hide(false);
-    //     // hide all children widgets
-    //     for (const item of this.getItems()) {
-    //         for (const widgetKey of item.getWidgetKeys()) {
-    //             try {
-    //                 const widget = g_widgets1.getWidget2(widgetKey);
-    //                 if (widget instanceof BaseWidget) {
-    //                     widget.hide(false);
-    //                 }
-    //             } catch (e) {
-
-    //             }
-    //         }
-    //     }
-    //     if (flush === true) {
-    //         g_flushWidgets();
-    //     }
-    // }
-
-
-    // unhide(flush: boolean) {
-    //     super.unhide(false);
-    //     // hide all children widgets
-    //     for (const item of this.getItems()) {
-    //         if (item !== this.getSelectedItem()) {
-    //             continue;
-    //         }
-    //         for (const widgetKey of item.getWidgetKeys()) {
-    //             try {
-    //                 const widget = g_widgets1.getWidget2(widgetKey);
-    //                 if (widget instanceof BaseWidget) {
-    //                     widget.unhide(false);
-    //                 }
-    //             } catch (e) {
-    //             }
-    //         }
-    //     }
-    //     if (flush === true) {
-    //         g_flushWidgets();
-    //     }
-    // }
-
 
     // -------------------- helper functions ----------------
     getGroupKey = () => {
@@ -730,7 +705,7 @@ export class Group extends BaseWidget {
     }
 
     jobsAsEditingModeBegins() {
-        this.updateCoverage();
+        // this.updateCoverage();
         this.shuffleWidgets();
         this.updateAppearance();
         super.jobsAsEditingModeBegins();
@@ -738,7 +713,7 @@ export class Group extends BaseWidget {
 
 
     jobsAsOperatingModeBegins(): void {
-        this.updateCoverage();
+        // this.updateCoverage();
         // this.shuffleWidgets();
         this.updateAppearance();
         super.jobsAsOperatingModeBegins()
