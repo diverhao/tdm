@@ -111,12 +111,8 @@ export class Group extends BaseWidget {
                     if (g_widgets1.isEditing()) {
                         this.updateCoverage();
                     }
-                    console.log("step 1")
-                    // this.shuffleWidgets();
                     this.updateAppearance();
-                    console.log("step 2")
                     this._handleMouseDown(event);
-                    console.log("step 3")
                     if (g_widgets1.isEditing()) {
                         this.selectChildWidgets()
                     }
@@ -284,10 +280,6 @@ export class Group extends BaseWidget {
      */
     updateCoverage = () => {
 
-        // if (!g_widgets1.isEditing()) {
-        // return;
-        // }
-
         const style = this.getStyle();
         // "mouse selection region" boundary
         let regionLeft = style.left;
@@ -313,9 +305,9 @@ export class Group extends BaseWidget {
                 continue;
             }
 
-            const widgetStyle = widget.getStyle();
             const widgetKey = widget.getWidgetKey();
-            // console.log("widgetKey", widgetKey)
+
+            const widgetStyle = widget.getStyle();
             let widgetLeft = widgetStyle.left;
             let widgetTop = widgetStyle.top;
             let widgetRight = widgetLeft + widgetStyle.width;
@@ -323,46 +315,56 @@ export class Group extends BaseWidget {
 
             const isInside = regionLeft <= widgetLeft && regionTop <= widgetTop && regionDown >= widgetDown && regionRight >= widgetRight;
             if (isInside === false) {
-                // if the widget belonged to this Group, but not anymore
-                // remove and unhide it
-                const widgetKeyRemoved = this.removeWidgetKey(widgetKey);
-                if (widgetKeyRemoved) {
+                if (this.belongToThisGroupWidget(widgetKey)) {
+                    // if the widget belonged to this Group, but not anymore
+                    // remove and unhide it
+                    this.excludeWidget(widget);
                     widget.unhide(false);
+                } else {
+                    // if the widget did not belong to this group
+                    // do nothing
                 }
             } else {
-                // the widget is inside the Group
+                // the widget is inside the Group boundary
                 this.cleanUpWidgetKey(widgetKey);
-                const item = this.getItemFromWidgetKey(widgetKey);
+                const item = this.getItemOfWidgetKey(widgetKey);
                 const widgetIsHidden = widget.isHidden();
                 if (item === undefined) {
-                    // the widget was not in any item
+                    // the widget did not belong to any item
                     if (widgetIsHidden === false) {
                         // the widget did not belong to this Group
                         // and the widget is not hidden, 
                         // then include this widget to the currently selected item
                         // the 2nd condition is to prevent a hidden widget from being included
 
-                        // explictly exclude the widget from all items
+                        // explictly exclude the widget from every item
                         this.excludeWidget(widget);
-                        // then include it
+                        // then include it to the currently selected item
                         this.includeWidget(selectedItem, widget);
                     } else {
-                        // if the widget does not belong to any item --> this item must belong to another Group
+                        // tricky business:
+                        // if the widget does not belong to any item in this Group widget,
+                        // then it must belong to a hidden item of this Group's parent Group
                     }
                 } else if (item === selectedItem) {
-                    // the widget is already included in the selected item
-                    // do nothing
+                    // do nothing here
+                    // the widget already belongs to the selected item
+                    // no matter if it is hidden or not, it will be unhide in updateAppearance()
                 } else {
-                    // this widget already belongs to an item
                     // do nothing
+                    // the widget already belongs to an item
+                    // no matter if it is hidden or not, it will be unhide in updateAppearance()
                 }
             }
         }
     };
 
     /**
-     * clean up a widget's key in all items' widgetKeys array: 
-     * only keep the first occurance of this widget key, remove this widgetKey in all other item's widgetKeys
+     * a widgetKey can only stay inside one item, unconditionally remove excessive 
+     * inclusion of this widgetKey from other items
+     * 
+     * After this method, it is gauranteed that the widgetKey is in one and only one item
+     * 
      */
     cleanUpWidgetKey = (widgetKey: string) => {
         let count = 0;
@@ -382,7 +384,7 @@ export class Group extends BaseWidget {
         }
     }
 
-    getItemFromWidgetKey = (widgetKey: string): GroupItem | undefined => {
+    getItemOfWidgetKey = (widgetKey: string): GroupItem | undefined => {
         for (const item of this.getItems()) {
             if (item.getWidgetKeys().includes(widgetKey)) {
                 return item;
@@ -392,14 +394,12 @@ export class Group extends BaseWidget {
     }
 
     /**
-     * @returns {boolean} `true` if the widget key was found and removed; otherwise `false`.
+     * if the widgetKey belongs to any of the item in this Group widget
      */
-    removeWidgetKey = (widgetKey: string): boolean => {
+    belongToThisGroupWidget = (widgetKey: string) => {
         for (const item of this.getItems()) {
             const widgetKeys = item.getWidgetKeys();
-            const index = widgetKeys.indexOf(widgetKey);
-            if (index > -1) {
-                widgetKeys.splice(index, 1);
+            if (widgetKeys.includes(widgetKey)) {
                 return true;
             }
         }
@@ -436,14 +436,9 @@ export class Group extends BaseWidget {
         g_widgets1.addToForceUpdateWidgets(widgetKey);
     }
 
-    excludeWidget1 = (item: GroupItem, widget: BaseWidget) => {
-        const widgetKey = widget.getWidgetKey();
-        item.removeWidgetKey(widgetKey);
-        // the widget may have been invisible
-        widget.getStyle()["display"] = "inline-flex";
-        g_widgets1.addToForceUpdateWidgets(widgetKey);
-    }
-
+    /**
+     * remove the widget from every item of this Group
+     */
     excludeWidget = (widget: BaseWidget) => {
         const widgetKey = widget.getWidgetKey();
         for (const item of this.getItems()) {
