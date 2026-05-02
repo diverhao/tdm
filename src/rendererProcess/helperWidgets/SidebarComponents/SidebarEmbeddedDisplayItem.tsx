@@ -78,49 +78,8 @@ export class SidebarEmbeddedDisplayItem {
                         {this.isValidDisplayFile(tdlFileName) === false ? null :
                             <this.StyledButton
                                 onClick={(event) => {
-                                    const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-                                    const displayWindowId = displayWindowClient.getWindowId();
                                     const mainWidget = this.getMainWidget();
-                                    const display = this.getDisplay();
-                                    if (display === undefined) {
-                                        return;
-                                    }
-
-                                    const allMacros = mainWidget.getAllMacros();
-                                    const itemMacros = display.macros;
-                                    const macros = [...itemMacros, ...allMacros];
-
-                                    let tdlFileName = display.tdlFileName;
-                                    // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
-                                    // the itemMacros is for the child tdl 
-                                    tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
-
-                                    let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
-
-                                    // if this EmbeddedDisplay is inside another EmbeddedDisplay
-                                    // use the parent EmbeddedDisplay's path
-                                    if (mainWidget.getEmbeddedDisplayWidgetKey() !== "") {
-                                        const parentWidget = g_widgets1.getWidget(mainWidget.getEmbeddedDisplayWidgetKey());
-                                        if (parentWidget instanceof EmbeddedDisplay) {
-                                            const parentFullTdlFileName = parentWidget.getFullTdlFileName();
-                                            if (parentFullTdlFileName !== "") {
-                                                currentTdlFolder = path.dirname(parentFullTdlFileName);
-                                            }
-                                        }
-                                    }
-
-                                    displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                                        options: {
-                                            // tdl?: type_tdl;
-                                            tdlFileNames: [tdlFileName],
-                                            mode: "operating",
-                                            editable: true,
-                                            macros: macros,
-                                            replaceMacros: true,
-                                            currentTdlFolder: currentTdlFolder,
-                                            windowId: displayWindowId,
-                                        }
-                                    });
+                                    mainWidget.openChildTdlFile(this.getIndex());
                                 }}
                             >
                                 <img

@@ -12,7 +12,7 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../common/Log";
 import { evaluate } from "mathjs";
-import { type_widget_tdl_schema_registry, verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
+import { verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -260,7 +260,7 @@ export abstract class BaseWidget {
      * (1) select this widget or whole group, flush widgets
      * (2) tell main process to show context menu
      */
-    _handleMouseDown = (event: React.MouseEvent): void  => {
+    _handleMouseDown = (event: React.MouseEvent): void => {
         // hide context menu
         g_widgets1.getRoot().getDisplayWindowClient().getContextMenu().hideElement();
 
@@ -727,17 +727,23 @@ export abstract class BaseWidget {
         this.showPrimaryInfoInput();
     };
 
+    /**
+     * when the widget is double clicked, show a full-screen input box to input the channel name, or other stuff
+     * 
+     * this function may change the following for various widgets
+     *  - channel name
+     *  - 
+     */
     showPrimaryInfoInput = () => {
         const sidebar = this.getSidebar();
         if (sidebar === undefined) {
             return;
         }
-        console.log("this.getNumSelectedWidgetsOnMouseDown", this.getNumSelectedWidgetsOnMouseDown())
+
         if (this.getNumSelectedWidgetsOnMouseDown() !== 1) {
             return;
         }
 
-        // change (1) channel name, (2) Label text (3) Action Button text
         let updater = (newValue: string) => { };
         const channelNameWidgets = [
             "Arc",
@@ -800,6 +806,19 @@ export abstract class BaseWidget {
             }
             value = channelNames[0] ?? "";
             readableText = "channel name";
+        } else if (widgetName === "EmbeddedDisplay") {
+            // open the current display 
+            try {
+                const widget = g_widgets1.getWidget2(widgetKey) as any;
+                const openChildTdlFile = widget.openChildTdlFile;
+                const getSelectedTab = widget.getSelectedTab;
+                if (openChildTdlFile !== undefined && getSelectedTab !== undefined) {
+                    openChildTdlFile(getSelectedTab());
+                }
+            } catch (e) {
+
+            }
+            return;
         } else {
             return;
         }

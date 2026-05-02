@@ -518,7 +518,7 @@ export class DisplayWindowFile {
 
             // update client's file name
             displayWindowAgent.sendFromMainProcess("tdl-file-saved", {
-                newTdlFileName: tdlFileName1
+                newTdlFileName: result["fileName"]
             });
         } else {
             const reason = result["reason"];
@@ -638,6 +638,7 @@ export class DisplayWindowFile {
             return;
         }
         const fileName = await this.selectFile(fileType);
+        console.log("selection a file ---------------", fileName)
         if (fileName === undefined) {
             // do not show error message on display window, the user may just canceled it
         } else {

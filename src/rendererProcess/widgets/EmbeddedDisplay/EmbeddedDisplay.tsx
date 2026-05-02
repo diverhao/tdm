@@ -527,6 +527,51 @@ export class EmbeddedDisplay extends BaseWidget {
         }
     };
 
+    openChildTdlFile = (index: number) => {
+
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const displayWindowId = displayWindowClient.getWindowId();
+        const display = this.getDisplay(index);
+        if (display === undefined) {
+            return;
+        }
+
+        const allMacros = this.getAllMacros();
+        const itemMacros = display.macros;
+        const macros = [...itemMacros, ...allMacros];
+
+        let tdlFileName = display.tdlFileName;
+        // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
+        // the itemMacros is for the child tdl 
+        tdlFileName = BaseWidget.expandChannelName(tdlFileName, allMacros);
+
+        let currentTdlFolder = path.dirname(g_widgets1.getRoot().getDisplayWindowClient().getTdlFileName());
+
+        // if this EmbeddedDisplay is inside another EmbeddedDisplay
+        // use the parent EmbeddedDisplay's path
+        if (this.getEmbeddedDisplayWidgetKey() !== "") {
+            const parentWidget = g_widgets1.getWidget(this.getEmbeddedDisplayWidgetKey());
+            if (parentWidget instanceof EmbeddedDisplay) {
+                const parentFullTdlFileName = parentWidget.getFullTdlFileName();
+                if (parentFullTdlFileName !== "") {
+                    currentTdlFolder = path.dirname(parentFullTdlFileName);
+                }
+            }
+        }
+
+        displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
+            options: {
+                tdlFileNames: [tdlFileName],
+                mode: "operating",
+                editable: true,
+                macros: macros,
+                replaceMacros: true,
+                currentTdlFolder: currentTdlFolder,
+                windowId: displayWindowId,
+            }
+        });
+    }
+
     hide(flush: boolean) {
         super.hide(false);
         // hide all children widgets
@@ -562,6 +607,38 @@ export class EmbeddedDisplay extends BaseWidget {
             g_flushWidgets();
         }
     }
+
+    /**
+     * Select the TDL file from GUI prompt
+     * 
+     * options: {
+     *     displayWindowId: displayWindowId,
+     *     widgetKey: this.getMainWidget().getWidgetKey(),
+     *     itemIndex: this.getIndex(),
+     *     filterType: "tdl",
+     * }
+     */
+    handleSelectAFile = (options: Record<string, any>, fileName: string) => {
+        const { itemIndex } = options;
+        const display = this.getDisplay(itemIndex);
+        if (display === undefined) {
+            return;
+        }
+        if (typeof fileName !== "string") {
+            return;
+        }
+
+        display["tdlFileName"] = fileName;
+
+        const sidebar = this.getSidebar();
+        if (sidebar instanceof EmbeddedDisplaySidebar) {
+            sidebar.beingUpdatedItemIndex = itemIndex;
+            sidebar.getSidebarEmbeddedDisplayItems()._updateFromWidget(fileName);
+        }
+        g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+        g_flushWidgets();
+    }
+
 
 
     // -------------------------- tdl -------------------------------

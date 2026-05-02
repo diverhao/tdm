@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { defaultPolylineTdl, type_Polyline_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class PolylineHelper extends BaseWidgetHelper {
-    
+
     static generateDefaultTdl = (): type_Polyline_tdl => {
         const widgetKey = GlobalMethods.generateWidgetKey(defaultPolylineTdl["type"]);
         return structuredClone({
@@ -239,6 +239,7 @@ export class PolylineHelper extends BaseWidgetHelper {
         ];
 
         let transparent = false;
+        let arrowLengthRaw = -1;
 
         tdl["style"]["top"] = 0;
         tdl["style"]["left"] = 0;
@@ -251,8 +252,9 @@ export class PolylineHelper extends BaseWidgetHelper {
             tdl["text"]["fill"] = true;
         } else if (type === "polyline") {
             tdl["text"]["fill"] = false;
-            tdl["text"]["arrowLength"] = 20;
-            tdl["text"]["arrowWidth"] = 4;
+            tdl["text"]["lineWidth"] = 3;
+            tdl["text"]["arrowLength"] = 20 / 3 + 2.56;
+            tdl["text"]["arrowWidth"] = tdl["text"]["arrowLength"] / 2;
         }
 
         for (const propertyName of propertyNames) {
@@ -287,7 +289,7 @@ export class PolylineHelper extends BaseWidgetHelper {
                 } else if (propertyName === "visible") {
                     tdl["text"]["invisibleInOperation"] = !BobPropertyConverter.convertBobBoolean(propertyValue);
                 } else if (propertyName === "arrow_length") {
-                    tdl["text"]["arrowLength"] = BobPropertyConverter.convertBobNum(propertyValue);
+                    arrowLengthRaw = BobPropertyConverter.convertBobNum(propertyValue);
                 } else if (propertyName === "arrows") {
                     const arrwoData = BobPropertyConverter.convertBobArrows(propertyValue);
                     tdl["text"]["showArrowHead"] = arrwoData["showArrowHead"];
@@ -307,13 +309,10 @@ export class PolylineHelper extends BaseWidgetHelper {
             tdl["text"]["fill"] = false;
         }
 
-        // the arrow length is in unit of line width
-        if (tdl["text"]["lineWidth"] !== 0) {
-            tdl["text"]["arrowLength"] = tdl["text"]["arrowLength"] / tdl["text"]["lineWidth"];
-        } else {
-            tdl["text"]["arrowLength"] = tdl["text"]["arrowLength"] / 3;
+        if (arrowLengthRaw !== -1) {
+            tdl["text"]["arrowLength"] = arrowLengthRaw / tdl["text"]["lineWidth"] + 2.56;
+            tdl["text"]["arrowWidth"] = tdl["text"]["arrowLength"] / 2;
         }
-
 
         return tdl;
     };

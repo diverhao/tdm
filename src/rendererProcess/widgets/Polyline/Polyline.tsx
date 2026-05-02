@@ -202,18 +202,18 @@ export class Polyline extends BaseWidget {
         const allText = this.getAllText();
         const widgetKey = this.getWidgetKey();
 
-        // line
-        const points = this.generateSmoothPolylinePoints();
-        const lineClosed = allText["closed"];
-        const lineWidth = allText["lineWidth"];
-        const lineColor = this._getElementAreaRawShapeStyle();
-        const dashArray = this.generateStrokeDasharray();
-
         // arrow
         const showArrowHead = allText["showArrowHead"];
         const showArrowTail = allText["showArrowTail"];
         const markerEnd = showArrowHead ? `url(#arrowTail-${widgetKey})` : "";
         const markerStart = showArrowTail ? `url(#arrowHead-${widgetKey})` : ""
+
+        // line
+        const points = this.generateSmoothPolylinePoints(showArrowTail, showArrowHead);
+        const lineClosed = allText["closed"];
+        const lineWidth = allText["lineWidth"];
+        const lineColor = this._getElementAreaRawShapeStyle();
+        const dashArray = this.generateStrokeDasharray();
 
         // fill
         const fill = allText["fill"];
@@ -243,17 +243,17 @@ export class Polyline extends BaseWidget {
         // if the line is closed
         const lineClosed = allText["closed"];
 
-        // line
-        const points = `${this.generatePolylinePoints()}`;
-        const lineWidth = allText["lineWidth"];
-        const lineColor = this._getElementAreaRawShapeStyle();
-        const dashArray = this.generateStrokeDasharray();
-
         // arrow
         const showArrowHead = allText["showArrowHead"];
         const showArrowTail = allText["showArrowTail"];
         const markerEnd = showArrowHead ? `url(#arrowTail-${widgetKey})` : "";
         const markerStart = showArrowTail ? `url(#arrowHead-${widgetKey})` : "";
+
+        // line
+        const points = `${this.generatePolylinePoints(showArrowTail, showArrowHead)}`;
+        const lineWidth = allText["lineWidth"];
+        const lineColor = this._getElementAreaRawShapeStyle();
+        const dashArray = this.generateStrokeDasharray();
 
         // fill
         const fill = allText["fill"];
@@ -357,21 +357,82 @@ export class Polyline extends BaseWidget {
      * 
      * the coordinates are the pixel locations inside the widget
      */
-    generatePolylinePoints = (): string => {
-        let result = "";
-
+    calcPolylinePoints = (): [number, number][] => {
         const allStyle = this.getAllStyle();
-
         const width = allStyle["width"];
         const height = allStyle["height"];
         const pointsX = this.getPointsRelativeX();
         const pointsY = this.getPointsRelativeY();
+        const result: [number, number][] = [];
 
         for (let ii = 0; ii < pointsX.length; ii++) {
             const x = width * pointsX[ii];
             const y = height * pointsY[ii];
+            result.push([x, y]);
+        }
+        return result;
+    };
+
+    shortenPolylinePointsForArrows = (points: [number, number][], showArrowTail: boolean, showArrowHead: boolean): [number, number][] => {
+        const result = points.map((point): [number, number] => [point[0], point[1]]);
+
+        if (result.length < 2 || (showArrowTail === false && showArrowHead === false)) {
+            return result;
+        }
+
+        const arrowLength = this.getAllText()["arrowLength"] * this.getAllText()["lineWidth"];
+        if (arrowLength <= 0) {
+            return result;
+        }
+
+        const movePointToward = (pointIndex: number, neighborIndex: number, distance: number) => {
+            const point = result[pointIndex];
+            const neighbor = result[neighborIndex];
+            const dx = neighbor[0] - point[0];
+            const dy = neighbor[1] - point[1];
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            if (length <= 0) {
+                return;
+            }
+
+            point[0] = point[0] + dx / length * distance;
+            point[1] = point[1] + dy / length * distance;
+        };
+
+        let tailLength = showArrowTail ? arrowLength : 0;
+        let headLength = showArrowHead ? arrowLength : 0;
+
+        if (result.length === 2 && tailLength + headLength > 0) {
+            const dx = result[1][0] - result[0][0];
+            const dy = result[1][1] - result[0][1];
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            if (tailLength + headLength > length) {
+                const ratio = length / (tailLength + headLength);
+                tailLength = tailLength * ratio;
+                headLength = headLength * ratio;
+            }
+        }
+
+        if (showArrowTail) {
+            movePointToward(0, 1, tailLength);
+        }
+        if (showArrowHead) {
+            movePointToward(result.length - 1, result.length - 2, headLength);
+        }
+
+        return result;
+    };
+
+    generatePolylinePoints = (showArrowTail: boolean = false, showArrowHead: boolean = false): string => {
+        const points = this.shortenPolylinePointsForArrows(this.calcPolylinePoints(), showArrowTail, showArrowHead);
+        let result = "";
+
+        for (const [x, y] of points) {
             result = `${result} ${x},${y}`;
         }
+
         return result;
     };
 
@@ -381,16 +442,17 @@ export class Polyline extends BaseWidget {
      * 
      * the coordinates are the pixel locations inside the widget
      */
-    generateSmoothPolylinePoints = (): string => {
+    generateSmoothPolylinePoints = (showArrowTail: boolean = false, showArrowHead: boolean = false): string => {
         const allStyle = this.getAllStyle();
         const width = allStyle["width"];
         const height = allStyle["height"];
 
         const pointsX = [];
         const pointsY = [];
-        for (let ii = 0; ii < this.getPointsRelativeX().length; ii++) {
-            pointsX.push(this.getPointsRelativeX()[ii] * width);
-            pointsY.push(this.getPointsRelativeY()[ii] * height);
+        const points = this.shortenPolylinePointsForArrows(this.calcPolylinePoints(), showArrowTail, showArrowHead);
+        for (const [x, y] of points) {
+            pointsX.push(x);
+            pointsY.push(y);
         }
         return PolylineSmoother.resize(pointsX, pointsY, width, height);
     };
