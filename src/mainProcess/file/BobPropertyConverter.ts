@@ -1168,7 +1168,8 @@ export class BobPropertyConverter {
             return "default";
         } else if (numValue === 1) {
             return "decimal";
-        } else if (numValue === 2) {
+        } else if (numValue === 2 || numValue === 3 || numValue === 5) {
+            // exponential, engineering, compact
             return "exponential";
         } else if (numValue === 4) {
             return "hexadecimal";

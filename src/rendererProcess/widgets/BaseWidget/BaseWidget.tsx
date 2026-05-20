@@ -2043,7 +2043,7 @@ export abstract class BaseWidget {
                 precision = precisionFromWidget;
             }
             if (precision === undefined) {
-                precision = 0;
+                precision = 2;
             }
 
             if (format === "default") {

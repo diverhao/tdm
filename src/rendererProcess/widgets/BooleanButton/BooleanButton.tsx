@@ -174,8 +174,10 @@ export class BooleanButton extends BaseWidget {
                 {showLED === true ?
                     <div
                         style={{
-                            width: ledCircleDiameter,
-                            height: ledCircleDiameter,
+                            minWidth: ledCircleDiameter,
+                            minHeight: ledCircleDiameter,
+                            maxWidth: ledCircleDiameter,
+                            maxHeight: ledCircleDiameter,
                             display: "inline-flex",
                             borderRadius: ledCircleDiameter / 2,
                             backgroundColor: ledColor,
