@@ -11,7 +11,7 @@ import {
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
-import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
+import { refineMacros, rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 
 /**
@@ -206,8 +206,6 @@ export class Canvas {
         if (g_widgets1.getRendererWindowStatus() === rendererWindowStatus.creatingWidget) {
             return;
         }
-
-        // console.log("continue", "event.button", event.button, g_widgets1.getRendererWindowStatus(), rendererWindowStatus.editing);
 
         // left button = 0
         // middle button = 1
@@ -404,9 +402,9 @@ export class Canvas {
         const internalMacros = this.getMacros();
         // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
         if (useExternalMacros) {
-            return [...internalMacros, ...externalMacros];
+            return refineMacros([...externalMacros, ...internalMacros]);
         } else {
-            return [...externalMacros, ...internalMacros];
+            return refineMacros([...internalMacros, ...externalMacros]);
         }
 
     };

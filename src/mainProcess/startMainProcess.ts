@@ -53,6 +53,13 @@ import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
  * load command line arguments
  */
 const args: type_args = ArgParser.parseArgs(process.argv, site);
+
+// Electron 36+ defaults to GTK 4 on GNOME, which makes native context menus
+// noticeably taller on some Linux desktops. GTK 3 keeps the desktop menus compact.
+if (process.platform === "linux" && args["mainProcessMode"] !== "ssh-server") {
+    app.commandLine.appendSwitch("gtk-version", "3");
+}
+
 if (args["mainProcessMode"] !== "ssh-server") {
     /**
      * Print TDM banner in command line. 
@@ -134,4 +141,3 @@ if (args["attach"] === -1) {
     Log.fatal('-1', `Wrong args["attach"] value ${args["attach"]}`);
     process.exit()
 }
-

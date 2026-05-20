@@ -1644,3 +1644,17 @@ export const adjustRgba = (color: string, delta: number) => {
         Number(b) + delta
     )}, ${a})`;
 };
+
+
+export const refineMacros = (macros: [string, string][]) => {
+    const result: [string, string][] = [];
+    const names : string[] = [];
+    for (const macro of macros) {
+        const name = macro[0];
+        if (!(names.includes(name))) {
+            names.push(name);
+            result.push(macro);
+        }
+    }
+    return result;
+}

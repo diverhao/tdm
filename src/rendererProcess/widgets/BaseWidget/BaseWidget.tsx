@@ -203,7 +203,8 @@ export abstract class BaseWidget {
     _eqChannelArray: (string | number)[] = [];
     _eqChannelNameIndices: number[] = [];
 
-
+    // a widget does not have dedicated macros
+    // this variable contains the macros from special purposes, e.g. the temporary EmbeddedDisplay macros
     _macros: [string, string][] = [];
 
     /**
@@ -1375,7 +1376,7 @@ export abstract class BaseWidget {
      * @param [widgetMacros=[]] the externally provided macros, this does not include the Canvas-provided 
      *                          macros. This macros could be from users, parent widget, and others.
      */
-    processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
+    processChannelNames(_: [string, string][] = [], removeDuplicated: boolean = true) {
         this._channelNamesLevel1 = [];
         this._channelNamesLevel2 = [];
         this._channelNamesLevel3 = [];
@@ -1388,8 +1389,9 @@ export abstract class BaseWidget {
             const errMsg = "No Canvas widget";
             throw new Error(errMsg);
         }
-        // const macros = [...widgetMacros, ...canvas.getAllMacros()];
-        const macros = this.getAllMacros();
+
+        // provided macros overrides locally defined macros
+        const macros = GlobalMethods.refineMacros([ ...this.getMacros(), ...this.getAllMacros()]);
 
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
@@ -1693,7 +1695,9 @@ export abstract class BaseWidget {
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
 
         // Higher priority macros appears first
-        return [...externalMacros, ...this.getMacros(), ...canvasMacros];
+        // external macros should override canvas macros
+        // the local widget's macros is for special purpose, which is always highest priority
+        return GlobalMethods.refineMacros([...this.getMacros(), ...externalMacros, ...canvasMacros]);
     }
 
 
@@ -1937,8 +1941,6 @@ export abstract class BaseWidget {
         if (g_widgets1.isEditing()) {
             return channelName;
         }
-
-        console.log("this.getEqChannelArray() ============", this.getEqChannelArray())
 
         if (this.getEqChannelArray().length > 0) {
             const value = this.evaluateEqChannel();
@@ -2691,7 +2693,6 @@ export abstract class BaseWidget {
     jobsAsEditingModeBegins() {
         this.deactivateRules();
         this.processChannelNames();
-        console.log("create sidebar for", this.getWidgetKey())
         this.createSidebar();
     }
     jobsAsOperatingModeBegins() {

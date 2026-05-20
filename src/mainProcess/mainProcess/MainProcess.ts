@@ -27,6 +27,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { SymbolGallery } from "./SymbolGallery";
 import { Rpc } from "./Rpc";
+import { refineMacros } from "../../common/GlobalMethods";
 
 /**
  * Represents a main process.
@@ -797,7 +798,7 @@ export class MainProcess {
                 }
 
                 // args["macros"] overrides profile-defined macros
-                macros = [...args["macros"], ...macros];
+                macros = refineMacros([...args["macros"], ...macros]);
             }
 
             const mode = selectedProfile.getMode() as "editing" | "operating";
@@ -870,7 +871,7 @@ export class MainProcess {
                 }
 
                 // args["macros"] overrides profile-defined macros
-                macros = [...args["macros"], ...macros];
+                macros = refineMacros([...args["macros"], ...macros]);
             }
 
             const mode = selectedProfile.getMode() as "editing" | "operating";

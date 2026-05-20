@@ -363,7 +363,7 @@ export class ActionButton extends BaseWidget {
         let externalMacros = [...displayConfig["externalMacros"]]
         if (displayConfig["useParentMacros"]) {
             const parentMacros = this.getAllMacros();
-            externalMacros = [...externalMacros, ...parentMacros];
+            externalMacros = GlobalMethods.refineMacros([...externalMacros, ...parentMacros]);
         }
 
         // tdl file name may contain macros

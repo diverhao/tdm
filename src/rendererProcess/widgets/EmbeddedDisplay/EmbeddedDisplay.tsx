@@ -345,7 +345,8 @@ export class EmbeddedDisplay extends BaseWidget {
             // macros defined in EmbeddedDisplay widget for this TDL
             const itemMacros = newDisplay.macros;
             // EmbeddedDisplay always inherits parent's macros
-            const macros = [...itemMacros, ...allMacros];
+            // const macros = [...allMacros, ...itemMacros];
+            const macros = GlobalMethods.refineMacros([...itemMacros, ...allMacros]);
 
             // process tdl file name
             // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
@@ -437,7 +438,7 @@ export class EmbeddedDisplay extends BaseWidget {
 
         const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
         const canvasMacros = canvasWidgetTdl["macros"];
-        const allMacros = [...macros, ...canvasMacros];
+        const allMacros = GlobalMethods.refineMacros([...macros, ...canvasMacros,]);
 
         this.setFullTdlFileName(fullTdlFileName);
 
@@ -465,7 +466,8 @@ export class EmbeddedDisplay extends BaseWidget {
                     widget.setEmbeddedDisplayWidgetKey(widgetKey);
                     this.appendChildWidgetKey(newWidgetKey);
                     widget.jobsAsOperatingModeBegins();
-                    widget.processChannelNames(allMacros);
+                    widget.setMacros(allMacros);
+                    widget.processChannelNames();
                     widgetMapPairs.push([newWidgetKey, widget]);
                     if (this.isHidden()) {
                         widget.hide(false);
@@ -538,7 +540,7 @@ export class EmbeddedDisplay extends BaseWidget {
 
         const allMacros = this.getAllMacros();
         const itemMacros = display.macros;
-        const macros = [...itemMacros, ...allMacros];
+        const macros = GlobalMethods.refineMacros([...itemMacros, ...allMacros]);
 
         let tdlFileName = display.tdlFileName;
         // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget

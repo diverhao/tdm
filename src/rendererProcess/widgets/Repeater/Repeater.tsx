@@ -247,7 +247,7 @@ export class Repeater extends BaseWidget {
                 const widgetMacro = this.getWidgetMacro(ii);
                 if (widgetMacro !== undefined) {
 
-                    const macros = [...widgetMacro, ...this.getAllMacros()];
+                    const macros = GlobalMethods.refineMacros([...widgetMacro, ...this.getAllMacros()]);
 
                     if (macros !== undefined && macros.length > 0) {
 
@@ -280,7 +280,7 @@ export class Repeater extends BaseWidget {
                                 if (action["type"] === "OpenDisplay") {
                                     action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
                                     const widgetMacro = this.getWidgetMacro(ii);
-                                    action["externalMacros"] = [...(widgetMacro === undefined ? [] : widgetMacro), ...action["externalMacros"]];
+                                    action["externalMacros"] = GlobalMethods.refineMacros([...(widgetMacro === undefined ? [] : widgetMacro), ...action["externalMacros"]]);
                                 } else if (action["type"] === "WritePV") {
                                     action["channelName"] = BaseWidget.expandChannelName(action["channelName"], macros, true);
                                     action["channelValue"] = BaseWidget.expandChannelName(action["channelValue"], macros, true);

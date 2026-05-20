@@ -10,6 +10,7 @@ import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import path from "path";
 import { Canvas } from "../Canvas/Canvas";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
+import { refineMacros } from "../../../common/GlobalMethods";
 
 export class SidebarActionOpenDisplayItem {
     _items: SidebarActionItems;
@@ -273,7 +274,7 @@ export class SidebarActionOpenDisplayItem {
         let externalMacros = [...displayConfig["externalMacros"]]
         if (displayConfig["useParentMacros"]) {
             const parentMacros = mainWidget.getAllMacros();
-            externalMacros = [...externalMacros, ...parentMacros];
+            externalMacros = refineMacros([...externalMacros, ...parentMacros]);
         }
 
         tdlFileName = BaseWidget.expandChannelName(tdlFileName, externalMacros)

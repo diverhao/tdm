@@ -258,6 +258,8 @@ export class LEDHelper extends BaseWidgetHelper {
         tdl["style"]["height"] = 20;
         tdl["text"]["useChannelItems"] = false;
         tdl["text"]["fallbackText"] = "";
+        tdl["itemNames"][0] = "";
+        tdl["itemNames"][1] = "";
 
         for (const propertyName of propertyNames) {
             const propertyValue = bobWidgetJson[propertyName];
