@@ -158,6 +158,22 @@ export class IpcManagerOnMainWindow {
         return this._mainWindowClient;
     };
 
+    private isFileDragEvent = (event: DragEvent) => {
+        const dataTransfer = event.dataTransfer;
+        if (dataTransfer === null) {
+            return false;
+        }
+        if (dataTransfer.files.length > 0) {
+            return true;
+        }
+        for (const item of Array.from(dataTransfer.items)) {
+            if (item.kind === "file") {
+                return true;
+            }
+        }
+        return Array.from(dataTransfer.types).includes("Files");
+    };
+
 
     sendFromRendererProcess = <T extends keyof IpcEventArgType>(
         channelName: T,
@@ -208,6 +224,10 @@ export class IpcManagerOnMainWindow {
      */
     startToListenDragAndDrop = () => {
         document.addEventListener("drop", (event: DragEvent) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
+
             event.preventDefault();
 
             // do not listen to drag and drop in ssh-client mode
@@ -265,15 +285,24 @@ export class IpcManagerOnMainWindow {
         });
 
         document.addEventListener("dragover", (e) => {
+            if (!this.isFileDragEvent(e)) {
+                return;
+            }
             e.preventDefault();
             e.stopPropagation();
         });
 
         document.addEventListener("dragenter", (event) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
             Log.debug("File is in the Drop Space");
         });
 
         document.addEventListener("dragleave", (event) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
             Log.debug("File has left the Drop Space");
         });
     };

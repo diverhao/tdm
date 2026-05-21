@@ -198,6 +198,10 @@ export const generateDefaultProfile = (): Record<string, any> => {
                     "PVA",
                 ]
             },
+            "Archiver Appliance Retrieval Address": {
+                value: [],
+                DESCRIPTION: "Archiver Appliance retrieval address, e.g. 127.0.0.1:17668/retrieval"
+            },
             "File Browser Bookmarks": {
                 "DESCRIPTION": "Bookmarks for File Browser. The first column is the folder/file path. The second column is for Web mode write permission: if YES, the user can create/modify/rename files, if NO, the user can only read the file/folder.",
                 "value": [],

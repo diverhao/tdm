@@ -1396,22 +1396,38 @@ export class IpcManagerOnMainProcess {
     // ------------------------- archive ------------------------
 
     handleRequestArchiveData = async (event: WebSocket | string, options: IpcEventArgType["request-archive-data"]) => {
+        console.log("request archive data -------------------------", options)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;
         }
-        const sql = this.getMainProcess().getSql();
-        if (sql === undefined) {
-            Log.error("Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
-            return;
-        }
-        const result = await sql.requestArchiveData(options["channelName"], options["startTime"], options["endTime"]);
-        if (result !== undefined) {
-            // do not process data in main process, the resouce is more precious in the main process
-            displayWindowAgent.sendFromMainProcess("new-archive-data", {
-                ...options,
-                archiveData: result,
-            });
+
+        // ------------ sql --------------
+        // const sql = this.getMainProcess().getSql();
+        // if (sql === undefined) {
+        //     Log.error("Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
+        // } else {
+        //     const result = await sql.requestArchiveData(options["channelName"], options["startTime"], options["endTime"]);
+        //     if (result !== undefined) {
+        //         // do not process data in main process, the resouce is more precious in the main process
+        //         displayWindowAgent.sendFromMainProcess("new-archive-data", {
+        //             ...options,
+        //             archiveData: result,
+        //         });
+        //     }
+        // }
+
+        // ----------- archiver appliance -------------
+        const aas = this.getMainProcess().getArchiverAppliances();
+        const results = await aas.requestArchiveData(options["channelName"], options["startTime"], options["endTime"], true);
+        for (const result of results) {
+            if (result !== undefined) {
+                // do not process data in main process, the resouce is more precious in the main process
+                displayWindowAgent.sendFromMainProcess("new-archive-data", {
+                    ...options,
+                    archiveData: result,
+                });
+            }
         }
     }
 

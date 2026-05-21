@@ -1391,7 +1391,7 @@ export abstract class BaseWidget {
         }
 
         // provided macros overrides locally defined macros
-        const macros = GlobalMethods.refineMacros([ ...this.getMacros(), ...this.getAllMacros()]);
+        const macros = GlobalMethods.refineMacros([...this.getMacros(), ...this.getAllMacros()]);
 
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
@@ -1930,8 +1930,10 @@ export abstract class BaseWidget {
      * Get the first channel's value, this channel may be a ca://, pva://, loc://, glb://, or a formula channel
      * 
      * If in editing mode, return the channel name
+     * 
+     * If the value is undefined, return the channel name with special sign indicating it is not available
      */
-    _getFirstChannelValue = (raw: boolean = false): string | number | string[] | number[] | undefined => {
+    _getFirstChannelValue = (raw: boolean = false): string | number | string[] | number[] => {
         const channelName = this.getChannelNames()[0];
 
         if (channelName === undefined) {
@@ -1949,10 +1951,13 @@ export abstract class BaseWidget {
             }
         } else if (TcaChannel.checkChannelName(channelName) !== undefined) {
             // regular TCA channel
-            return g_widgets1.getChannelValue(channelName, raw);
+            const value = g_widgets1.getChannelValue(channelName, raw);
+            if (value !== undefined) {
+                return value;
+            }
         }
 
-        return channelName;
+        return "<" + channelName + ">";
     };
 
     /**
@@ -2009,7 +2014,7 @@ export abstract class BaseWidget {
 
     // this function is used in monitor widgets: TextUpdate, ProgressBar, Meter, Tank, Thermometer, LED, LEDMultiState, ByteMonitor
     getChannelValueForMonitorWidget = (raw: boolean = false) => {
-        let value = this._getFirstChannelValue(raw);
+        let value: string | number | undefined | string[] | number[] = this._getFirstChannelValue(raw);
 
         if (this.getEqChannelArray().length > 0) {
             value = this.evaluateEqChannel();
@@ -2028,6 +2033,8 @@ export abstract class BaseWidget {
      * For "number" type scalar data, format it to the desired format, e.g. decimal, exponential ...
      * 
      * For all other type scalar data, simply stringify it
+     * 
+     * If the value is undefined, return empty
      */
     formatScalarValue = (scalarValue: number | string | boolean | undefined): string => {
         // text["scale"] is ignored if its value < 0

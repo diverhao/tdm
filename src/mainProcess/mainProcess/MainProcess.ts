@@ -28,6 +28,8 @@ import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { SymbolGallery } from "./SymbolGallery";
 import { Rpc } from "./Rpc";
 import { refineMacros } from "../../common/GlobalMethods";
+import { ArchiverAppliance } from "../archive/ArchiverAppliance";
+import { ArchiverAppliances } from "../archive/ArchiverAppliances";
 
 /**
  * Represents a main process.
@@ -90,6 +92,9 @@ export class MainProcess {
     // SQL client for communicating to archive
     private _sql: Sql | undefined = undefined;
 
+    private _archiverAppliances: ArchiverAppliances = new ArchiverAppliances([]);
+
+
     // EDL file converter thread, may be used for converting EDL files to TDL files
     // private _edlFileConverterThread: Worker | undefined = undefined;
 
@@ -134,7 +139,6 @@ export class MainProcess {
         this._rawArgs = args;
         // websocket opener server
         this._wsOpenerServer = new WsOpenerServer(this, args["attach"], args["flexibleAttach"]);
-
 
 
         // profiles
@@ -784,6 +788,11 @@ export class MainProcess {
             await this.getChannelAgentsManager().createAndInitContext();
             // (2)
             this.createSql();
+            
+            const aaAddresses = selectedProfile.getEntry("EPICS Custom Environment", "Archiver Appliance Retrieval Address");
+            if (Array.isArray(aaAddresses)) {
+                this._archiverAppliances = new ArchiverAppliances(aaAddresses);
+            }
 
             // (3)
             let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
@@ -1043,4 +1052,7 @@ export class MainProcess {
         this._mainProcessMode = newMode;
     }
 
+    getArchiverAppliances = () => {
+        return this._archiverAppliances;
+    }
 }

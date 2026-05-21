@@ -208,6 +208,22 @@ export class IpcManagerOnDisplayWindow {
         return this._displayWindowClient;
     };
 
+    private isFileDragEvent = (event: DragEvent) => {
+        const dataTransfer = event.dataTransfer;
+        if (dataTransfer === null) {
+            return false;
+        }
+        if (dataTransfer.files.length > 0) {
+            return true;
+        }
+        for (const item of Array.from(dataTransfer.items)) {
+            if (item.kind === "file") {
+                return true;
+            }
+        }
+        return Array.from(dataTransfer.types).includes("Files");
+    };
+
     /**
      * Drag and drop one or more tdl files to the DisplayWindow to open the files. <br>
      *
@@ -215,7 +231,11 @@ export class IpcManagerOnDisplayWindow {
      */
     startToListenDragAndDrop = () => {
 
-        document.addEventListener("drop", (event: any) => {
+        document.addEventListener("drop", (event: DragEvent) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
+
             event.preventDefault();
 
             // do not listen to drag and drop in ssh-client mode
@@ -224,6 +244,10 @@ export class IpcManagerOnDisplayWindow {
             }
 
             event.stopPropagation();
+            const dataTransfer = event.dataTransfer;
+            if (dataTransfer === null) {
+                return;
+            }
 
             const displayWindowClient = this.getDisplayWindowClient();
             const mode = displayWindowClient.getMainProcessMode();
@@ -240,12 +264,12 @@ export class IpcManagerOnDisplayWindow {
                 let fileName = "";
                 let fileFullName = "";
                 let fileBlob: undefined | Blob = undefined;
-                if (event.dataTransfer.files.length > 0) {
+                if (dataTransfer.files.length > 0) {
                     // for web mode, the web mode does not have .path, which is the full path of the file
-                    fileName = event.dataTransfer.files[0].name;
-                    fileBlob = event.dataTransfer.files[0];
+                    fileName = dataTransfer.files[0].name;
+                    fileBlob = dataTransfer.files[0];
                     // for desktop and ssh-client mode, it is the full path of the file
-                    fileFullName = event.dataTransfer.files[0].path;
+                    fileFullName = (dataTransfer.files[0] as any).path;
                 }
                 for (let widget of [...g_widgets1.getWidgets().values()]) {
                     if (widget instanceof TextEditor) {
@@ -272,7 +296,7 @@ export class IpcManagerOnDisplayWindow {
                 // regular display window
                 const tdlFileNames: string[] = [];
 
-                for (const file of event.dataTransfer.files) {
+                for (const file of dataTransfer.files) {
                     // full name
                     // must use preload.js to resolve the full file path
                     const electronAPI = (window as any).electronAPI;
@@ -294,9 +318,9 @@ export class IpcManagerOnDisplayWindow {
                     Log.debug("external macors", externalMacros);
                     if (this.getDisplayWindowClient().getMainProcessMode() === "web") {
                         // for web mode, the web mode does not have .path, which is the full path of the file
-                        const fileBlob = event.dataTransfer.files[0];
+                        const fileBlob = dataTransfer.files[0];
                         if (fileBlob !== undefined) {
-                            const fileName = event.dataTransfer.files[0].name;
+                            const fileName = dataTransfer.files[0].name;
                             this.getDisplayWindowClient().getDisplayWindowFile().openLocalTdlFileInWebMode(fileBlob);
                         }
                     } else {
@@ -321,15 +345,24 @@ export class IpcManagerOnDisplayWindow {
         });
 
         document.addEventListener("dragover", (e) => {
+            if (!this.isFileDragEvent(e)) {
+                return;
+            }
             e.preventDefault();
             e.stopPropagation();
         });
 
         document.addEventListener("dragenter", (event) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
             Log.debug("File is in the Drop Space");
         });
 
         document.addEventListener("dragleave", (event) => {
+            if (!this.isFileDragEvent(event)) {
+                return;
+            }
             Log.debug("File has left the Drop Space");
         });
     };
