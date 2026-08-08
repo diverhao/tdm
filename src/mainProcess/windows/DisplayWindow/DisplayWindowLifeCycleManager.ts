@@ -278,6 +278,14 @@ export class DisplayWindowLifeCycleManager {
                 }
             }
         }
+        const iconFile =
+            process.platform === "linux"
+                ? "icon-linux.png"
+                : process.platform === "win32"
+                    ? "icon-windows.png"
+                    : "icon-macos.png";
+
+
         const windowOptions: Electron.BrowserWindowConstructorOptions = {
             width: 800,
             height: 500,
@@ -291,7 +299,7 @@ export class DisplayWindowLifeCycleManager {
             parent: parent,
             frame: true,
             show: !this.isHiddenWindow(),
-            icon: path.join(__dirname, "../../../common/resources/webpages/icon-macos.png"),
+            icon: path.join(__dirname, `../../../common/resources/webpages/${iconFile}`),
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
                 nodeIntegration: true,
@@ -307,7 +315,11 @@ export class DisplayWindowLifeCycleManager {
             },
         };
         try {
-            app.focus({ steal: true });
+            if (process.platform == "darwin") {
+                // make the Electron.js app active on MacOS
+                // However, it focuses the first Electron.js window on Windows or Linux
+                app.focus({ steal: true });
+            }
             const window = new BrowserWindow(windowOptions);
             this.setBrowserWindow(window);
             window.webContents.setWindowOpenHandler(({ url }: any) => {
@@ -597,7 +609,7 @@ export class DisplayWindowLifeCycleManager {
         const displayWindowFile = displayWindowAgent.getDisplayWindowFile();
 
         const saveResult = await displayWindowFile.saveFile(fileName, fileContent, dataType);
-        
+
         if (saveResult["status"] === true) {
             this.closeBrowserWindow();
         } else {

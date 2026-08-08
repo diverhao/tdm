@@ -1,0 +1,17 @@
+#!/usr/bin/env xdg-open
+
+# TDM desktop registration on Linux
+# Copy this file to /usr/share/applications/ or ~/.local/share/applications/ to register the `tdm` application type
+# Update the `Exec` and `Icon` entries to point to the tdm executable and Linux icon, respectively.
+# The TDM icon for linux is located at resources/app.asar.unpacked/dist/webpack/resources/webpages/icon-linux.png
+
+[Desktop Entry]
+Type=Application
+Name=TDM
+Comment=A display manager for EPICS
+Exec=/absolute/path/to/tdm %U
+Icon=/absolute/path/to/icon-linux.png
+Terminal=false
+Categories=Utility
+StartupWMClass=tdm
+

@@ -9,7 +9,8 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2026-08-08T07:09:37Z",
+    "desktopName": "tdm.desktop",
+    "buildDate": "2026-08-08T20:30:16Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -161,6 +162,9 @@
         },
         "linux": {
             "icon": "icons-linux",
+            "desktop": {
+                "StartupWMClass": "tdm"
+            },
             "target": {
                 "target": "dir",
                 "arch": [
