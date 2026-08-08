@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate aperture">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M358 121a156 156 0 1 0 28 62" stroke="#080808" stroke-width="56"/>
+    <path d="M76 436 436 76" stroke="#111111" stroke-width="28"/>
+    <path d="M206 365 346 225" stroke="#8b9098" stroke-width="11"/>
+    <path d="M149 276c-4-48 14-94 49-126 34-31 80-46 125-40" stroke="#3f454c" stroke-width="16"/>
+  </g>
+</svg>

@@ -514,7 +514,7 @@ export class DataViewerPlot {
                     window.removeEventListener("mousemove", this.updateCursorElement);
                 }}
                 onMouseDown={(event: React.MouseEvent) => {
-
+                    console.log("a;lfdaslkdfasd")
                     if (event.button === 0) {
                         window.addEventListener("mousemove", this.getPlotMouseHelper().handleMouseMoveOnPlotX);
                     } else if (event.button === 2) {
@@ -527,6 +527,7 @@ export class DataViewerPlot {
                     if (event.ctrlKey === true) {
                         this.handleWheelOnPlotY(event);
                     } else {
+                        console.log("bbb")
                         this.handleWheelOnPlotX(event);
                     }
                 }}
@@ -1339,10 +1340,7 @@ export class DataViewerPlot {
         const numXgrid = 10;
         const numYgrid = 5;
 
-        // unit of ms
-        const xRange = xValMax - xValMin;
-        const { xTickValMin, xTickUnit } = this.calcXValMinTick(xRange);
-        const xTickValMax = 0;
+        const { xTickValMin, xTickValMax, xTickUnit } = this.calcXTickRange(xValMin, xValMax);
 
         const xTickValues = GlobalMethods.calcTicks(xTickValMin, xTickValMax, numXgrid + 1, { scale: scale });
         const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xTickValMin, xTickValMax, xLength, { scale: scale }, "horizontal");
@@ -1381,25 +1379,25 @@ export class DataViewerPlot {
     calcXyValMinMax = (index: number) => {
 
         const yAxis = this.getMainWidget().getYAxes()[index];
-        if (yAxis === undefined) {
-            return {
-                xValMin: 0,
-                xValMax: 100,
-                yValMin: 0,
-                yValMax: 100,
-            }
-        }
+        // if (yAxis === undefined) {
+        //     return {
+        //         xValMin: 0,
+        //         xValMax: 100,
+        //         yValMin: 0,
+        //         yValMax: 100,
+        //     }
+        // }
         const xData = yAxis["xData"];
         const yData = yAxis["yData"];
 
-        if (yData.length === 0) {
-            return {
-                xValMin: 0,
-                xValMax: 100,
-                yValMin: 0,
-                yValMax: 100,
-            }
-        }
+        // if (yData.length === 0) {
+        //     return {
+        //         xValMin: -10*60*1000,
+        //         xValMax: 0,
+        //         yValMin: 0,
+        //         yValMax: 100,
+        //     }
+        // }
 
         // x
         let xValMin = this.xAxis["valMin"];
@@ -1408,6 +1406,11 @@ export class DataViewerPlot {
         // y
         let yValMin = yAxis["valMin"];
         let yValMax = yAxis["valMax"];
+
+        if (yData.length === 0) {
+            yValMin = 0;
+            yValMax = 100;
+        }
 
         return (
             {
@@ -1421,17 +1424,10 @@ export class DataViewerPlot {
 
 
     /**
-     * Convert a time range in milliseconds to a human-readable (negative) value and unit string.
-     *
-     * xValMaxTicks is always 0, xValMinTicks is the negative range in the chosen unit.
-     *
-     * Examples:
-     *   90,000 ms (1.5 min)   → {xValMinTicks: -90,  xValMaxTicks: 0, xTimeUnit: "second" }
-                        *   7,200,000 ms (2 hr)   → {xValMinTicks: -120,  xValMaxTicks: 0, xTimeUnit: "minute" }
-                        *   172,800,000 ms (2 d)  → {xValMinTicks: -48,  xValMaxTicks: 0, xTimeUnit: "hour" }
-                        *   ~730 d (2 yr)         → {xValMinTicks: -24,  xValMaxTicks: 0, xTimeUnit: "month" }
-                        */
-    calcXValMinTick = (xRangeMs: number): { xTickValMin: number; xTickUnit: string } => {
+     * Convert epoch millisecond bounds to human-readable values relative to now.
+     */
+    calcXTickRange = (xValMin: number, xValMax: number): { xTickValMin: number; xTickValMax: number; xTickUnit: string } => {
+        const xRangeMs = xValMax - xValMin;
         const absRange = Math.abs(xRangeMs);
         const oneSecond = 1000;
         const oneMinute = 60 * oneSecond;
@@ -1459,9 +1455,20 @@ export class DataViewerPlot {
             unit = "month";
         }
 
-        const xTickValMin = -(absRange / divisor);
+        if (this.traceIsMoving || xValMax <= 0) {
+            return {
+                xTickValMin: -(absRange / divisor),
+                xTickValMax: 0,
+                xTickUnit: unit,
+            };
+        }
 
-        return { xTickValMin, xTickUnit: unit };
+        const now = Date.now();
+        return {
+            xTickValMin: (xValMin - now) / divisor,
+            xTickValMax: (xValMax - now) / divisor,
+            xTickUnit: unit,
+        };
     };
 
 

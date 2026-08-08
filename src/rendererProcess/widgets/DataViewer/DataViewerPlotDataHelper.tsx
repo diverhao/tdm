@@ -60,6 +60,7 @@ export class DataViewerPlotDataHelper {
         if (g_widgets1.isEditing()) {
             return;
         }
+        console.log(plot.yAxes)
         if (plot.getChannelNames().includes(data["channelName"])) {
             const ii = plot.getChannelNames().indexOf(data["channelName"]);
             const yAxis = plot.yAxes[ii];

@@ -51,7 +51,7 @@ export class ArchiverAppliance {
         try {
             const archiveData = await this.fetchData(channelName, startTime, endTime, optimize);
             if (archiveData === undefined) {
-                Log.error("Cannot obtain archive data for", channelName, "from", startTime, "to", endTime);
+                Log.error("Failed to fetch archive data for", channelName, "from", this.getRetrievalUrl());
                 return undefined;
             }
             const data = this.convertArchiveData(archiveData);
@@ -111,6 +111,7 @@ export class ArchiverAppliance {
         let pv = channelName;
         if (optmized === true) {
             pv = "optimized_3000(" + pv + ")";
+            // pv = pv;
         }
 
         const params = new URLSearchParams({
@@ -120,6 +121,7 @@ export class ArchiverAppliance {
         });
 
         const url = `${baseUrl}?${params.toString()}`;
+
 
         let response: Response;
 
@@ -146,7 +148,6 @@ export class ArchiverAppliance {
         try {
             const result = JSON.parse(bodyText)[0];
             if (verifyArchiverApplianceData(result) === true) {
-                console.log("aaabbb--------<<<<<<<<<<<")
                 return result;
             } else {
                 Log.error("Archiver returned a non-compilant data");

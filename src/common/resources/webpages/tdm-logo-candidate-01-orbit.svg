@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate orbit">
+  <rect width="512" height="512" rx="0" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M338 117a158 158 0 1 0 49 62" stroke="#080808" stroke-width="58"/>
+    <path d="M73 439 439 73" stroke="#111111" stroke-width="26"/>
+    <path d="M151 282 298 135" stroke="#6b7280" stroke-width="12"/>
+  </g>
+</svg>

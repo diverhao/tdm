@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="TDM Windows app icon">
+  <!-- Windows shows app icons on both light and dark surfaces. Keep the
+       canvas transparent and use a narrow white halo around the black mark. -->
+  <g transform="scale(2)" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="#ffffff" stroke="#ffffff">
+      <path d="M66 263C61 151 153 61 265 64c62 2 112 20 155 33-54-10-94-19-142-19-104 1-188 86-190 186 0 14-21 17-22-1Z" stroke-width="18"/>
+      <path d="M150 435c92 29 190 27 259-52 35-40 48-85 47-126 0-15-19-16-21-1-4 70-43 130-102 160-52 26-117 32-183 19Z" stroke-width="18"/>
+      <path d="m170 202 187-44-7 163-186 40Z" fill="none" stroke-width="40"/>
+      <path d="M112 296c55-29 93-74 130-66 38 8 44 49 82 52 36 2 65-39 109-85" fill="none" stroke-width="44"/>
+    </g>
+    <g fill="#000000" stroke="#000000">
+      <path d="M66 263C61 151 153 61 265 64c62 2 112 20 155 33-54-10-94-19-142-19-104 1-188 86-190 186 0 14-21 17-22-1Z"/>
+      <path d="M150 435c92 29 190 27 259-52 35-40 48-85 47-126 0-15-19-16-21-1-4 70-43 130-102 160-52 26-117 32-183 19Z"/>
+      <path d="m170 202 187-44-7 163-186 40Z" fill="none" stroke-width="20"/>
+      <path d="M112 296c55-29 93-74 130-66 38 8 44 49 82 52 36 2 65-39 109-85" fill="none" stroke-width="24"/>
+    </g>
+  </g>
+</svg>

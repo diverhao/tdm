@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate field">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 88v64M256 360v64M88 256h64M360 256h64" stroke="#111111" stroke-width="30"/>
+    <path d="M161 161c53-52 136-61 199-22 70 43 96 133 59 207-38 74-126 108-204 79-39-15-70-43-88-78" stroke="#111111" stroke-width="38"/>
+    <path d="M128 372 384 140" stroke="#101010" stroke-width="34"/>
+    <path d="M198 307h118M219 256h74M242 205h55" stroke="#8b9098" stroke-width="16"/>
+  </g>
+</svg>

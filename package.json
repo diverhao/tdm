@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2026-05-21T06:04:23Z",
+    "buildDate": "2026-08-08T04:05:28Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -114,6 +114,7 @@
             "dist/common/resources/webpages/tdm.svg"
         ],
         "mac": {
+            "icon": "icon-macos.png",
             "target": {
                 "target": "dmg",
                 "arch": [
@@ -135,6 +136,7 @@
             "gatekeeperAssess": false
         },
         "win": {
+            "icon": "icon-windows.ico",
             "target": [
                 {
                     "target": "portable",
@@ -154,6 +156,7 @@
             ]
         },
         "linux": {
+            "icon": "icons-linux",
             "target": {
                 "target": "dir",
                 "arch": [

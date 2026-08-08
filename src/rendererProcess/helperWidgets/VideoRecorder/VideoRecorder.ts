@@ -4,7 +4,7 @@ import path from "path";
 import { g_widgets1,  } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
-import { getCurrentDateTimeStr } from "../../../common/GlobalMethods";
+import { arrayBufferToBase64, getCurrentDateTimeStr } from "../../../common/GlobalMethods";
 
 export class VideoRecorder {
     private _sourceId: string = "";
@@ -127,12 +127,11 @@ export class VideoRecorder {
         const videoFileName = path.join(folder, "TDM-video-clip-" + getCurrentDateTimeStr(true) +`.webm`);
         if (blobs.length >= 1) {
             const a = await blobs[0].arrayBuffer();
-            const buf = Buffer.from(a);
 
             g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("save-video-file", {
                 displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                 fileName: videoFileName,
-                fileContents: buf.toString("base64"), // send base64 data
+                fileContents: arrayBufferToBase64(a), // send base64 data
             })
         } else {
             this.getDisplayWindowClient().getPrompt().createElement(

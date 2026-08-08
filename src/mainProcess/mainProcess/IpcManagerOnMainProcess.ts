@@ -1403,19 +1403,19 @@ export class IpcManagerOnMainProcess {
         }
 
         // ------------ sql --------------
-        // const sql = this.getMainProcess().getSql();
-        // if (sql === undefined) {
-        //     Log.error("Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
-        // } else {
-        //     const result = await sql.requestArchiveData(options["channelName"], options["startTime"], options["endTime"]);
-        //     if (result !== undefined) {
-        //         // do not process data in main process, the resouce is more precious in the main process
-        //         displayWindowAgent.sendFromMainProcess("new-archive-data", {
-        //             ...options,
-        //             archiveData: result,
-        //         });
-        //     }
-        // }
+        const sql = this.getMainProcess().getSql();
+        if (sql === undefined) {
+            Log.error("Cannot obtain archive data for", options["channelName"], "from", options["startTime"], "to", options["endTime"]);
+        } else {
+            const result = await sql.requestArchiveData(options["channelName"], options["startTime"], options["endTime"]);
+            if (result !== undefined) {
+                // do not process data in main process, the resouce is more precious in the main process
+                displayWindowAgent.sendFromMainProcess("new-archive-data", {
+                    ...options,
+                    archiveData: result,
+                });
+            }
+        }
 
         // ----------- archiver appliance -------------
         const aas = this.getMainProcess().getArchiverAppliances();
