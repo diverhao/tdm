@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate northmark">
-  <rect width="512" height="512" fill="#ffffff"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M363 111a155 155 0 1 0 38 99" stroke="#111111" stroke-width="42"/>
-    <path d="M256 75 302 226 437 256 302 286 256 437 210 286 75 256 210 226Z" fill="#111111" stroke="none"/>
-    <path d="M112 400 400 112" stroke="#ffffff" stroke-width="40"/>
-    <path d="M112 400 400 112" stroke="#737982" stroke-width="16"/>
-  </g>
-</svg>

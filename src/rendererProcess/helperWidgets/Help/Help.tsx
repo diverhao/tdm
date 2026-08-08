@@ -922,7 +922,7 @@ export class Help {
                         alignItems: "center",
                         height: "100%",
                     }}>
-                        <img src="resources/webpages/tdm-logo.svg" height="50%"></img>
+                        <img src="resources/webpages/icon-macos.svg" height="50%"></img>
                         <div style={{
                             marginLeft: 15,
                             fontSize: 20,

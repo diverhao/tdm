@@ -294,8 +294,8 @@ export class MainWindowStartupPage {
             <div
                 style={style}
             >
-                {/* <img src={`../../resources/webpages/tdm-logo.svg`} width="40px" height="40px"></img> */}
-                <img src={`${getBasePath()}/webpack/resources/webpages/tdm-logo.svg`} width="40px" height="40px"></img>
+                {/* <img src={`../../resources/webpages/icon-macos.svg`} width="40px" height="40px"></img> */}
+                <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="40px" height="40px"></img>
             </div>
         );
     };

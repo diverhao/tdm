@@ -1,7 +1,7 @@
 import * as React from "react";
 
 /**
- * tdm-logo.svg
+ * icon-macos.svg
  * 
  * We package the svg file within the frontend so that when the frontend is disconnected with 
  * the backend, e.g. the server is down, these images can still be displayed.

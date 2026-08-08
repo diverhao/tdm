@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate channel flow">
-  <rect width="512" height="512" fill="#ffffff"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M121 369c57 45 139 52 203 15 73-42 100-133 62-207" stroke="#101010" stroke-width="40"/>
-    <path d="M125 143c53-38 124-44 183-15" stroke="#101010" stroke-width="40"/>
-    <path d="M130 337 377 159" stroke="#101010" stroke-width="31"/>
-    <path d="M173 200v67M231 176v67M289 220v67" stroke="#747b84" stroke-width="20"/>
-  </g>
-</svg>

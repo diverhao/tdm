@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2026-08-08T04:05:28Z",
+    "buildDate": "2026-08-08T04:49:35Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -110,8 +110,12 @@
             "dist/mainProcess/mainProcess/WsPvClient.js",
             "dist/mainProcess/mainProcess/WsPvClient.py",
             "dist/test/tdmDemo/**",
-            "dist/common/resources/webpages/tdm.png",
-            "dist/common/resources/webpages/tdm.svg"
+            "dist/common/resources/webpages/icon-macos.png",
+            "dist/common/resources/webpages/icon-macos.svg",
+            "dist/common/resources/webpages/icon-linux.png",
+            "dist/common/resources/webpages/icon-linux.svg",
+            "dist/common/resources/webpages/icon-windows.png",
+            "dist/common/resources/webpages/icon-windows.svg"
         ],
         "mac": {
             "icon": "icon-macos.png",

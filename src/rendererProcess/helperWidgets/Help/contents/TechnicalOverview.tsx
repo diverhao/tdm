@@ -270,9 +270,7 @@ const treeStr = `
 │   │       ├── old-logos
 │   │       │   ├── icon.icns
 │   │       │   ├── icon.ico
-│   │       │   ├── tdm-logo-round-corner.png
-│   │       │   ├── tdm-logo.png
-│   │       │   └── tdm-logo.svg
+│   │       │   └── tdm-logo-round-corner.png
 │   │       ├── opacity-bar.png
 │   │       ├── open-file-symbol.svg
 │   │       ├── open-link-symbol.svg
@@ -285,11 +283,8 @@ const treeStr = `
 │   │       ├── settings.svg
 │   │       ├── Spallation_neutron_source_logo.png
 │   │       ├── star.svg
-│   │       ├── tdm-logo-large-fill.png
-│   │       ├── tdm-logo.png
-│   │       ├── tdm-logo.svg
-│   │       ├── tdm.png
-│   │       ├── tdm.svg
+│   │       ├── icon-macos.png
+│   │       ├── icon-macos.svg
 │   │       ├── trend.svg
 │   │       ├── vertical-pan-down.svg
 │   │       ├── vertical-pan-up.svg

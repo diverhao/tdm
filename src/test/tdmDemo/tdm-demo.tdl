@@ -1622,7 +1622,7 @@
             "verticalAlign": "flex-start",
             "wrapWord": false,
             "showUnit": false,
-            "fileName": "../../../webpack/resources/webpages/tdm-logo.svg",
+            "fileName": "../../../webpack/resources/webpages/icon-macos.svg",
             "opacity": 1,
             "stretchToFit": false,
             "showPvValue": false,

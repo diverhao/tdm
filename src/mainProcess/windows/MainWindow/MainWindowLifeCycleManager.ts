@@ -45,7 +45,7 @@ export class MainWindowLifeCycleManager {
                 minWidth: 200,
                 minHeight: 100,
                 show: true,
-                icon: path.join(__dirname, "../../../common/resources/webpages/tdm-logo.png"),
+                icon: path.join(__dirname, "../../../common/resources/webpages/icon-macos.png"),
                 webPreferences: {
                     preload: path.join(__dirname, "preload.js"),
                     nodeIntegration: true,

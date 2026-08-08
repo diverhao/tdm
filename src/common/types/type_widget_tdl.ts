@@ -1577,7 +1577,7 @@ export const defaultSymbolTdl: type_Symbol_tdl = {
         verticalAlign: "flex-start",
         wrapWord: false,
         showUnit: false,
-        fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
+        fileName: "../../../webpack/resources/webpages/icon-macos.svg",
         opacity: 1,
         stretchToFit: false,
         showPvValue: false,
@@ -2773,7 +2773,7 @@ export const defaultMediaTdl: type_Media_tdl = {
         boxSizing: "content-box",
     },
     text: {
-        fileName: "../../../webpack/resources/webpages/tdm-logo.svg",
+        fileName: "../../../webpack/resources/webpages/icon-macos.svg",
         opacity: 1,
         stretchToFit: false,
         invisibleInOperation: false,

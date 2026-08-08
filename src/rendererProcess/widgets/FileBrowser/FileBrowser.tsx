@@ -947,7 +947,7 @@ export class FileBrowser extends BaseWidget {
                                 maxWidth: "100%",
                                 overflow: "hidden",
                             }}>
-                                <img src={`${getBasePath()}/webpack/resources/webpages/tdm-logo-large-fill.png`}
+                                <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.png`}
                                     style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
                                 >
                                 </img>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate compass">
-  <rect width="512" height="512" fill="#ffffff"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="256" cy="256" r="151" stroke="#111111" stroke-width="38"/>
-    <path d="M256 64 292 220 448 256 292 292 256 448 220 292 64 256 220 220Z" fill="#111111" stroke="none"/>
-    <path d="M131 381 381 131" stroke="#ffffff" stroke-width="35"/>
-    <path d="M131 381 381 131" stroke="#6b7280" stroke-width="14"/>
-  </g>
-</svg>

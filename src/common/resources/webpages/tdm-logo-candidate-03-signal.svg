@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TDM logo candidate signal">
-  <rect width="512" height="512" fill="#ffffff"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M365 128a152 152 0 1 0 28 79" stroke="#111111" stroke-width="52"/>
-    <path d="M77 431 431 77" stroke="#060606" stroke-width="24"/>
-    <path d="M143 366c52 43 128 50 188 14" stroke="#6f7782" stroke-width="15"/>
-    <path d="M125 153c46-50 120-66 183-40" stroke="#2f3338" stroke-width="15"/>
-  </g>
-</svg>

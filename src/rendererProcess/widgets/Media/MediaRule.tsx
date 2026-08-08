@@ -30,7 +30,7 @@ export class MediaRule extends BaseWidgetRule {
                 // actually "alarm outline"
                 // alarmBorder: true,
                 // media file name, could be picture types, pdf, or video type
-                // fileName: `${getBasePath()}/webpack/resources/webpages/tdm-logo.svg`,
+                // fileName: `${getBasePath()}/webpack/resources/webpages/icon-macos.svg`,
                 // opacity
                 // opacity: 1,
                 // for picture

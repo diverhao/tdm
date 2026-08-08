@@ -291,7 +291,7 @@ export class DisplayWindowLifeCycleManager {
             parent: parent,
             frame: true,
             show: !this.isHiddenWindow(),
-            icon: path.join(__dirname, "../../../common/resources/webpages/tdm-logo.png"),
+            icon: path.join(__dirname, "../../../common/resources/webpages/icon-macos.png"),
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
                 nodeIntegration: true,
