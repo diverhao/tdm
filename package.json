@@ -10,7 +10,7 @@
         "email": "haoh@ornl.gov"
     },
     "desktopName": "tdm.desktop",
-    "buildDate": "2026-08-08T20:30:16Z",
+    "buildDate": "2026-08-08T23:02:12Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -116,7 +116,8 @@
             "dist/webpack/resources/webpages/icon-linux.png",
             "dist/webpack/resources/webpages/icon-linux.svg",
             "dist/webpack/resources/webpages/icon-windows.png",
-            "dist/webpack/resources/webpages/icon-windows.svg"
+            "dist/webpack/resources/webpages/icon-windows.svg",
+            "dist/webpack/resources/deploy/**"
         ],
         "mac": {
             "icon": "icon-macos.png",

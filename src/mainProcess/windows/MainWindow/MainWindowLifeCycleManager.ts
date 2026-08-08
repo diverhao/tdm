@@ -32,6 +32,13 @@ export class MainWindowLifeCycleManager {
         if (mainProcesMode === "ssh-server") {
             return;
         }
+        const iconFile =
+            process.platform === "linux"
+                ? "icon-linux.png"
+                : process.platform === "win32"
+                    ? "icon-windows.png"
+                    : "icon-macos.png";
+
 
         if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
             const windowOptions: Electron.BrowserWindowConstructorOptions = {
@@ -45,7 +52,7 @@ export class MainWindowLifeCycleManager {
                 minWidth: 200,
                 minHeight: 100,
                 show: true,
-                icon: path.join(__dirname, "../../../common/resources/webpages/icon-macos.png"),
+                icon: path.join(__dirname, `../../../common/resources/webpages/${iconFile}`),
                 webPreferences: {
                     preload: path.join(__dirname, "preload.js"),
                     nodeIntegration: true,
