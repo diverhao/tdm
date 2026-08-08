@@ -294,8 +294,7 @@ export class MainWindowStartupPage {
             <div
                 style={style}
             >
-                {/* <img src={`../../resources/webpages/icon-macos.svg`} width="40px" height="40px"></img> */}
-                <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="40px" height="40px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="80px" height="80px"></img>
             </div>
         );
     };

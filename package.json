@@ -9,7 +9,7 @@
         "name": "Hao Hao",
         "email": "haoh@ornl.gov"
     },
-    "buildDate": "2026-08-08T04:49:35Z",
+    "buildDate": "2026-08-08T05:27:58Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",
@@ -110,12 +110,12 @@
             "dist/mainProcess/mainProcess/WsPvClient.js",
             "dist/mainProcess/mainProcess/WsPvClient.py",
             "dist/test/tdmDemo/**",
-            "dist/common/resources/webpages/icon-macos.png",
-            "dist/common/resources/webpages/icon-macos.svg",
-            "dist/common/resources/webpages/icon-linux.png",
-            "dist/common/resources/webpages/icon-linux.svg",
-            "dist/common/resources/webpages/icon-windows.png",
-            "dist/common/resources/webpages/icon-windows.svg"
+            "dist/webpack/resources/webpages/icon-macos.png",
+            "dist/webpack/resources/webpages/icon-macos.svg",
+            "dist/webpack/resources/webpages/icon-linux.png",
+            "dist/webpack/resources/webpages/icon-linux.svg",
+            "dist/webpack/resources/webpages/icon-windows.png",
+            "dist/webpack/resources/webpages/icon-windows.svg"
         ],
         "mac": {
             "icon": "icon-macos.png",

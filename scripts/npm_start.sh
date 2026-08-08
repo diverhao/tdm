@@ -19,9 +19,11 @@ cp ${TDM_ROOT}/src/mainProcess/windows/HelpWindow/HelpWindow.html ${TDM_ROOT}/di
 
 # resources: images, css, js
 cp -a ${TDM_ROOT}/src/common/resources ${TDM_ROOT}/dist/common/
-ln -s ${TDM_ROOT}/dist/common/resources ${TDM_ROOT}/dist/webpack/
+rm -rf ${TDM_ROOT}/dist/webpack/resources
+cp -a ${TDM_ROOT}/dist/common/resources ${TDM_ROOT}/dist/webpack/
 # for desktop mode katex
-ln -s ${TDM_ROOT}/dist/common/resources/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/fonts
+rm -rf ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/fonts
+cp -a ${TDM_ROOT}/dist/common/resources/css/fonts ${TDM_ROOT}/dist/mainProcess/windows/DisplayWindow/
 
 # others
 cp -a ${TDM_ROOT}/src/mainProcess/mainProcess/*.py ${TDM_ROOT}/dist/mainProcess/mainProcess/
