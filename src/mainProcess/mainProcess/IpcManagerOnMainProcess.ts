@@ -73,6 +73,20 @@ export class IpcManagerOnMainProcess {
         });
 
         /**
+         * Manully create an error event, which does not close/crash the server
+         * 
+         * Manlly close connection with all clients/windows
+         * 
+         * For testing purpose
+         */
+        setTimeout(() => {
+            websocketServer.emit("error", new Error("Test WebSocket IPC server error"));
+            for (const client of websocketServer.clients) {
+                client.terminate();
+            }
+        }, 10 * 1000);
+
+        /**
          * listen to connection from renderer process, each wsClient is a renderer window
          * 
          * the renderer process will try to connect this websocket server when the display window becomes operating mode
@@ -81,6 +95,8 @@ export class IpcManagerOnMainProcess {
             Log.info(`WebSocket IPC Server got a connection from ${request.socket.remoteAddress}:${request.socket.remotePort}`);
 
             wsClient.on("message", (messageBuffer: RawData) => {
+                // convert null to undefined
+                // the `undefined` value in object is ignored in the websocket transportation 
                 const message = JSON.parse(messageBuffer.toString(),
                     (key, value) =>
                         value === null ? undefined : value
@@ -90,21 +106,52 @@ export class IpcManagerOnMainProcess {
             });
 
             wsClient.on("error", (err: Error) => {
-                Log.error("WebSocket IPC client got an error", err)
+                let windowId = this.getWindowIdFromWsClient(wsClient);
+                if (windowId !== undefined) {
+                    Log.error(`Window ${windowId} WebSocket ${request.socket.remoteAddress}:${request.socket.remotePort} got an error`, err)
+                } else {
+                    // no window
+                }
             });
 
             // websocket connection closed, do nothing
             // if the display window is still alive, it will try to reconnect
             wsClient.on("close", (code: number, reason: Buffer) => {
-                Log.info("WebSocket client closed.", code, reason.toString());
+                let windowId = this.getWindowIdFromWsClient(wsClient);
+                if (windowId !== undefined) {
+                    // [info] Window 0-4 WebSocket closed: 127.0.0.1:56612, Error code: 1006 
+                    Log.error(`Window ${windowId} WebSocket closed:`, `${request.socket.remoteAddress}:${request.socket.remotePort}, Error code:`, code, reason.toString());
+                } else {
+                    // no window
+                }
             });
         });
     };
 
-    createWebSocketIpcServerWebMode = () => {
+    /**
+     * Obtain the window ID from the websocket client
+     */
+    private getWindowIdFromWsClient = (wsClient: WebSocket): undefined | String => {
+        for (const [windowId, client] of Object.entries(this.getClients())) {
+            if (typeof client === "string") {
+                // not connected yet
+                return undefined;
+            } else {
+                if (client === wsClient) {
+                    return windowId;
+                }
+            }
+        }
+        return undefined;
+    }
 
+    /**
+     * Upgrade the existing http connection to websocket connection
+     */
+    private createWebSocketIpcServerWebMode = () => {
         const mainProcess = this.getMainProcess();
 
+        // the http web server must be prepared
         const webServer = mainProcess.getWebServer();
         if (webServer === undefined) {
             return;
@@ -114,6 +161,7 @@ export class IpcManagerOnMainProcess {
             return;
         }
 
+        // upgrade http to websocket
         const websocketServer = new WebSocketServer({
             server: httpServer,
             path: webServer.withBasePath("/ipc"),
@@ -122,13 +170,17 @@ export class IpcManagerOnMainProcess {
         return websocketServer;
     }
 
-
-    createWebSocketIpcServerDesktopMode = () => {
+    /**
+     * Create a localhost (127.0.0.1) web server if we are in desktop mode
+     */
+    private createWebSocketIpcServerDesktopMode = () => {
         const websocketServer = new WebSocketServer({ host: "127.0.0.1", port: this.getPort() });
         return websocketServer;
     }
 
-
+    /**
+     * Handle websocket message from client
+     */
     handleMessage = (wsClient: WebSocket | string, message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
         const processId = message["processId"];
         const eventName = message["eventName"];
@@ -140,68 +192,7 @@ export class IpcManagerOnMainProcess {
         /**
          * 4 possible modes: "desktop", "web", "ssh-server", "ssh-client"
          */
-        if (mainProcessMode === "ssh-client") {
-            // messages that are processed on client side, do not forward message to tcp server
-            // "show-context-menu" 
-            // "show-context-menu-sidebar" 
-            // "main-window-show-context-menu"
-            // "new-tdl-rendered": take screenshots, send local fonts names
-            // "close-window": close the window, same as clicking the close button
-            // "focus-window": focus the window, initiated by mosue down event on thumbnail
-            // "processes-info": request processes info (CPU, memory) from renderer process
-            // "bring-up-main-window": all info needed by main window are stored
-            if (
-                eventName === "show-context-menu"
-                || eventName === "show-context-menu-sidebar"
-                || eventName === "main-window-show-context-menu"
-                || eventName === "new-tdl-rendered"
-                || eventName === "close-window"
-                || eventName === "focus-window"
-                || eventName === "zoom-window"
-                || eventName === "processes-info"
-                // || eventName === "close-iframe-display"
-                || eventName === "bring-up-main-window"
-                || eventName === "websocket-ipc-connected-on-main-window"
-                || eventName === "ssh-password-prompt-result"
-                || eventName === "take-screenshot"
-                || eventName === "fetch-thumbnail"
-            ) {
-                const eventListeners = mainProcess.getIpcManager().getEventListeners();
-                const callback = eventListeners[eventName];
-                if (callback !== undefined) {
-                    // invoke callback
-                    const data = message["data"];
-                    callback(wsClient, ...data);
-                }
-                return;
-            } else {
-                let fullWindowId = windowId;
-                // same as desktoip or web mode, always register the websocket client
-                // also forward the message to to ssh server, so that the window can be registered
-                if (this.getClients()[fullWindowId] === undefined) {
-                    Log.debug("register window", windowId, "for WebSocket IPC");
-                    this.getClients()[fullWindowId] = wsClient;
-                    // lift the block in create window method
-                    // const windowAgent = mainProcess.getWindowAgentsManager().getAgent(windowId);
-                    // if (windowAgent instanceof MainWindowAgent || windowAgent instanceof DisplayWindowAgent) {
-                    //     console.log("lift block for", windowId);
-                    //     windowAgent.creationResolve("");
-                    // }
-                }
-                // normally, we forward the message to remote ssh server via TCP
-                const sshClient = mainProcess.getSshClient();
-                const tcpMessage = {
-                    command: "forward-to-websocket-ipc",
-                    data: message,
-                }
-                if (sshClient !== undefined) {
-                    sshClient.sendToTcpServer(message);
-                    // sshClient.sendToTcpServer(tcpMessage);
-                } else {
-                    Log.error("Error: the main process", processId, "is not a ssh client");
-                }
-            }
-        } else if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
+        if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
             // find callback for this event
             const callback = this.getEventListeners()[eventName];
             if (callback !== undefined) {

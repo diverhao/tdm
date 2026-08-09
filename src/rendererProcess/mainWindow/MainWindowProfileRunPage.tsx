@@ -424,7 +424,7 @@ export class MainWindowProfileRunPage {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
-                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="40px"></img>
+                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="80px"></img>
                     </div>
                     <div style={{
                         margin: 5,
