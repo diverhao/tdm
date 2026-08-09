@@ -29,7 +29,7 @@ export type type_args = {
     attach: number;
     flexibleAttach: boolean;
     cwd: string;
-    mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client"; // "ssh-client" mode process can only be created inside the program
+    mainProcessMode: "desktop" | "web";
     httpServerPort: number;
     httpServerBasePath: string;
     site: string;

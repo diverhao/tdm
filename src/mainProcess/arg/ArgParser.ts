@@ -131,10 +131,6 @@ Options:
                         result["mainProcessMode"] = "desktop";
                     } else if (argv[ii] === "web") {
                         result["mainProcessMode"] = "web";
-                    } else if (argv[ii] === "ssh-server") {
-                        result["mainProcessMode"] = "ssh-server";
-                    } else if (argv[ii] === "ssh-client") {
-                        result["mainProcessMode"] = "ssh-client";
                     } else {
                         throw new Error("Error at --main-process-mode")
                     }

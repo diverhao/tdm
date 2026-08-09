@@ -98,24 +98,7 @@ export class DisplayWindowTextEditor {
             fileName = dialog.showSaveDialogSync({
                 title: "Save file to",
             });
-        } else if (mainProcessMode === "ssh-server") {
-            displayWindowAgent.showInputBox({
-                command: "save-text-file",
-                humanReadableMessages: ["Save file to"],
-                buttons: [
-                    {
-                        text: "OK",
-                    },
-                    {
-                        text: "Cancel",
-                    }
-                ],
-                defaultInputText: "",
-                attachment: data,
-            });
-
-            fileName = "";
-        }
+        } 
         return fileName;
     };
 

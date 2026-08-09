@@ -7,7 +7,6 @@ import { WsPvServer } from "./WsPvServer";
 // import { MainProcesses } from "../mainProcesses/MainProcesses";
 import { Log } from "../../common/Log";
 import { websocketPvServerPort } from "../global/GlobalVariables";
-import { SshClient, type_sshServerConfig } from "./SshClient";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
@@ -76,10 +75,7 @@ export class MainProcess {
 
     // is is mostly like the main process mode defined in MainProcesses, but
     // with one more mode: "ssh-client"
-    private _mainProcessMode: "desktop" | "web" | "ssh-server" | "ssh-client";
-
-    // the ssh client
-    private _sshClient: SshClient | undefined = undefined;
+    private _mainProcessMode: "desktop" | "web";
 
     // CA snooper service
     // it listens to the search messages from CA client
@@ -132,8 +128,7 @@ export class MainProcess {
         args: type_args,
         // processId: string,
         callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
-        mainProcessMode: "web" | "desktop" | "ssh-server" | "ssh-client" = "desktop",
-        sshServerConfig?: type_sshServerConfig & { callingProcessId: string }
+        mainProcessMode: "web" | "desktop" = "desktop",
     ) {
 
         this._rawArgs = args;
@@ -157,10 +152,6 @@ export class MainProcess {
             // only show in desktop mode
             // Create a custom menu template
             // menubar on top of the window or top of the screen, it only shows in desktop mode
-            const applicationMenu = new ApplicationMenu(this);
-            applicationMenu.createApplicationMenu()
-        } else if (args["mainProcessMode"] === "ssh-server") {
-        } else if (args["mainProcessMode"] === "ssh-client") {
             const applicationMenu = new ApplicationMenu(this);
             applicationMenu.createApplicationMenu()
         } else {
@@ -191,35 +182,15 @@ export class MainProcess {
         this._windowAgentsManager = new WindowAgentsManager(this);
 
         // ignore ssl error
-        if (this.getMainProcessMode() !== "ssh-server") {
-            app.commandLine.appendSwitch("ignore-certificate-errors");
-            app.commandLine.appendSwitch("allow-insecure-localhost", "true");
-        }
+        app.commandLine.appendSwitch("ignore-certificate-errors");
+        app.commandLine.appendSwitch("allow-insecure-localhost", "true");
 
-        if (this.getMainProcessMode() !== "ssh-server") {
-            this.readLocalFontNames();
-            this.enableLogToFile();
-        }
+        this.readLocalFontNames();
+        this.enableLogToFile();
 
         // main process mode specific initializations
         // 4 modes: ssh-client, desktop, web, and ssh-server mode
-        if (this.getMainProcessMode() === "ssh-client") {
-            app.whenReady().then(async () => {
-                // create the main window that loads from local, its purpose is to provide
-                // a GUI interface for user to input password
-                await this.getWindowAgentsManager().createMainWindow();
-                // todo:
-                // if (sshServerConfig !== undefined) {
-                setTimeout(() => {
-                    this._sshClient = new SshClient(this, sshServerConfig as any)
-                }, 1000)
-                // } else {
-                // Log.error("Input for MainProcess constructor error: sshServerConfig cannot be undefined in ssh-client mode");
-                // todo: quit
-                // }
-            })
-
-        } else if (this.getMainProcessMode() === "desktop") {
+        if (this.getMainProcessMode() === "desktop") {
             /**
              * (1) wait for the app ready, 
              * (2) create main window
@@ -252,16 +223,6 @@ export class MainProcess {
             this.getIpcManager().handleProfileSelected("", {
                 selectedProfileName: firstProfileName,
             })
-        } else if (this.getMainProcessMode() === "ssh-server") {
-            /**
-             * (1) create ssh server,  self destruction count down until tcp server heartbeat starts to run
-             * (2) create main window, the callback will run after the profile is selected from client side
-             */
-
-            // (1)
-            this.getIpcManager().createSshServer();
-            // (2)
-            this.getWindowAgentsManager().createMainWindow();
         } else {
             // no such mode
             Log.error("No such a mode", this.getMainProcessMode(), "Quit ...")
@@ -344,32 +305,11 @@ export class MainProcess {
 
     // if there is no display window, quit
     quit = () => {
-        // ssh server
-        if (this.getMainProcessMode() === "ssh-server") {
-            this.getIpcManager().getSshServer()?.quit();
-        }
-
-        // SshClient
-        if (this.getMainProcessMode() === "ssh-client") {
-            const sshClient = this.getSshClient();
-            if (sshClient !== undefined) {
-                sshClient.destroy("");
-            }
-        }
-
         // close all opened windows
         const windowAgentsManager = this.getWindowAgentsManager();
         for (let windowAgent of Object.values(windowAgentsManager.getAgents())) {
             // ! don't ask if we want to save the file in ssh-client mode
             // ! need to be fixed
-            if (this.getMainProcessMode() === "ssh-client") {
-                // close the window forcefully
-                if ("getDisplayWindowLifeCycleManager" in windowAgent) {
-                    windowAgent.getDisplayWindowLifeCycleManager().setReadyToClose(true);
-                } else {
-                    windowAgent.readyToClose = true;
-                }
-            }
             windowAgent.getBrowserWindow()?.close();
         }
 
@@ -556,23 +496,9 @@ export class MainProcess {
 
         const mainProcessMode = this.getMainProcessMode();
 
-        // in ssh-client mode, the quit-tdm-process is handled in ssh-server
-        if (mainProcessMode === "ssh-client") {
-            return;
-        }
-
         // we have confirmed in the message box to quit
         if (confirmToQuit === true) {
-            if (mainProcessMode === "ssh-server") {
-                const sshServer = this.getIpcManager().getSshServer();
-                sshServer?.sendToTcpClient(JSON.stringify(
-                    { command: "quit-tdm-process-immediately", data: {} }));
-                setTimeout(() => {
-                    this.quit()
-                }, 1000)
-            } else {
-                this.quit()
-            }
+            this.quit()
             return;
         }
 
@@ -608,17 +534,7 @@ export class MainProcess {
             });
             return;
         } else {
-
-            if (mainProcessMode === "ssh-server") {
-                const sshServer = this.getIpcManager().getSshServer();
-                sshServer?.sendToTcpClient(JSON.stringify(
-                    { command: "quit-tdm-process-immediately", data: {} }));
-                setTimeout(() => {
-                    this.quit()
-                }, 1000)
-            } else {
-                this.quit()
-            }
+            this.quit()
         }
     }
 
@@ -742,36 +658,10 @@ export class MainProcess {
         Log.info("Main process for", mainProcessMode, "mode started. Profile is", profileName);
 
 
-        // todo: what is this?
-        // select to run a new process as ssh-client mode, it can only be started from desktop mode
-        if (mainProcessMode === "desktop" && selectedProfile.isSshConfig()) {
-
-            // connect to remote
-            // const mainProcesses = this.getMainProcess().getMainProcesses();
-            const sshConfigRaw = selectedProfile.getCategory("SSH Configuration");
-            const sshServerConfig: type_sshServerConfig = {
-                ip: sshConfigRaw["Host Name/IP Address"]["value"],
-                port: parseInt(sshConfigRaw["Port"]["value"]),
-                userName: sshConfigRaw["User Name"]["value"],
-                privateKeyFile: sshConfigRaw["Private Key File"]["value"],
-                tdmCommand: sshConfigRaw["TDM Command"]["value"],
-            };
-            Log.info("We are going to run a new process on remote ssh using config", sshServerConfig)
-
-            if (typeof sshServerConfig.ip === "string" && !isNaN(sshServerConfig.port) && typeof sshServerConfig.userName === "string" && typeof sshServerConfig.privateKeyFile === "string") {
-                // const callingProcessId = this.getMainProcess().getMain();
-                const callingProcessId = "0";
-                const args = this.getRawArgs();
-                new MainProcess(args, undefined, "ssh-client", { ...sshServerConfig, callingProcessId: callingProcessId });
-            } else {
-                Log.error("Profiles file error: Cannot create main process for ssh config", profileName);
-            }
-        } else if (mainProcessMode === "web") {
-
+        if (mainProcessMode === "web") {
             // create epcis-tca CA and PVA context
             // do not open default wind
             await mainProcess.getChannelAgentsManager().createAndInitContext();
-
         } else if (mainProcessMode === "desktop") {
 
             /**
@@ -788,7 +678,7 @@ export class MainProcess {
             await this.getChannelAgentsManager().createAndInitContext();
             // (2)
             this.createSql();
-            
+
             const aaAddresses = selectedProfile.getEntry("EPICS Custom Environment", "Archiver Appliance Retrieval Address");
             if (Array.isArray(aaAddresses)) {
                 this._archiverAppliances = new ArchiverAppliances(aaAddresses);
@@ -850,80 +740,8 @@ export class MainProcess {
             } else {
                 Log.error("Main window agent does not exist");
             }
-        } else if (mainProcessMode === "ssh-server") {
-
-            /**
-             * (1) create epics-tca CA and PVA context 
-             * 
-             * (2) create SQL
-             * 
-             * (3) open default TDL files
-             * 
-             * (4) prepare main window, i.e. change title, telling main window to switch to run mode, etc
-             */
-
-            // (1)
-            await this.getChannelAgentsManager().createAndInitContext();
-            // (2)
-            this.createSql();
-
-            // (3)
-            let tdlFileNames: string[] = selectedProfile.getEntry("EPICS Custom Environment", "Default TDL Files");
-            let macros = selectedProfile.getMacros();
-            let currentTdlFolder: undefined | string = undefined;
-            if (args !== undefined) {
-                currentTdlFolder = args["cwd"] === "" ? undefined : args["cwd"];
-                if (args["alsoOpenDefaults"]) {
-                    tdlFileNames.push(...args["fileNames"]);
-                } else {
-                    tdlFileNames = args["fileNames"];
-                }
-
-                // args["macros"] overrides profile-defined macros
-                macros = refineMacros([...args["macros"], ...macros]);
-            }
-
-            const mode = selectedProfile.getMode() as "editing" | "operating";
-            const editable = selectedProfile.getEditable();
-            windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, undefined);
-
-
-            /**
-             * (4) For Main Window in desktop mode:
-             * 
-             * (a) wait for the main window URL to be loaded
-             *     the event is emitted when the .loadURL() is done when creating the BrowserWindow in MainWindowAgent
-             * 
-             * (b) wait for the main window's websocket IPC established
-             *     the event is emitted when the websocket-ipc-connected is received in main process from main window
-             * 
-             * (c) change main window title with selected profile name
-             * 
-             * (d) tell main window to switch to run mode by sending "after-profile-selected" to main window
-             * 
-             * (e) create preview Display Window for File Browser, it is an invisible Display Window dedicated
-             *     for the File Browser utility window
-             */
-
-            const mainWindowAgent = windowAgentsManager.getMainWindowAgent();
-            if (mainWindowAgent instanceof MainWindowAgent) {
-                // (a)
-                await mainWindowAgent.loadURLPromise;
-                // (b)
-                // the websocket is never connected in ssh server 
-                // await mainWindowAgent.websocketIpcConnectedPromise;
-                // (c)
-                const oldTitle = mainWindowAgent.getTitle();
-                const newTitle = oldTitle + " -- " + profileName;
-                mainWindowAgent.setTitle(newTitle);
-                // (d)
-                mainWindowAgent.sendFromMainProcess("after-profile-selected", {
-                    profileName: profileName,
-                });
-                // (e)
-                // do not create preview display window in ssh client
-                // windowAgentsManager.createPreviewDisplayWindow();
-            }
+        } else {
+            Log.error("No such mode", mainProcessMode);
         }
     }
 
@@ -933,10 +751,6 @@ export class MainProcess {
     getMainProcessMode = () => {
         return this._mainProcessMode;
     };
-
-    getSshClient = () => {
-        return this._sshClient;
-    }
 
     getCaSnooperServer = () => {
         return this._caSnooperServer;
@@ -1046,10 +860,6 @@ export class MainProcess {
 
     setConnectingToSsh = (newStatus: boolean) => {
         this._connectingToSsh = newStatus;
-    }
-
-    setMainProcessMode = (newMode: "desktop" | "ssh-client") => {
-        this._mainProcessMode = newMode;
     }
 
     getArchiverAppliances = () => {

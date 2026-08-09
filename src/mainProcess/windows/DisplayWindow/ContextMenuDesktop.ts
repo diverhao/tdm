@@ -1596,10 +1596,6 @@ export class ContextMenuDesktop {
             widgetSpecificItems = this.resolveWidgetSpecificItems(widgetKeys[0], options);
         }
 
-        if (this.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-client") {
-            this.removeItemsForAllMenus(["Open Display", "Open Display with File Browser"])
-        }
-
         const name = `${mode}_${location}`;
 
         if (widgetSpecificItems === undefined) {

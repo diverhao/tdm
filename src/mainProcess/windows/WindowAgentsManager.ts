@@ -161,10 +161,11 @@ export class WindowAgentsManager {
         let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, windowId } = options;
 
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "ssh-client") {
 
-            // todo: test it
-            // check if the window already exist
+        // web, desktop, or ssh-server mode
+
+        // check if the window already exist for desktop mode
+        if (mainProcessMode === "desktop") {
             const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
             if (exisitedDisplayWindow !== undefined) {
                 Log.debug(`File ${tdlFileName} is already opened.`);
@@ -172,74 +173,47 @@ export class WindowAgentsManager {
                 exisitedDisplayWindow.show();
                 return undefined;
             }
-
-            const displayWindowId = windowId;
-            if (displayWindowId !== undefined) {
-                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
-                // only the browser window is managed by ssh-client, all others are managed by ssh-server
-                displayWindowAgent.createBrowserWindow(options);
-                return undefined;
-
-            } else {
-                //todo: what to do
-                return undefined;
-            }
-
-        } else {
-            // web, desktop, or ssh-server mode
-
-            // check if the window already exist for desktop mode
-            if (mainProcessMode === "desktop") {
-                const exisitedDisplayWindow = this.checkExistedDisplayWindow(tdlFileName, macros);
-                if (exisitedDisplayWindow !== undefined) {
-                    Log.debug(`File ${tdlFileName} is already opened.`);
-                    // bring up this window if in desktop mode
-                    exisitedDisplayWindow.show();
-                    return undefined;
-                }
-            }
-            Log.debug(`Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
-            );
-            // (0)
-            // preloaded window only for desktop mode, always create a new display if modal === true
-            if ((mainProcessMode !== "web" && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
-                // ssh-server does not have preloaded display window
-                if (mainProcessMode !== "ssh-server") {
-                    let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
-                    if (displayWindowAgent !== undefined) {
-                        Log.debug(`Preloaded display window is consumed, created a new one.`);
-                        this.createPreloadedDisplayWindow();
-                        return displayWindowAgent;
-                    } else {
-                        if (this.creatingPreloadedDisplayWindow === true) {
-                            Log.debug(`Preloaded display window does not exist, but it is being created.`);
-                        } else {
-                            Log.debug(`Preloaded display window does not exist, create one in background.`);
-                            this.createPreloadedDisplayWindow();
-                        }
-                    }
-                }
-            }
-
-
-            try {
-                // (1)
-                let displayWindowId = this.obtainDisplayWindowId();
-
-                const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
-                if (options["isPreloadedDisplayWindow"]) {
-                    this.preloadedDisplayWindowAgent = displayWindowAgent;
-                } else if (options["isPreviewDisplayWindow"]) {
-                    this.previewDisplayWindowAgent = displayWindowAgent;
-                }
-
-                // (2)
-                await displayWindowAgent.createBrowserWindow(options);
+        }
+        Log.debug(`Try to create a new display window for ${tdlFileName === "" ? "<blank string>" : tdlFileName} in  mode`
+        );
+        // (0)
+        // preloaded window only for desktop mode, always create a new display if modal === true
+        if ((mainProcessMode !== "web" && options["isPreviewDisplayWindow"] !== true) && !(options["utilityOptions"] !== undefined && options["utilityOptions"]["modal"] === true)) {
+            // ssh-server does not have preloaded display window
+            let displayWindowAgent = this.replacePreloadedDisplayWindow(options);
+            if (displayWindowAgent !== undefined) {
+                Log.debug(`Preloaded display window is consumed, created a new one.`);
+                this.createPreloadedDisplayWindow();
                 return displayWindowAgent;
-            } catch (e) {
-                Log.error(e);
-                return undefined;
+            } else {
+                if (this.creatingPreloadedDisplayWindow === true) {
+                    Log.debug(`Preloaded display window does not exist, but it is being created.`);
+                } else {
+                    Log.debug(`Preloaded display window does not exist, create one in background.`);
+                    this.createPreloadedDisplayWindow();
+                }
             }
+        }
+
+
+        try {
+            // (1)
+            let displayWindowId = this.obtainDisplayWindowId();
+
+            const displayWindowAgent = this.createDisplayWindowAgent(options, displayWindowId);
+            if (options["isPreloadedDisplayWindow"]) {
+                this.preloadedDisplayWindowAgent = displayWindowAgent;
+            } else if (options["isPreviewDisplayWindow"]) {
+                this.previewDisplayWindowAgent = displayWindowAgent;
+            }
+
+            // (2)
+            await displayWindowAgent.createBrowserWindow(options);
+            return displayWindowAgent;
+        } catch (e) {
+            Log.error(e);
+            return undefined;
+
         }
     };
 
@@ -593,7 +567,7 @@ export class WindowAgentsManager {
         }
 
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
-        if (mainProcessMode !== "desktop" && mainProcessMode !== "ssh-client") {
+        if (mainProcessMode === "web" ) {
             return;
         }
 
@@ -679,7 +653,7 @@ export class WindowAgentsManager {
      * (3) a BrowserWindow is closed
      */
     setDockMenu = () => {
-        if (process.platform === "darwin" && this.getMainProcess().getMainProcessMode() !== "ssh-server") {
+        if (process.platform === "darwin") {
             const menuItems: (Electron.MenuItem | Electron.MenuItemConstructorOptions)[] = [];
 
             for (let windowAgent of Object.values(this._agents)) {

@@ -18,16 +18,6 @@ export class DisplayWindowIpc {
     sendFromMainProcess = <T extends keyof IpcEventArgType2>(channel: T, arg: IpcEventArgType2[T]): void => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
-        const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-
-        if (mainProcessMode === "ssh-server") {
-            const ipcManagerOnMainProcesses = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
-            const sshServer = ipcManagerOnMainProcesses.getSshServer();
-            if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] }));
-            }
-            return;
-        }
 
         const wsClient = ipcManager.getClients()[displayWindowAgent.getId()];
 

@@ -110,9 +110,6 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
 export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
 
     const mainProcessMode = args["mainProcessMode"];
-    if (mainProcessMode === "ssh-server") {
-        return false;
-    }
 
     const isFirstInstance = app.requestSingleInstanceLock();
     if (isFirstInstance === true) {
@@ -214,11 +211,6 @@ export const openTdlInNewInstance = (args: type_args) => {
 
     const mainProcessMode = args["mainProcessMode"];
 
-    if (mainProcessMode === "ssh-server") {
-        const mainProcess = new MainProcess(args, cmdLineCallback, mainProcessMode, undefined);
-        return;
-    }
-
     /**
      * Only emitted on MacOS when double click the TDL file in Finder
      *
@@ -272,7 +264,7 @@ export const openTdlInNewInstance = (args: type_args) => {
         }
     });
 
-    const mainProcess = new MainProcess(args, cmdLineCallback, mainProcessMode, undefined);
+    const mainProcess = new MainProcess(args, cmdLineCallback, mainProcessMode);
 }
 
 function getParentProcessName() {
@@ -357,10 +349,6 @@ export const processArgsAttach = (args: type_args) => {
             args["attach"] = -2; // -2 means we are trying to open file from file manager
         }
     }
-
-    if (args["mainProcessMode"] === "ssh-server") {
-        args["attach"] = -1;
-    }
 }
 
 /**
@@ -375,12 +363,6 @@ export const processArgsAttach = (args: type_args) => {
  * (4) if already selected a profile, then ignore the requested profile
  */
 export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcess: MainProcess, args?: type_args) => {
-
-    const mainProcesMode = mainProcess.getMainProcessMode();
-
-    if (mainProcesMode === "ssh-server") {
-        return;
-    }
 
     // (1)
     if (path.isAbsolute(filePath) === false && args === undefined) {

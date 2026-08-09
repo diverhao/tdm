@@ -110,9 +110,7 @@ export class DisplayWindowLifeCycleManager {
         });
 
         const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "ssh-server") {
-            await this.createBrowserWindowInSshSeverMode(options);
-        } else if (mainProcessMode === "ssh-client" || mainProcessMode === "desktop") {
+        if (mainProcessMode === "desktop") {
             await this.createBrowserWindowInDesktopMode(options);
         } else if (mainProcessMode === "web") {
             if (webRootRequest == true) {
@@ -120,6 +118,9 @@ export class DisplayWindowLifeCycleManager {
             } else {
                 this.createBrowserWindowInWebMode(options);
             }
+        } else {
+            // should not happen
+            return;
         }
 
         // wait for IPC websocket connected, then send the basic info and tdl
@@ -351,9 +352,8 @@ export class DisplayWindowLifeCycleManager {
             });
 
             const ipcServerPort = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager().getPort();
-            const hostname = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "desktop"
-                ? "127.0.0.1"
-                : displayWindowAgent.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
+            const hostname = "127.0.0.1";
+
             await window.loadURL(
                 url.format({
                     pathname: path.join(__dirname, "DisplayWindow.html"),
@@ -368,15 +368,6 @@ export class DisplayWindowLifeCycleManager {
             );
         } catch (e) {
             Log.error(e);
-        }
-    };
-
-    private createBrowserWindowInSshSeverMode = async (options: any = {}) => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const sshServer = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
-        if (sshServer !== undefined) {
-            options["windowId"] = displayWindowAgent.getId();
-            sshServer.sendToTcpClient(JSON.stringify({ command: "create-display-window-step-2", data: options }));
         }
     };
 
@@ -409,16 +400,6 @@ export class DisplayWindowLifeCycleManager {
 
     // webpage window, not web-mode window
     createWebBrowserWindow = async (url: string) => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-        if (mainProcessMode === "ssh-server") {
-            const sshServer = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager().getSshServer();
-            if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify({ command: "create-web-display-window-step-2", data: { url: url, displayWindowId: displayWindowAgent.getId() } }));
-            }
-            return;
-        }
-
         const windowOptions = {
             width: 1200,
             height: 1100,
@@ -530,7 +511,7 @@ export class DisplayWindowLifeCycleManager {
 
         if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
             const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+            if (mainProcessMode === "desktop") {
                 displayWindowAgent.getWindowAgentsManager().getMainProcess().quit();
             }
         }
@@ -597,9 +578,7 @@ export class DisplayWindowLifeCycleManager {
         const browserWindow = this.getBrowserWindow();
         const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
         const mainProcessMode = windowAgentsManager.getMainProcess().getMainProcessMode();
-        const isRegularDisplayWindow = mainProcessMode === "ssh-server"
-            ? windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent
-            : browserWindow instanceof BrowserWindow && windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent;
+        const isRegularDisplayWindow = browserWindow instanceof BrowserWindow && windowAgentsManager.preloadedDisplayWindowAgent !== displayWindowAgent;
 
         if (!isRegularDisplayWindow) {
             Log.error("You are trying to close a non-regular window", displayWindowId);
@@ -627,8 +606,6 @@ export class DisplayWindowLifeCycleManager {
         const displayWindowId = displayWindowAgent.getId();
         if (mainProcessMode === "desktop") {
             this.closeBrowserWindowInDesktopMode();
-        } else if (mainProcessMode === "ssh-server") {
-            this.closeBrowserWindowInSshServerMode();
         } else {
             Log.error(`Cannot close browser window: unsupported main process mode ${mainProcessMode} for displayWindowId=${displayWindowId}`);
         }
@@ -645,33 +622,6 @@ export class DisplayWindowLifeCycleManager {
             Log.error(`Cannot close browser window in desktop mode: browserWindow is undefined for displayWindowId=${displayWindowId}`);
         }
     }
-
-    closeBrowserWindowInSshServerMode = () => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const mainProcessMode = displayWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
-        const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
-        const displayWindowId = displayWindowAgent.getId();
-        // (1) clean up the local stuff
-        this.handleWindowClosed();
-        // (2) tell the ssh-client to close the window
-        const sshServer = ipcManager.getMainProcess().getIpcManager().getSshServer();
-        // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window =====================\n`, { flag: "a" });
-        if (sshServer !== undefined) {
-            // this is a tcp command, not websocket
-            // fs.writeFileSync("/Users/haohao/tdm.log", `window will be closed, tell the ssh-client to close window B =====================\n`, { flag: "a" });
-            sshServer.sendToTcpClient(JSON.stringify(
-                {
-                    command: "close-browser-window",
-                    data: {
-                        mainProcessId: "0",
-                        displayWindowId: displayWindowId,
-                    }
-                }
-            ))
-        } else {
-            Log.error(`Cannot close browser window in ssh-server mode: sshServer is undefined for displayWindowId=${displayWindowId}`);
-        }
-    };
 
     // ------------------------- window appearance -------------------
 

@@ -56,43 +56,39 @@ const args: type_args = ArgParser.parseArgs(process.argv, site);
 
 // Electron 36+ defaults to GTK 4 on GNOME, which makes native context menus
 // noticeably taller on some Linux desktops. GTK 3 keeps the desktop menus compact.
-if (process.platform === "linux" && args["mainProcessMode"] !== "ssh-server") {
+if (process.platform === "linux") {
     app.commandLine.appendSwitch("gtk-version", "3");
 }
 
-if (args["mainProcessMode"] !== "ssh-server") {
-    /**
-     * Print TDM banner in command line. 
-     * 
-     * It includes version number, build date, and the commit hash of the current version. It also provides a
-     * help on how to use TDM.
-     */
-    ArgParser.printTdmBanner();
+/**
+ * Print TDM banner in command line. 
+ * 
+ * It includes version number, build date, and the commit hash of the current version. It also provides a
+ * help on how to use TDM.
+ */
+ArgParser.printTdmBanner();
 
-    /**
-     * `true` for the first TDM instance 
-     * 
-     * `false` for the later TDM instances
-     */
-    app.requestSingleInstanceLock();
-}
+/**
+ * `true` for the first TDM instance 
+ * 
+ * `false` for the later TDM instances
+ */
+app.requestSingleInstanceLock();
 
-if (args["mainProcessMode"] !== "ssh-server") {
-    /**
-     * Print TDM banner in command line. 
-     * 
-     * It includes version number, build date, and the commit hash of the current version. It also provides a
-     * help on how to use TDM.
-     */
-    ArgParser.printTdmBanner();
+/**
+ * Print TDM banner in command line. 
+ * 
+ * It includes version number, build date, and the commit hash of the current version. It also provides a
+ * help on how to use TDM.
+ */
+ArgParser.printTdmBanner();
 
-    /**
-     * `true` for the first TDM instance 
-     * 
-     * `false` for the later TDM instances
-     */
-    app.requestSingleInstanceLock();
-}
+/**
+ * `true` for the first TDM instance 
+ * 
+ * `false` for the later TDM instances
+ */
+app.requestSingleInstanceLock();
 
 /**
  * Here is the site-specific profile file

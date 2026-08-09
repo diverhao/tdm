@@ -29,9 +29,7 @@ export class MainWindowLifeCycleManager {
         const windowAgentsManager = mainWindowAgent.getWindowAgentsManager();
         const mainProcesMode = windowAgentsManager.getMainProcess().getMainProcessMode();
 
-        if (mainProcesMode === "ssh-server") {
-            return;
-        }
+        
         const iconFile =
             process.platform === "linux"
                 ? "icon-linux.png"
@@ -40,7 +38,7 @@ export class MainWindowLifeCycleManager {
                     : "icon-macos.png";
 
 
-        if (mainProcesMode === "ssh-client" || mainProcesMode === "desktop") {
+        if (mainProcesMode === "desktop") {
             const windowOptions: Electron.BrowserWindowConstructorOptions = {
                 width: 1000,
                 height: 800,
@@ -111,29 +109,7 @@ export class MainWindowLifeCycleManager {
 
             return;
         } else if (mainProcesMode === "web") {
-            const ipcServerPort = windowAgentsManager.getMainProcess().getIpcManager().getPort();
-
-            // httpResponse.send(
-            //     `
-            //     <html>
-            //         <body style="margin: 0px; padding: 0px">
-            //             <div id="root"></div>
-            //             <script>
-            //                 var exports = {};
-            //             </script>
-    
-            //             <script type="module" src="/MainWindowClient.js"></script>
-    
-            //             <script type="module">
-            //                 const urlParams = new URLSearchParams(window.location.search);
-            //                 const ipcServerPort = urlParams.get("ipcServerPort");
-            //                 const mainWindowId = urlParams.get("mainWindowId");
-            //                 new window.MainWindowClientClass("${mainWindowAgent.getId()}", ${ipcServerPort});
-            //             </script>
-            //         </body>
-            //     </html>
-            //     `,
-            // );
+            // no main window in web mode
             return;
         }
 
@@ -228,7 +204,7 @@ export class MainWindowLifeCycleManager {
 
         if (numBrowserWindows - hasPreloadedBrowserWindow - hasPreviewBrowserWindow <= 0) {
             const mainProcessMode = windowAgentsManager.getMainProcess().getMainProcessMode();
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+            if (mainProcessMode === "desktop") {
                 windowAgentsManager.getMainProcess().quit();
             }
         }
@@ -243,20 +219,7 @@ export class MainWindowLifeCycleManager {
     };
 
     handleWindowClose = (event: any) => {
-        const mainWindowAgent = this.getMainWindowAgent();
-        const mainProcess = mainWindowAgent.getWindowAgentsManager().getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
-        if (mainProcessMode === "desktop") {
-            return;
-        }
-        if (mainProcessMode === "ssh-client") {
-            if (this.isReadyToClose()) {
-                return;
-            }
-            event.preventDefault();
-            this.setReadyToClose(true);
-            mainWindowAgent.sendFromMainProcess("window-will-be-closed", {});
-        }
+        // do nothing
     };
 
     handleWindowWillBeClosed = (data: IpcEventArgType["main-window-will-be-closed"]) => {
@@ -276,23 +239,6 @@ export class MainWindowLifeCycleManager {
             } else {
                 Log.error(`Cannot close main window ${mainWindowId} in desktop mode: browserWindow is undefined.`);
             }
-        } else if (mainProcessMode === "ssh-server") {
-            this.handleWindowClosed();
-
-            const sshServer = mainProcess.getIpcManager().getSshServer();
-            if (sshServer !== undefined) {
-                sshServer.sendToTcpClient(JSON.stringify(
-                    {
-                        command: "close-browser-window",
-                        data: {
-                            mainProcessId: "0",
-                            mainWindowId: mainWindowId,
-                        }
-                    }
-                ));
-            } else {
-                Log.error(`Cannot close main window ${mainWindowId} in ssh-server mode: sshServer is undefined.`);
-            }
         } else {
             Log.error(`Cannot close main window ${mainWindowId}: unsupported main process mode ${mainProcessMode}.`);
         }
@@ -309,9 +255,7 @@ export class MainWindowLifeCycleManager {
 
     focus = () => {
         const mainWindowAgent = this.getMainWindowAgent();
-        if (mainWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-server") {
-            return;
-        }
+
         const browserWindow = this.getBrowserWindow();
         if (browserWindow instanceof BrowserWindow) {
             if (browserWindow.isMinimized()) {

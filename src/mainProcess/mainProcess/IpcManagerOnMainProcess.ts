@@ -5,12 +5,8 @@ import path from "path";
 import { Log } from "../../common/Log";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { IpcEventArgType } from "../../common/IpcEventArgType";
-import { generateKeyAndCert } from "../global/GlobalMethods";
-import { SshServer } from "./SshServer";
-import https from "https";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
-import { FileReader } from "../file/FileReader";
 
 /**
  * Manage IPC messages sent from renderer process.
@@ -21,8 +17,6 @@ export class IpcManagerOnMainProcess {
     private _mainProcess: MainProcess;
     private _wsServer: WebSocketServer | undefined;
     private _port: number = 4000 + Math.floor(Math.random() * 1000);
-    private _sshServer: SshServer | undefined = undefined;
-    private keyAndCert = generateKeyAndCert();
     private clients: Record<string, WebSocket | string> = {};
 
     constructor(mainProcess: MainProcess) {
@@ -31,11 +25,21 @@ export class IpcManagerOnMainProcess {
         this.startToListen();
     }
 
+    // -------------------------- websocket server -----------------------
 
     /**
-     * Create the websocket IPC server. 
-     * 
-     * This websocket server is attached to a https server, which has no role in anywhere.
+     * Create and configure the WebSocket server used for IPC between the main process and
+     * renderer windows.
+     *
+     * In desktop mode, the server listens independently on a randomly selected localhost
+     * port. If that port is already occupied, the next port is tried. In web mode, the
+     * WebSocket server shares the existing HTTP server and handles HTTP upgrade requests
+     * whose path is `<basePath>/ipc`; it does not open another listening port.
+     *
+     * Each accepted WebSocket represents one renderer window. Incoming JSON messages are
+     * dispatched to the registered IPC event handlers, while connection errors and closures
+     * are logged. A renderer that loses its connection is responsible for reconnecting and
+     * registering its window ID again.
      */
     createWebSocketIpcServer = () => {
         Log.info(`Creating WebSocket IPC server on port ${this.getPort()}`);
@@ -79,12 +83,12 @@ export class IpcManagerOnMainProcess {
          * 
          * For testing purpose
          */
-        setTimeout(() => {
-            websocketServer.emit("error", new Error("Test WebSocket IPC server error"));
-            for (const client of websocketServer.clients) {
-                client.terminate();
-            }
-        }, 10 * 1000);
+        // setTimeout(() => {
+        //     websocketServer.emit("error", new Error("Test WebSocket IPC server error"));
+        //     for (const client of websocketServer.clients) {
+        //         client.terminate();
+        //     }
+        // }, 10 * 1000);
 
         /**
          * listen to connection from renderer process, each wsClient is a renderer window
@@ -178,30 +182,20 @@ export class IpcManagerOnMainProcess {
         return websocketServer;
     }
 
+    // ---------------------------- websocket message ---------------------------
+
     /**
      * Handle websocket message from client
      */
-    handleMessage = (wsClient: WebSocket | string, message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
-        const processId = message["processId"];
+    handleMessage = (wsClient: WebSocket, message: { processId: string; windowId: string; eventName: string; data: any[] }) => {
         const eventName = message["eventName"];
-        const windowId = message["windowId"];
 
-        const mainProcess = this.getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
-
-        /**
-         * 4 possible modes: "desktop", "web", "ssh-server", "ssh-client"
-         */
-        if (mainProcessMode === "desktop" || mainProcessMode === "web" || mainProcessMode === "ssh-server") {
-            // find callback for this event
-            const callback = this.getEventListeners()[eventName];
-            if (callback !== undefined) {
-                // invoke callback
-                const data = message["data"];
-                callback(wsClient, ...data);
-            }
-        } else {
-            // should never happen
+        // find callback for this event
+        const callback = this.getEventListeners()[eventName];
+        if (callback !== undefined) {
+            // invoke callback
+            const data = message["data"];
+            callback(wsClient, ...data);
         }
     };
 
@@ -219,14 +213,6 @@ export class IpcManagerOnMainProcess {
         }
 
     }
-
-
-
-    createSshServer = () => {
-        this._sshServer = new SshServer(this);
-        this._sshServer.createTcpServer();
-    }
-
 
     /**
      *
@@ -346,10 +332,6 @@ export class IpcManagerOnMainProcess {
         // ------------------------- actions ------------------------
         this.ipcMain.on("open-webpage", this.handleOpenWebpage);
         this.ipcMain.on("execute-command", this.handleExecuteCommand);
-
-        // ------------------------- ssh ------------------------
-        this.ipcMain.on("ssh-password-prompt-result", this.handleSshPasswordPromptResult);
-        this.ipcMain.on("cancel-ssh-connection", this.handleCancelSshConnection);
     };
 
     // ------------------------- main process ------------------------
@@ -1326,18 +1308,6 @@ export class IpcManagerOnMainProcess {
 
     // ------------------------- ssh ------------------------
 
-    handleSshPasswordPromptResult = (event: WebSocket | string, result: IpcEventArgType["ssh-password-prompt-result"]) => {
-        Log.info(result)
-        const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(result["sshMainProcessId"]);
-        if (sshMainProcess instanceof MainProcess) {
-            sshMainProcess.getSshClient()?._passwordPromptResolve({
-                password: result["password"],
-            });
-        } else {
-            Log.error("Cannot find main process", result["sshMainProcessId"]);
-        }
-    }
-
     handleCancelSshConnection = (event: WebSocket | string, data: IpcEventArgType["cancel-ssh-connection"]) => {
         const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(data["sshMainProcessId"]);
         if (sshMainProcess instanceof MainProcess) {
@@ -1467,7 +1437,4 @@ export class IpcManagerOnMainProcess {
         return this.clients;
     };
 
-    getSshServer = () => {
-        return this._sshServer;
-    }
 }

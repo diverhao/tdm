@@ -129,7 +129,7 @@ export class DisplayWindowFile {
                     return undefined;
                 }
                 return fileNames[0];
-            } else if (mainProcessMode === "ssh-server" || mainProcessMode === "web") {
+            } else if (mainProcessMode === "web") {
                 const displayWindowAgent = this.getDisplayWindowAgent();
                 displayWindowAgent.showInputBox({
                     command: "input-file-path",

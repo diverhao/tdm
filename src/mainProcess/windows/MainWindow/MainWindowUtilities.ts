@@ -20,12 +20,7 @@ export class MainWindowUtilities {
         const mainWindowAgent = this.getMainWindowAgent();
         let windowTitle = "TDM Main Window";
 
-        let hostname = mainWindowAgent.getWindowAgentsManager().getMainProcess().getSshClient()?.getServerIP();
-        if (hostname === undefined) {
-            hostname = "";
-        } else {
-            hostname = `${hostname}:`;
-        }
+        let hostname = "";
 
         windowTitle = hostname + windowTitle;
 
@@ -39,9 +34,6 @@ export class MainWindowUtilities {
 
     showContextMenu = (menu: ("copy" | "cut" | "paste")[]) => {
         const mainWindowAgent = this.getMainWindowAgent();
-        if (mainWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode() === "ssh-server") {
-            return;
-        }
 
         const contextMenuTemplate: (Electron.MenuItem | Electron.MenuItemConstructorOptions)[] = [];
         if (menu.includes("copy")) {

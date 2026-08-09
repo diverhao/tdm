@@ -90,7 +90,7 @@ export class MainWindowFile {
         const mainProcessMode = mainWindowAgent.getWindowAgentsManager().getMainProcess().getMainProcessMode();
 
         try {
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+            if (mainProcessMode === "desktop") {
                 const fileNames = dialog.showOpenDialogSync({
                     title: fileDialogOptionsByType[fileType].displayText,
                     filters: fileDialogOptionsByType[fileType].filters,
@@ -99,7 +99,7 @@ export class MainWindowFile {
                     return undefined;
                 }
                 return fileNames[0];
-            } else if (mainProcessMode === "ssh-server" || mainProcessMode === "web") {
+            } else if (mainProcessMode === "web") {
                 mainWindowAgent.showInputBox({
                     command: "input-file-path",
                     humanReadableMessages: ["Type the file absolute path"],
@@ -171,13 +171,13 @@ export class MainWindowFile {
             }
         }
 
-        if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+        if (mainProcessMode === "desktop") {
             fileName = dialog.showSaveDialogSync({
                 title: "Select a file to save to",
                 defaultPath: saveOptions.defaultFileName,
                 filters: saveOptions.filters,
             });
-        } else if (mainProcessMode === "ssh-server" || mainProcessMode === "web") {
+        } else if (mainProcessMode === "web") {
             mainWindowAgent.showInputBox({
                 command: "input-file-path",
                 humanReadableMessages: ["Type the file absolute path"],
