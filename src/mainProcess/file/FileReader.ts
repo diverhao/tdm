@@ -614,7 +614,7 @@ export class FileReader {
                 script: "",
                 xGridSize: 1,
                 yGridSize: 1,
-                gridColor: "rgba(128,128,128,1)",
+                gridColor: "rgba(128,128,128,0.15)",
                 showGrid: true,
                 isUtilityWindow: false,
             },
