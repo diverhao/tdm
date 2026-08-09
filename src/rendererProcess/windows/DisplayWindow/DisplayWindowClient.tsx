@@ -94,7 +94,7 @@ export class DisplayWindowClient {
             const httpPort = parseInt(window.location.port);
             ipcServerPort = httpPort;
         } else {
-            // in desktop, ssh-server, ssh-client modes, there must be an ipcServerPort
+            // in desktop mode, there must be an ipcServerPort
             if (ipcServerPort === -1 || ipcServerPort === undefined || isNaN(ipcServerPort)) {
                 throw new Error(`Failed to obatain the ipcServerPort, ${ipcServerPort}`);
             }
@@ -388,14 +388,10 @@ export class DisplayWindowClient {
         this._processId = newId;
     };
 
-    getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
+    getMainProcessMode = (): "desktop" | "web" => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
-            if (this.getHostname() === "127.0.0.1") {
-                return "desktop"
-            } else {
-                return "ssh-client";
-            }
+            return "desktop"
         } else {
             return "web"
         }

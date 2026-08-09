@@ -393,10 +393,6 @@ export class MainWindowProfileRunPage {
             "Exit": quitTdmProcess,
         };
 
-        if (this.getMainWindowClient().getMainProcessMode() === "ssh-client") {
-            delete (buttonFunctions["Open file"])
-            delete (buttonFunctions["New TDM process"])
-        }
 
         return (
             <div style={{

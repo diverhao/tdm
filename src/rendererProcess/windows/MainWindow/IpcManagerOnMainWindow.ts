@@ -212,7 +212,6 @@ export class IpcManagerOnMainWindow {
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
         this.ipcRenderer.on("log-file-name", this.handleLogFileName);
-        this.ipcRenderer.on("update-profiles", this.handleUpdateProfiles);
         this.ipcRenderer.on("bounce-back", this.handleBounceBack);
     };
 
@@ -229,11 +228,6 @@ export class IpcManagerOnMainWindow {
             }
 
             event.preventDefault();
-
-            // do not listen to drag and drop in ssh-client mode
-            if (this.getMainWindowClient().getMainProcessMode() === "ssh-client") {
-                return;
-            }
 
             event.stopPropagation();
             if (this.getMainWindowClient().getSelectedProfileName() === "") {
@@ -399,20 +393,6 @@ export class IpcManagerOnMainWindow {
                     });
                 };
             }
-        } else if (command === "ssh-connection-waiting") {
-            const buttons = info["buttons"];
-            const attachment = info["attachment"];
-            if (buttons !== undefined && buttons.length == 1 && attachment !== undefined) {
-                const prompt = this.getMainWindowClient().getPrompt();
-                const sshMainProcessId = attachment["sshMainProcessId"];
-                buttons[0]["handleClick"] = () => {
-                    this.getMainWindowClient().getIpcManager().sendFromRendererProcess("cancel-ssh-connection", {
-                        sshMainProcessId: `${sshMainProcessId}`,
-                    })
-                    prompt.startEventListeners();
-                    prompt.removeElement();
-                };
-            }
         }
 
         if (command !== "hide") {
@@ -476,25 +456,6 @@ export class IpcManagerOnMainWindow {
         }
     }
 
-    /**
-     * only for ssh-client mode
-     */
-    handleUpdateProfiles = (event: undefined, data: IpcEventArgType3["update-profiles"]) => {
-        const { windowId, profilesFullFileName, profilesJson } = data;
-        const mainWindowClient = this.getMainWindowClient();
-        const startupPage = mainWindowClient.getStartupPage();
-        // we must be on main window startup page
-        if (mainWindowClient.getState() === mainWindowState.start && startupPage instanceof MainWindowStartupPage) {
-            // update data
-            mainWindowClient.setProfiles(profilesJson);
-            mainWindowClient.setProfilesFileName(profilesFullFileName);
-            // refresh page
-            startupPage.forceUpdate();
-        } else {
-            // todo: show a warning page?
-        }
-
-    }
 
     handleBounceBack = (event: undefined, message: IpcEventArgType3["bounce-back"]) => {
         const { eventName, data } = message;

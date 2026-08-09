@@ -142,7 +142,7 @@ export class ContextMenu {
         const windowId = this.getDisplayWindowClient().getWindowId();
         const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
         if (widgetKey === "Canvas") {
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+            if (mainProcessMode === "desktop") {
                 this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu",
                     {
                         mode: windowStatus,
@@ -159,7 +159,7 @@ export class ContextMenu {
         } else {
             if (g_widgets1.isEditing()) {
                 const selectedWidgetKeys = g_widgets1.getSelectedWidgetKeys();
-                if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+                if (mainProcessMode === "desktop") {
                     this.getDisplayWindowClient()
                         .getIpcManager()
                         .sendFromRendererProcess("show-context-menu",
@@ -175,7 +175,7 @@ export class ContextMenu {
                     this.showElement(element, [x, y]);
                 }
             } else {
-                if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+                if (mainProcessMode === "desktop") {
                     this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("show-context-menu",
                         {
                             mode: windowStatus,

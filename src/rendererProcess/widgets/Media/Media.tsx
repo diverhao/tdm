@@ -103,7 +103,7 @@ export class Media extends BaseWidget {
         const mainProcessMode = g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode();
 
         // fetch the file from server 
-        if (mainProcessMode === "web" || mainProcessMode === "ssh-client") {
+        if (mainProcessMode === "web") {
             this.fetchMediaContent();
         }
         const mediaType = this.getMediaType(fileName);
@@ -145,7 +145,7 @@ export class Media extends BaseWidget {
 
         const fileName = allText["fileName"];
         const fullFileName = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
-        const src = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
+        const src = mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
         return (
             <img
                 src={src}
@@ -189,7 +189,7 @@ export class Media extends BaseWidget {
         const fileName = allText["fileName"];
         const fullFileName = displayWindowClient.getDisplayWindowFile().resolvePath(fileName);
 
-        const data = mainProcessMode === "ssh-client" || mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
+        const data = mainProcessMode === "web" ? this.getBase64Content() : fullFileName;
         return (
             <object
                 data={data}
@@ -442,14 +442,6 @@ export class Media extends BaseWidget {
                 widgetKey: this.getWidgetKey(),
                 displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
             })
-        } else if ((g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client")) {
-            //todo: what is this? get-ssh-file does not exist on main process
-            // Log.info("try to obtain file from ssh host")
-            // g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("get-ssh-file", {
-            //     displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-            //     widgetKey: this.getWidgetKey(),
-            //     fullFileName: fullFileName,
-            // })
         }
     }
 

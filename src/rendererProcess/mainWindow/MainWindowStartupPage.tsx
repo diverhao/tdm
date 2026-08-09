@@ -414,7 +414,7 @@ export class MainWindowStartupPage {
         const mainProcessMode = this.getMainWindowClient().getMainProcessMode();
 
         return (
-            (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") ?
+            (mainProcessMode === "desktop") ?
                 <ElementDropDownMenu
                     callbacks={{
                         "Open profiles file": () => this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-profiles", {}),
@@ -480,7 +480,7 @@ export class MainWindowStartupPage {
     private _ElementNewProfile = () => {
         const mainProcessMode = this.getMainWindowClient().getMainProcessMode();
         return (
-            (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") ?
+            (mainProcessMode === "desktop") ?
                 <this._ElementProfileWrapper>
                     <this._ElementProfileBlock profileName={"+"}></this._ElementProfileBlock>
                     <ElementDropDownMenu
@@ -613,7 +613,7 @@ export class MainWindowStartupPage {
                 return;
             }
 
-            if (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") {
+            if (mainProcessMode === "desktop") {
                 Log.info("Selected profile", profileName);
                 // tell the main process to create the corresponding EPICS CA context
                 // after that, the main process sends back the `after-profile-selected` event
@@ -693,7 +693,7 @@ export class MainWindowStartupPage {
         };
 
         return (
-            (mainProcessMode === "desktop" || mainProcessMode === "ssh-client") ?
+            (mainProcessMode === "desktop") ?
                 <ElementDropDownMenu callbacks={dropdownMenuCallbacks} /> : null
         )
     };

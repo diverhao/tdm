@@ -238,11 +238,6 @@ export class IpcManagerOnDisplayWindow {
 
             event.preventDefault();
 
-            // do not listen to drag and drop in ssh-client mode
-            if (this.getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
-                return;
-            }
-
             event.stopPropagation();
             const dataTransfer = event.dataTransfer;
             if (dataTransfer === null) {
@@ -268,7 +263,7 @@ export class IpcManagerOnDisplayWindow {
                     // for web mode, the web mode does not have .path, which is the full path of the file
                     fileName = dataTransfer.files[0].name;
                     fileBlob = dataTransfer.files[0];
-                    // for desktop and ssh-client mode, it is the full path of the file
+                    // for desktop mode, it is the full path of the file
                     fileFullName = (dataTransfer.files[0] as any).path;
                 }
                 for (let widget of [...g_widgets1.getWidgets().values()]) {
@@ -398,9 +393,6 @@ export class IpcManagerOnDisplayWindow {
 
         this.ipcRenderer.on("request-epics-dbd", this.handleRequestEpicsDbd);
 
-        // ssh-client requested a file from ssh-server, here is the contents of the
-        // file sent from ssh server
-        this.ipcRenderer.on("ssh-file-contents", this.handleSshFileContents);
         this.ipcRenderer.on("show-about-tdm", this.handleShowAboutTdm);
 
         this.ipcRenderer.on("terminal-command-result", this.handleTerminalCommandResult);
@@ -565,8 +557,6 @@ export class IpcManagerOnDisplayWindow {
             this.getDisplayWindowClient().getDisplayWindowFile().showTdlFileContents();
             // } else if (command === "create-new-display-in-web-mode") {
             //     this.handleCreateNewDisplayInWebMode();
-        } else if (command === "open-display-in-ssh-mode") {
-            this.handleOpenDisplayInSshMode();
         }
 
         // operating mode
@@ -1127,22 +1117,6 @@ export class IpcManagerOnDisplayWindow {
         });
     };
 
-    handleSshFileContents = (event: string, data: IpcEventArgType2["ssh-file-contents"]) => {
-        // find the widget
-        const widget = g_widgets1.getWidget2(data["widgetKey"]);
-        if (widget instanceof Media) {
-            widget.updateFileContents(data["fileContents"]);
-        }
-    }
-
-    /**
-     * in desktop mode, the open display prompt is handled in main process using OS-dependent API
-     * in ssh-client mode, we cannot use the same API, as we are opening the files on remote computer
-     * instead, we show the prompt using a div element, and send 'open-tdl-file' in the end
-     */
-    handleOpenDisplayInSshMode = () => {
-        this.getDisplayWindowClient().getPrompt().createElement("open-display-in-ssh-mode");
-    }
 
     handleShowAboutTdm = (event: string, info: IpcEventArgType2["show-about-tdm"]) => {
         this.getDisplayWindowClient().getPrompt().createElement("about-tdm", info);

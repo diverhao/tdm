@@ -374,7 +374,7 @@ export class ActionButton extends BaseWidget {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const currentTdlFileName = displayWindowClient.getTdlFileName();
         const currentTdlFolder = path.dirname(currentTdlFileName);
-        if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop" || g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "ssh-client") {
+        if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop") {
             ipcManager.sendFromRendererProcess("open-tdl-file", {
                 options: {
                     tdlFileNames: [tdlFileName],

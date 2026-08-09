@@ -199,19 +199,10 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    private registerClient = (client: WebSocket | string, windowId: string) => {
+    private registerClient = (client: WebSocket, windowId: string) => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         Log.info("register window", windowId, "for WebSocket IPC");
-        if (mainProcessMode === "desktop" || mainProcessMode === "web") {
-            // desktop mode: websocket client on main/display window
-            this.getClients()[windowId] = client;
-        } else if (mainProcessMode === "ssh-server") {
-            // ssh-server mode: an arbitrary string
-            // in this way the DisplayWindowAgent.sendFromMainProcess() or MainWindowAgent.sendFromMainProcess()
-            // on the calling process won't send message to the windows
-            this.getClients()[windowId] = windowId;
-        }
-
+        this.getClients()[windowId] = client;
     }
 
     /**
@@ -424,7 +415,7 @@ export class IpcManagerOnMainProcess {
      * to the Main Window. These info are for Main Window startup page.
      * 
      */
-    handleWebsocketIpcConnectedOnDisplayWindow = async (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-display-window"]) => {
+    handleWebsocketIpcConnectedOnDisplayWindow = async (event: WebSocket, data: IpcEventArgType["websocket-ipc-connected-on-display-window"]) => {
         const mainProcess = this.getMainProcess();
         const windowId = data["windowId"];
         const reconnect = data["reconnect"];
@@ -451,7 +442,7 @@ export class IpcManagerOnMainProcess {
         }
     };
 
-    handleWebsocketIpcConnectedOnMainWindow = (event: WebSocket | string, data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
+    handleWebsocketIpcConnectedOnMainWindow = (event: WebSocket , data: IpcEventArgType["websocket-ipc-connected-on-main-window"]) => {
 
         // the main processes' ipc manager
         const mainProcess = this.getMainProcess();

@@ -226,21 +226,13 @@ export class MainWindowClient {
     };
 
     /**
-     * get the main process mode: desktop, web or ssh-client
-     * 
-     * if we are running in electron.js, it is desktop or ssh-client. 
-     * 
-     * if the host name is "127.0.0.1", then we are running in desktop mode, otherwise ssh-client mode
-     */
-    getMainProcessMode = (): "desktop" | "web" | "ssh-client" => {
+     * get the main process mode: desktop or web
+     *      */
+    getMainProcessMode = (): "desktop" | "web" => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             // electron.js based
-            if (this.getHostname() === "127.0.0.1") {
-                return "desktop"
-            } else {
-                return "ssh-client";
-            }
+            return "desktop"
         } else {
             // web based
             return "web"
