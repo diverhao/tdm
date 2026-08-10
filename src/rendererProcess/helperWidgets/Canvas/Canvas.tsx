@@ -11,9 +11,10 @@ import {
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
-import { refineMacros, rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
+import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { Macros } from "../../../common/Macros";
+import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
 /**
  * ! Note: this type is defined in 3 places: (1) here, (2) widgetConverters/CanvasHelper.ts, and (3) common/GlobalVariables
@@ -24,7 +25,7 @@ export type type_Canvas_tdl = Record<string, any> & {
     widgetKey: "Canvas";
     // key: "Canvas";
     style: Record<string, number | string>;
-    macros: [string, string][];
+    macros: type_macros_tdl;
     // replaceMacros: boolean;
     windowName: string;
     script: string;
@@ -42,7 +43,6 @@ export class Canvas {
 
     // macros for this tdl is managed by Canvas
     // internal macros
-    // private _macros: [string, string][];
     private _macros: Macros;
 
     // if the duplicated internal macros should be replaced by external macros
@@ -121,7 +121,7 @@ export class Canvas {
                 }
                 break;
             case "macros":
-                this._macros = propertyValue as [string, string][];
+                this._macros = new Macros(propertyValue as [string, string][]);
                 break;
             case "windowName":
                 this.setWindowName(propertyValue as string);
@@ -314,7 +314,7 @@ export class Canvas {
             widgetKey: "Canvas",
             key: "Canvas",
             style: structuredClone(this.getStyle()),
-            macros: structuredClone(this.getMacros()),
+            macros: this.getMacros().getArr(),
             // replaceMacros: this.getReplaceMacros(),
             windowName: this.getWindowName(),
             script: this.getScript(),
@@ -349,7 +349,7 @@ export class Canvas {
     getSidebar = (): CanvasSidebar => {
         return this._sidebar;
     };
-    getMacros = (): [string, string][] => {
+    getMacros = (): Macros => {
         return this._macros;
     };
 
@@ -404,9 +404,9 @@ export class Canvas {
         const internalMacros = this.getMacros();
         // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
         if (useExternalMacros) {
-            return refineMacros([...externalMacros, ...internalMacros]);
+            return Macros.fromMacros(internalMacros, externalMacros);
         } else {
-            return refineMacros([...internalMacros, ...externalMacros]);
+            return Macros.fromMacros(externalMacros, internalMacros);
         }
 
     };

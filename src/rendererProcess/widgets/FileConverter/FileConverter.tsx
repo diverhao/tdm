@@ -11,6 +11,7 @@ import { XYPlot } from "../XYPlot/XYPlot";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { defaultFileConverterTdl, type_FileConverter_tdl } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 
 export type type_FileConverterData = {
@@ -25,10 +26,10 @@ export type type_FileConverterData = {
 export class FileConverter extends BaseWidget {
     // -------------------------------------------
 
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
     _table: Table;
 
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     };
 
@@ -65,7 +66,7 @@ export class FileConverter extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setMacros(new Macros(widgetTdl.macros));
 
         // columns: ms since epoch, channel name, ip, port
         this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 6, GlobalVariables.defaultFontSize * 8], this);

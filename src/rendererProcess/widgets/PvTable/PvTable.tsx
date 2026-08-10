@@ -18,6 +18,8 @@ import { ElementRectangleButton } from "../../helperWidgets/SharedElements/Recta
 import { Log } from "../../../common/Log";
 import { defaultPvTableTdl, type_PvTable_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { Macro } from "../../helperWidgets/Help/contents/Macro";
+import { Macros } from "../../../common/Macros";
 
 
 
@@ -67,9 +69,9 @@ export class PvTable extends BaseWidget {
         return result;
     };
 
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
 
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     };
 
@@ -95,7 +97,7 @@ export class PvTable extends BaseWidget {
             this.getChannelNamesLevel5().push(channelNameLevel5);
         }
 
-        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setMacros(new Macros(widgetTdl.macros));
         this.setFieldNames(structuredClone(widgetTdl.fieldNames));
         this._channelValues = structuredClone(widgetTdl.channelValues);
         this._channelSelects = structuredClone(widgetTdl.channelSelects);
@@ -690,7 +692,7 @@ export class PvTable extends BaseWidget {
                 this.getChannelNamesLevel0().push(channelNameLevel5);
             }
         }
-        super.processChannelNames(this.getMacros(), false);
+        super.processChannelNames([], false);
     }
 
     _ElementTableHeaderFieldName = ({ columnIndex }: { columnIndex: number }) => {

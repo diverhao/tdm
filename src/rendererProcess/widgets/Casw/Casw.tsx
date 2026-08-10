@@ -12,6 +12,7 @@ import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
 import { defaultCaswTdl, type_Casw_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { Macros } from "../../../common/Macros";
 
 export type type_CaProtoRsrvIsUpData = {
     msSinceEpoch: number,
@@ -23,7 +24,7 @@ export type type_CaProtoRsrvIsUpData = {
 export class Casw extends BaseWidget {
     // -------------------------------------------
 
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
     _table: Table;
 
     bufferSize: number = 10000;
@@ -39,7 +40,7 @@ export class Casw extends BaseWidget {
 
     bottomView: "raw-data" | "stats" | "counts-src-ip" | "counts-tcp-client" = "raw-data";
 
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     };
 
@@ -176,7 +177,7 @@ export class Casw extends BaseWidget {
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
-        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setMacros(new Macros(widgetTdl.macros));
 
         // columns: ms since epoch, channel name, ip, port
         this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 16, GlobalVariables.defaultFontSize * 20, GlobalVariables.defaultFontSize * 10], this);

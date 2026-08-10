@@ -187,11 +187,7 @@ export class DisplayWindowClient {
             const canvas = g_widgets1.getWidget2("Canvas");
             if (canvas instanceof Canvas) {
                 const macros = canvas.getAllMacros();
-                for (let macro of macros) {
-                    const name = macro[0];
-                    const value = macro[1];
-                    titleContents = titleContents.replaceAll("${" + name + "}", value).replaceAll("$(" + name + ")", value).replaceAll(`"`, "");
-                }
+                titleContents = macros.apply(titleContents);
             }
         } else if (windowTitleType === "file-name") {
             if (this.getTdlFileName() === "") {

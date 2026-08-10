@@ -1,4 +1,5 @@
 import { type_log_levels } from "./Log";
+import { type_macros_tdl } from "./types/type_widget_tdl";
 
 export let logLevel: type_log_levels = type_log_levels.debug;
 
@@ -12,7 +13,7 @@ export type type_Canvas_tdl = Record<string, any> & {
     widgetKey: "Canvas";
     // key: "Canvas";
     style: Record<string, number | string>;
-    macros: [string, string][];
+    macros: type_macros_tdl;
     // replaceMacros: boolean;
     windowName: string;
     script: string;

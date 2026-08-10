@@ -4,13 +4,11 @@ import { ActionButton } from "../../widgets/ActionButton/ActionButton";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { type_action_opendisplay_tdl } from "../../../common/types/type_widget_tdl";
-import { ElementMacroTd, ElementMacroTr, ElementMacroInput, ElementMacrosTable } from "../SharedElements/MacrosTable";
+import { ElementMacrosTable } from "../SharedElements/MacrosTable";
 import { ElementButton } from "../SharedElements/MacrosTable";
-import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import path from "path";
-import { Canvas } from "../Canvas/Canvas";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
-import { refineMacros } from "../../../common/GlobalMethods";
+import { Macros } from "../../../common/Macros";
 
 export class SidebarActionOpenDisplayItem {
     _items: SidebarActionItems;
@@ -271,10 +269,10 @@ export class SidebarActionOpenDisplayItem {
         const displayConfig = mainWidget.getActions()[index] as type_action_opendisplay_tdl;
         let tdlFileName = displayConfig["fileName"];
 
-        let externalMacros = [...displayConfig["externalMacros"]]
+        let externalMacros = new Macros(displayConfig["externalMacros"]);
         if (displayConfig["useParentMacros"]) {
             const parentMacros = mainWidget.getAllMacros();
-            externalMacros = refineMacros([...externalMacros, ...parentMacros]);
+            externalMacros = Macros.fromMacros(externalMacros, parentMacros);
         }
 
         tdlFileName = BaseWidget.expandChannelName(tdlFileName, externalMacros)
@@ -300,7 +298,7 @@ export class SidebarActionOpenDisplayItem {
                                 tdlFileNames: [tdlFileName],
                                 mode: "editing",
                                 editable: true,
-                                macros: externalMacros,
+                                macros: externalMacros.getArr(),
                                 replaceMacros: true, // not used
                                 currentTdlFolder: currentTdlFolder,
                                 windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),

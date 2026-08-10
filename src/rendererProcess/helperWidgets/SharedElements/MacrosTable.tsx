@@ -2,6 +2,7 @@ import * as React from "react"
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
+import { type_macro_tdl } from "../../../common/types/type_widget_tdl";
 
 const disableImageDrag = (children: React.ReactNode): React.ReactNode => {
     return React.Children.map(children, (child) => {
@@ -98,7 +99,7 @@ export const ElementMacrosTable = (
                 </ElementMacroTr>
 
                 {/* data rows */}
-                {macrosData.map((item: [string, string], index: number) => {
+                {macrosData.map((item: type_macro_tdl, index: number) => {
                     const name = item[0];
                     const value = item[1];
                     return (

@@ -17,6 +17,7 @@ import { DisplayWindowLifeCycleManager } from "./DisplayWindowLifeCycleManager";
 import { DisplayWindowTerminal } from "./DisplayWindowTerminal";
 import { DisplayWindowTextEditor } from "./DisplayWindowTextEditor";
 import { DisplayWindowUtilities } from "./DisplayWindowUtilities";
+import { type_macro_tdl, type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
 /**
  * Owns the main-process state and coordination for a single display window.
@@ -107,7 +108,7 @@ export class DisplayWindowAgent {
 
     // private _mainProcessId: string;
 
-    _macros: [string, string][];
+    _macros: type_macros_tdl;
     _isUtilityWindow: boolean;
 
     private _editable: boolean;
@@ -551,7 +552,7 @@ export class DisplayWindowAgent {
     /**
      * set new macros (hard copy), and update hash.
      */
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: type_macros_tdl) => {
         this._macros = structuredClone(newMacros);
         this.updateHash();
     };

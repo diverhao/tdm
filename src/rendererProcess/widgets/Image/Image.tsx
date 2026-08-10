@@ -4,7 +4,7 @@ import { ImageSidebar } from "./ImageSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
-import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl, type_Image_roi } from "../../../common/types/type_widget_tdl";
+import { type_Image_tdl, defaultImageTdl, type_Image_text_tdl, type_Image_roi, type_macros_tdl } from "../../../common/types/type_widget_tdl";
 import { ImagePlot } from "./ImagePlot";
 import { getScaleWidthHeight } from "../../helperWidgets/SharedElements/Scale";
 
@@ -195,7 +195,7 @@ export class Image extends BaseWidget {
         this.getPlot().mapDbrDataWitNewData();
     }
 
-    processChannelNames(widgetMacros: [string, string][] = [], removeDuplicated: boolean = true) {
+    processChannelNames(widgetMacros: type_macros_tdl = [], removeDuplicated: boolean = true) {
         // console.log("this.getChannelNamesLevel0()", this.getChannelNamesLevel0())
         // if (this.getChannelNamesLevel0().length > 1) {
         //     this.getChannelNamesLevel0().length = 1;

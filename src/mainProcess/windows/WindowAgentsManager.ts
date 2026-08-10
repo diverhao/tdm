@@ -9,13 +9,14 @@ import { FileReader } from "../file/FileReader";
 import { Log } from "../../common/Log";
 import { spawn } from "child_process";
 import path from "path";
+import { type_macros_tdl } from "../../common/types/type_widget_tdl";
 
 export type type_options_createDisplayWindow = {
     tdl: type_tdl;
     mode: "editing" | "operating";
     editable: boolean;
     tdlFileName: string;
-    macros: [string, string][];
+    macros: type_macros_tdl;
     replaceMacros: boolean;
     hide: boolean;
     utilityType?: string;
@@ -218,7 +219,7 @@ export class WindowAgentsManager {
     };
 
 
-    checkExistedDisplayWindow = (tdlFileName: string, macros: [string, string][]): DisplayWindowAgent | undefined => {
+    checkExistedDisplayWindow = (tdlFileName: string, macros: type_macros_tdl): DisplayWindowAgent | undefined => {
         const hash = DisplayWindowUtilities.calcHash(tdlFileName, macros);
         for (let displayWindowAgent of Object.values(this.getAgents())) {
             if (displayWindowAgent instanceof DisplayWindowAgent) {
@@ -247,7 +248,7 @@ export class WindowAgentsManager {
      * @param {string | undefined} currentTdlFolder The current tdl folder. It is used to resolve relative path of the tdl files.
      * 
      */
-    createDisplayWindows = async (tdlFileNames: string[], mode: "operating" | "editing", editable: boolean, macros: [string, string][], currentTdlFolder: string | undefined, windowId: string | undefined) => {
+    createDisplayWindows = async (tdlFileNames: string[], mode: "operating" | "editing", editable: boolean, macros: type_macros_tdl, currentTdlFolder: string | undefined, windowId: string | undefined) => {
 
         if (tdlFileNames.length === 0) {
             return;

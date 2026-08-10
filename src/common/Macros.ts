@@ -1,3 +1,4 @@
+import { type_macros_tdl } from "./types/type_widget_tdl";
 
 
 export class Macros {
@@ -6,7 +7,7 @@ export class Macros {
     /**
      * The later macro will override the previous one.
      */
-    constructor(arr: [string, string][]) {
+    constructor(arr: type_macros_tdl) {
         for (const macro of arr) {
             let name = macro[0];
             let value = macro[1];
@@ -21,7 +22,7 @@ export class Macros {
      */
     static fromStr = (str: string): Macros => {
         const macroStrs = str.split(",");
-        let macrosArr: [string, string][] = [];
+        let macrosArr: type_macros_tdl = [];
         for (const macroStr of macroStrs) {
             const macroRaw = macroStr.split("=");
             const nameRaw = macroRaw[0];
@@ -34,7 +35,7 @@ export class Macros {
     }
 
     static fromMacros = (...macrosArray: Macros[]) => {
-        let totalArr: [string, string][] = [];
+        let totalArr: type_macros_tdl = [];
         for (const macros of macrosArray) {
             totalArr.push(...macros.getArr());
         }
@@ -88,6 +89,24 @@ export class Macros {
         ].join("\n");
     }
 
+    /**
+     * Get the string format of the macro, like "SYS = RNG, SUBSYS = DIAG"
+     */
+    getStr = () => {
+        let str = "";
+        for (const [name, value] of Object.entries(this.getData())) {
+            str = str + `, ${name} = ${value}`;
+        }
+        if (str.length > 0) {
+            str = str.slice(1);
+        }
+        return str;
+    }
+
+    isEmpty = () => {
+        return this.getArr().length === 0;
+    }
+
     getValue = (name: string): string | undefined => {
         return this.getData()[name];
     }
@@ -96,7 +115,7 @@ export class Macros {
         return this.data;
     }
 
-    getArr = (): [string, string][] => {
+    getArr = (): type_macros_tdl => {
         return Object.entries(this.getData());
     }
 

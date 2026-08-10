@@ -15,6 +15,7 @@ import { Condition, SeqProgram, SeqState, SeqStateSet } from "./SeqProgram";
 import { ElementMacrosTable } from "../../helperWidgets/SharedElements/MacrosTable";
 import { parseSeq } from "./SeqParser";
 import { defaultSeqGraphTdl, type_SeqGraph_tdl } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 export enum colors {
     NO_ALARM = "rgba(25, 218, 0, 0)",
@@ -58,7 +59,7 @@ export class SeqGraph extends BaseWidget {
 
     _seqProgram: SeqProgram;
 
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
 
     updateLogElement = (input: any) => { };
 
@@ -133,7 +134,7 @@ export class SeqGraph extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setMacros(new Macros(widgetTdl.macros));
         this._sidebar = new SeqGraphSidebar(this);
 
         this._seqProgram = new SeqProgram("Seq Program", this);
@@ -1434,7 +1435,7 @@ ss volt_check {
 
     replaceMacros = (code: string) => {
         const result = code.replace(/(?<!\$)\{([^{}]*)\}/g, (match, key) => {
-            for (const macro of this.getMacros()) {
+            for (const macro of this.getMacros().getArr()) {
                 if (macro[0] === key) {
                     const value = macro[1];
                     return value;
@@ -1598,7 +1599,7 @@ ss volt_check {
     getSeqProgram = () => {
         return this._seqProgram;
     }
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     };
 

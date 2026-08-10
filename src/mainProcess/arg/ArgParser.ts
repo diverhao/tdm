@@ -5,6 +5,7 @@ import { Log } from "../../common/Log";
 import { type_log_levels } from "../../common/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
 import { type_args } from "../../common/IpcEventArgType";
+import { type_macros_tdl } from "../../common/types/type_widget_tdl";
 
 
 const dashdashMacros = `--macros`;
@@ -204,7 +205,7 @@ Options:
         if (macrosRawStr.startsWith("-")) {
             throw new Error("Error at --macros");
         }
-        const result: [string, string][] = [];
+        const result: type_macros_tdl = [];
         const reg = /[^=]+\=(\s*)[^\s]+/g;
         const macrosRawArray = macrosRawStr.replaceAll(`"`, "").replaceAll(`,`, " ").match(reg);
         if (macrosRawArray !== null) {

@@ -7,6 +7,7 @@ import { Channel_DBR_TYPES, type_dbrData } from "./GlobalVariables";
 import { type_LocalChannel_data } from "./GlobalVariables";
 import { type_tdl } from "./GlobalVariables";
 import { type_fileType } from "./types/type_Files";
+import { type_macros_tdl } from "./types/type_widget_tdl";
 
 
 /**
@@ -18,7 +19,7 @@ import { type_fileType } from "./types/type_Files";
  * 
  */
 export type type_args = {
-    macros: [string, string][];
+    macros: type_macros_tdl;
     settings: string;
     profile: string;
     alsoOpenDefaults: boolean;
@@ -217,7 +218,7 @@ export type IpcEventArgType = {
         options: {
             tdl: type_tdl;
             mode: "operating" | "editing";
-            externalMacros: [string, string][];
+            externalMacros: type_macros_tdl;
             windowId: string,
         },
     },
@@ -250,7 +251,7 @@ export type IpcEventArgType = {
             mode: "editing" | "operating";
             editable: boolean;
             // external macros: user-provided and parent display macros
-            macros: [string, string][];
+            macros: type_macros_tdl;
             replaceMacros: boolean;
             currentTdlFolder?: string;
             windowId: string;
@@ -263,7 +264,7 @@ export type IpcEventArgType = {
         tdlFileName: string;
         mode: "editing" | "operating";
         editable: boolean;
-        externalMacros: [string, string][];
+        externalMacros: type_macros_tdl;
         replaceMacros: boolean;
     },
 
@@ -531,7 +532,7 @@ export type IpcEventArgType = {
         widgetKey: string,
         tdlFileName: string,
         currentTdlFolder: string,
-        macros: [string, string][],
+        macros: type_macros_tdl,
         widgetWidth: number,
         widgetHeight: number,
         resize: "none" | "crop" | "fit",
@@ -596,7 +597,7 @@ export type IpcEventArgType2 = {
         tdlFileName: string; // full name, or ""
         initialModeStr: "editing" | "operating";
         editable: boolean;
-        externalMacros: [string, string][];
+        externalMacros: type_macros_tdl;
         useExternalMacros: boolean;
         utilityType?: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "Casw" | "PvMonitor" | "CaSnooper" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph";
         utilityOptions?: Record<string, any>;
@@ -811,7 +812,7 @@ export type IpcEventArgType2 = {
     "read-embedded-display-tdl": {
         displayWindowId: string,
         widgetKey: string,
-        macros: [string, string][],
+        macros: type_macros_tdl,
         fullTdlFileName?: string,
         tdl?: type_tdl,
         widgetWidth: number,

@@ -3099,7 +3099,6 @@ export class Widgets {
     // (4) asks main process to read (not re-read per see) the tdl file, and send it
     //     mode, editable, external macros are all preserved
     reloadTdlFile = () => {
-        console.log("------------------- reload tdl file")
         // (1)
         this.destroyAllTcaChannels();
         // (2)
@@ -3117,7 +3116,7 @@ export class Widgets {
             tdlFileName: tdlFileName,
             mode: rendererWindowStatus,
             editable: editable,
-            externalMacros: externalMacros,
+            externalMacros: externalMacros.getArr(),
             replaceMacros: externalReplaceMacros,
         });
     };
@@ -3152,7 +3151,7 @@ export class Widgets {
                 {
                     tdl: this.getRoot().getDisplayWindowClient().getDisplayWindowFile().generateTdl() as type_tdl,
                     mode: this.isEditing() ? "editing" : "operating",
-                    externalMacros: this.getRoot().getExternalMacros(),
+                    externalMacros: this.getRoot().getExternalMacros().getArr(),
                     windowId: this.getRoot().getDisplayWindowClient().getWindowId(),
                 }
             });

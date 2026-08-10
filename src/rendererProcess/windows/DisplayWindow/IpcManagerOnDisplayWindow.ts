@@ -24,7 +24,6 @@ import { FileConverter } from "../../../rendererProcess/widgets/FileConverter/Fi
 import { ChannelSeverity, pvaValueDisplayType, TcaChannel } from "../../../rendererProcess/channel/TcaChannel";
 import { ChannelGraph } from "../../../rendererProcess/widgets/ChannelGraph/ChannelGraph";
 import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
-import { Repeater } from "../../../rendererProcess/widgets/Repeater/Repeater";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
@@ -327,7 +326,7 @@ export class IpcManagerOnDisplayWindow {
                                     // manually opened, always editable
                                     editable: true,
                                     // use parent window's macros
-                                    macros: externalMacros,
+                                    macros: externalMacros.getArr(),
                                     replaceMacros: true,
                                     // currentTdlFolder?: string;
                                     windowId: this.getDisplayWindowClient().getWindowId(),

@@ -9,6 +9,7 @@ import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { v4 as uuidv4 } from "uuid";
+import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
 type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
 type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
@@ -510,7 +511,7 @@ export class DisplayWindowUtilities {
      *
      * When the file name or macros changes, recalculate the hash.
      */
-    static calcHash = (fullTdlFileName: string, macros: [string, string][]) => {
+    static calcHash = (fullTdlFileName: string, macros: type_macros_tdl) => {
         if (fullTdlFileName === "") {
             return uuidv4();
         } else {

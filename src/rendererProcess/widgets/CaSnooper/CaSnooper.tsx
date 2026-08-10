@@ -13,6 +13,7 @@ import { DataViewer } from "../DataViewer/DataViewer";
 import { defaultCaSnooperTdl, type_CaSnooper_tdl } from "../../../common/types/type_widget_tdl";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { Macros } from "../../../common/Macros";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,
@@ -23,7 +24,7 @@ export type type_CaProtoSearchData = {
 
 export class CaSnooper extends BaseWidget {
 
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
     _table: Table;
     _CaProtoSearchData: type_CaProtoSearchData[] = [];
     bufferSize: number = 10000;
@@ -76,7 +77,7 @@ export class CaSnooper extends BaseWidget {
         this.initText(widgetTdl);
         this.setReadWriteType("write");
 
-        this.setMacros(structuredClone(widgetTdl.macros));
+        this.setMacros(new Macros(widgetTdl.macros));
 
         // columns: ms since epoch, channel name, ip, port
         this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 16, GlobalVariables.defaultFontSize * 20, GlobalVariables.defaultFontSize * 11, GlobalVariables.defaultFontSize * 8], this);
@@ -768,7 +769,7 @@ export class CaSnooper extends BaseWidget {
 
     // -------------------- helper functions ----------------
 
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     };
 

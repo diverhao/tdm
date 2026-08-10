@@ -16,6 +16,7 @@ import { Log } from "../../../common/Log";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { v4 as uuidv4 } from "uuid";
 import { defaultEmbeddedDisplayTdl, type_EmbeddedDisplay_display_tdl, type_EmbeddedDisplay_tdl } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 export const defaultTdlFileName = `../../../webpack/resources/tdls/blank-red.tdl`;
 
@@ -346,7 +347,8 @@ export class EmbeddedDisplay extends BaseWidget {
             const itemMacros = newDisplay.macros;
             // EmbeddedDisplay always inherits parent's macros
             // const macros = [...allMacros, ...itemMacros];
-            const macros = GlobalMethods.refineMacros([...itemMacros, ...allMacros]);
+            const macros = Macros.fromMacros(new Macros(itemMacros), allMacros);
+            // const macros = GlobalMethods.refineMacros([...itemMacros, ...allMacros]);
 
             // process tdl file name
             // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
@@ -377,7 +379,7 @@ export class EmbeddedDisplay extends BaseWidget {
                 // these macros are assigned to _macros for these widgets
                 // In this way, we can pass all the parent display's macros and the item macros down
                 // to each widget inside the EmbeddedDisplay's TDL file
-                macros: macros,
+                macros: macros.getArr(),
                 currentTdlFolder: currentTdlFolder,
                 widgetWidth: this.getStyle()["width"],
                 widgetHeight: this.getStyle()["height"],
@@ -438,7 +440,7 @@ export class EmbeddedDisplay extends BaseWidget {
 
         const canvasBackgroundColor = canvasWidgetTdl["style"]["backgroundColor"];
         const canvasMacros = canvasWidgetTdl["macros"];
-        const allMacros = GlobalMethods.refineMacros([...macros, ...canvasMacros,]);
+        const allMacros = Macros.fromMacros(new Macros(macros), new Macros(canvasMacros));
 
         this.setFullTdlFileName(fullTdlFileName);
 
@@ -540,7 +542,7 @@ export class EmbeddedDisplay extends BaseWidget {
 
         const allMacros = this.getAllMacros();
         const itemMacros = display.macros;
-        const macros = GlobalMethods.refineMacros([...itemMacros, ...allMacros]);
+        const macros = Macros.fromMacros(new Macros(itemMacros), allMacros);
 
         let tdlFileName = display.tdlFileName;
         // the tdl file name is expanded based on the macros for this EmbeddedDisplay widget
@@ -566,7 +568,7 @@ export class EmbeddedDisplay extends BaseWidget {
                 tdlFileNames: [tdlFileName],
                 mode: "operating",
                 editable: true,
-                macros: macros,
+                macros: macros.getArr(),
                 replaceMacros: true,
                 currentTdlFolder: currentTdlFolder,
                 windowId: displayWindowId,

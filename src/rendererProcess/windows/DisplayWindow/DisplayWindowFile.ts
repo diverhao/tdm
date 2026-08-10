@@ -26,6 +26,8 @@ import { toBlob } from "dom-to-image-more";
 import { isDataUri, isRemotePath } from "../../../common/GlobalMethods";
 import path from "path";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { Macros } from "../../../common/Macros";
+import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
 export class DisplayWindowFile {
     private readonly _displayWindowClient: DisplayWindowClient;
@@ -58,7 +60,7 @@ export class DisplayWindowFile {
         tdlFileName: string,
         initialModeStr: "editing" | "operating",
         editable: boolean,
-        externalMacros: [string, string][],
+        externalMacros: type_macros_tdl,
         useExternalMacros: boolean,
         utilityType?: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "Help" | "CaSnooper" | "Casw" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph" | undefined,
         utilityOptions?: Record<string, any>
@@ -99,7 +101,8 @@ export class DisplayWindowFile {
             }
         }
         // (2)
-        const rootElement = new Root(newTdl, this.getDisplayWindowClient(), initialMode, editable, externalMacros, useExternalMacros);
+        
+        const rootElement = new Root(newTdl, this.getDisplayWindowClient(), initialMode, editable, new Macros(externalMacros), useExternalMacros);
         // (3)
         this.getDisplayWindowClient().getRoot().render(rootElement.getElement());
         // (4)

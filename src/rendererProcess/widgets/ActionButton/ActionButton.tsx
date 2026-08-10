@@ -19,6 +19,7 @@ import {
     type_action_closedisplaywindow,
     defaultActionButtonTdl,
 } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 export class ActionButton extends BaseWidget {
 
@@ -360,10 +361,11 @@ export class ActionButton extends BaseWidget {
         // external macros is composed of 2 parts:
         // (1) macros defined by ActionButton widget for this display
         // (2) all macros that is held by this ActionButton widget
-        let externalMacros = [...displayConfig["externalMacros"]]
+        // let externalMacros = [...displayConfig["externalMacros"]]
+        let externalMacros = new Macros(displayConfig["externalMacros"]);
         if (displayConfig["useParentMacros"]) {
             const parentMacros = this.getAllMacros();
-            externalMacros = GlobalMethods.refineMacros([...externalMacros, ...parentMacros]);
+            externalMacros = Macros.fromMacros(externalMacros, parentMacros);
         }
 
         // tdl file name may contain macros
@@ -380,7 +382,7 @@ export class ActionButton extends BaseWidget {
                     tdlFileNames: [tdlFileName],
                     mode: mode,
                     editable: editable,
-                    macros: externalMacros,
+                    macros: externalMacros.getArr(),
                     replaceMacros: true, // not used
                     currentTdlFolder: currentTdlFolder,
                     windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),

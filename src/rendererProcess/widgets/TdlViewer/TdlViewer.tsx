@@ -4,7 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import { defaultTdlViewerTdl, type_TdlViewer_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultTdlViewerTdl, type_macro_tdl, type_TdlViewer_tdl } from "../../../common/types/type_widget_tdl";
 
 export class TdlViewer extends BaseWidget {
     constructor(widgetTdl: type_TdlViewer_tdl) {
@@ -332,7 +332,7 @@ export class TdlViewer extends BaseWidget {
                             Value
                         </th>
                     </tr>
-                    {this.getText()["externalMacros"].map((nameValue: [string, string], index: number) => {
+                    {this.getText()["externalMacros"].map((nameValue: type_macro_tdl, index: number) => {
                         const name = nameValue[0];
                         const value = nameValue[1];
                         return (

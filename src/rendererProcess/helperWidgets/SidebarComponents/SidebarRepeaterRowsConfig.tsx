@@ -6,6 +6,8 @@ import { SidebarComponent } from "./SidebarComponent";
 import * as GlobalMethods from "../../../common/GlobalMethods"
 import { Repeater } from "../../widgets/Repeater/Repeater";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
+import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 /**
  * Represents the X component in sidebar. <br>
@@ -30,12 +32,30 @@ export class SidebarRepeaterRowsConfig extends SidebarComponent {
                         if (mainWidget instanceof Repeater) {
                             // mainWidget.showRowsConfigPage();
                             const largeInput = this.getSidebar().getSidebarLargeInput();
+
+                            // [Macro1, Macro2] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
+                            let widgetsMacrosStr: string = "";
+                            for (const widgetMacros of mainWidget.getWidgetsMacros()) {
+                                const widgetMacrosStr = widgetMacros.getStr();
+                                widgetsMacrosStr = widgetsMacrosStr + widgetMacrosStr + "\n";
+                            }
+                            if (widgetsMacrosStr.endsWith("\n")) {
+                                widgetsMacrosStr = widgetsMacrosStr.substring(0, widgetsMacrosStr.length - 1);
+                            }
+
                             largeInput.createTextareaElement(
-                                mainWidget.serializeMacros(),
+                                widgetsMacrosStr,
                                 "Macros for each line in Repeater widget",
                                 `Each row in below input box represents a row in the Repeater. The macros should be in form of SYS=RNG, SUBSYS=BPM`,
                                 (macrosStr: string) => {
-                                    const widgetsMacros = mainWidget.deserializeMacros(macrosStr);
+                                    // "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM" --> [Macros1, Macros2]
+                                    const macrosStrLines = macrosStr.split("\n");
+                                    const widgetsMacros: Macros[] = [];
+
+                                    for (const widgetMacrosStr of macrosStrLines) {
+                                        const widgetMacros = Macros.fromStr(widgetMacrosStr);
+                                        widgetsMacros.push(widgetMacros);
+                                    }
                                     mainWidget.setWidgetsMacros(widgetsMacros);
                                     this.updateWidget(undefined);
                                 }

@@ -10,6 +10,7 @@ import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowCl
 import { type_tdl } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { ActionButton } from "../../widgets/ActionButton/ActionButton";
+import { Macros } from "../../../common/Macros";
 
 /**
  * Update the widgets.
@@ -45,7 +46,7 @@ export class Root {
     /**
      * Macros set by upper-level window
      */
-    private _externalMacros: [string, string][] = [];
+    private _externalMacros: Macros;
     private _useExternalMacros: boolean;
 
     isNewTdl: boolean = true;
@@ -63,13 +64,13 @@ export class Root {
         displayWindowClient: DisplayWindowClient,
         initialMode: rendererWindowStatus.editing | rendererWindowStatus.operating,
         editable: boolean,
-        externalMacros: [string, string][], // go to Canvas
+        externalMacros: Macros, // go to Canvas
         useExternalMacros: boolean // go to Canvas
     ) {
         this._displayWindowClient = displayWindowClient;
         this._initialMode = initialMode;
         this._editable = editable;
-        this._externalMacros = structuredClone(externalMacros);
+        this._externalMacros = externalMacros;
         this._useExternalMacros = useExternalMacros;
         g_setWidgets1(new Widgets(tdl, this));
         g_flushWidgets = this._flushWidgets;
@@ -182,10 +183,6 @@ export class Root {
 
     getUseExternalMacros = () => {
         return this._useExternalMacros;
-    };
-
-    setExternalMacros = (newMacros: [string, string][]) => {
-        this._externalMacros = structuredClone(newMacros);
     };
 
     setUseExternalMacros = (use: boolean) => {

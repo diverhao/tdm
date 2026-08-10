@@ -6,9 +6,10 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
-import { defaultRepeaterTdl, type_macro_tdl, type_Repeater_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultRepeaterTdl, type_macro_tdl, type_macros_tdl, type_Repeater_tdl } from "../../../common/types/type_widget_tdl";
 import { v4 as uuidv4 } from "uuid";
 import { rendererWindowStatus } from "../../global/Widgets";
+import { Macros } from "../../../common/Macros";
 
 export class Repeater extends BaseWidget {
 
@@ -16,7 +17,7 @@ export class Repeater extends BaseWidget {
     private _templateWidgets: BaseWidget[] = [];
     private _dynamicWidgetKeys: string[] = [];
 
-    private _widgetsMacros: type_macro_tdl[][] = [];
+    private _widgetsMacros: Macros[] = [];
     private readonly _groupName: string = `repeater_group_${uuidv4()}`;
 
     constructor(widgetTdl: type_Repeater_tdl) {
@@ -26,7 +27,9 @@ export class Repeater extends BaseWidget {
         this.setReadWriteType("write");
 
         this._templateWidgetKeys = structuredClone(widgetTdl["widgetKeys"]);
-        this._widgetsMacros = structuredClone(widgetTdl["widgetsMacros"]);
+        for (const macros of widgetTdl["widgetsMacros"]) {
+            this._widgetsMacros.push(new Macros(macros));
+        }
     }
 
     // ------------------------------ elements ---------------------------------
@@ -221,7 +224,7 @@ export class Repeater extends BaseWidget {
         for (let ii = 0; ii < this.getWidgetsMacros().length; ii++) {
 
             const macros = this.getWidgetsMacros()[ii];
-            if (macros.length === 0) {
+            if (macros.isEmpty()) {
                 continue;
             }
 
@@ -247,9 +250,10 @@ export class Repeater extends BaseWidget {
                 const widgetMacro = this.getWidgetMacro(ii);
                 if (widgetMacro !== undefined) {
 
-                    const macros = GlobalMethods.refineMacros([...widgetMacro, ...this.getAllMacros()]);
+                    // const macros = GlobalMethods.refineMacros([...widgetMacro, ...this.getAllMacros()]);
+                    const macros = Macros.fromMacros(widgetMacro, this.getAllMacros());
 
-                    if (macros !== undefined && macros.length > 0) {
+                    if (macros !== undefined) {
 
                         // replace macros in Label text 
                         if (widgetTdl["widgetKey"].startsWith("Label_")) {
@@ -280,7 +284,7 @@ export class Repeater extends BaseWidget {
                                 if (action["type"] === "OpenDisplay") {
                                     action["fileName"] = BaseWidget.expandChannelName(action["fileName"], macros, true);
                                     const widgetMacro = this.getWidgetMacro(ii);
-                                    action["externalMacros"] = GlobalMethods.refineMacros([...(widgetMacro === undefined ? [] : widgetMacro), ...action["externalMacros"]]);
+                                    action["externalMacros"] = Macros.fromMacros(widgetMacro, new Macros(action["externalMacros"])).getArr();
                                 } else if (action["type"] === "WritePV") {
                                     action["channelName"] = BaseWidget.expandChannelName(action["channelName"], macros, true);
                                     action["channelValue"] = BaseWidget.expandChannelName(action["channelValue"], macros, true);
@@ -404,38 +408,6 @@ export class Repeater extends BaseWidget {
     }
 
 
-
-    // -------------------- macros ---------------------
-
-    /**
-     * [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]] --> "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM"
-     */
-    serializeMacros = () => {
-        let result: string = "";
-        for (const rowMacros of this.getWidgetsMacros()) {
-            const rowMacrosStr = GlobalMethods.serializeMacros(rowMacros);
-            result = result + rowMacrosStr + "\n";
-        }
-        if (result.endsWith("\n")) {
-            result = result.substring(0, result.length - 1);
-        }
-        return result;
-    }
-
-    /**
-     * "SYS=RNG, SUBSYS=BPM\n SYS=BST, SUBSYS=BLM" --> [[["SYS", "RNG"], ["SUBSYS", "BPM"]], [["SYS", "BST"], ["SUBSYS", "BLM"]]]
-     */
-    deserializeMacros = (str: string) => {
-        const macrosStrLines = str.split("\n");
-        const result: [string, string][][] = [];
-
-        for (const rowMacrosStr of macrosStrLines) {
-            const rowMacros = GlobalMethods.deserializeMacros(rowMacrosStr);
-            result.push(rowMacros);
-        }
-        return result;
-    }
-
     // -------------------------- tdl -------------------------------
 
     static generateDefaultTdl = (): type_Repeater_tdl => {
@@ -466,8 +438,8 @@ export class Repeater extends BaseWidget {
         return this.getWidgetsMacros()[index];
     }
 
-    setWidgetsMacros = (widgetsMacros: type_macro_tdl[][]) => {
-        this._widgetsMacros = structuredClone(widgetsMacros);
+    setWidgetsMacros = (widgetsMacros: Macros[]) => {
+        this._widgetsMacros = widgetsMacros;
     }
 
 

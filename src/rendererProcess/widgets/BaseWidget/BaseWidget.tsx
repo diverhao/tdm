@@ -12,7 +12,8 @@ import { rendererWindowStatus } from "../../global/Widgets";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { Log } from "../../../common/Log";
 import { evaluate } from "mathjs";
-import { verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
+import { type_macros_tdl, verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
+import { Macros } from "../../../common/Macros";
 
 export type type_BaseWidget_tdl = {
     type: string;
@@ -205,7 +206,7 @@ export abstract class BaseWidget {
 
     // a widget does not have dedicated macros
     // this variable contains the macros from special purposes, e.g. the temporary EmbeddedDisplay macros
-    _macros: [string, string][] = [];
+    _macros: Macros = new Macros([]);
 
     /**
      * number of selected widgets when mouse button down
@@ -1376,7 +1377,7 @@ export abstract class BaseWidget {
      * @param [widgetMacros=[]] the externally provided macros, this does not include the Canvas-provided 
      *                          macros. This macros could be from users, parent widget, and others.
      */
-    processChannelNames(_: [string, string][] = [], removeDuplicated: boolean = true) {
+    processChannelNames(_: type_macros_tdl = [], removeDuplicated: boolean = true) {
         this._channelNamesLevel1 = [];
         this._channelNamesLevel2 = [];
         this._channelNamesLevel3 = [];
@@ -1391,7 +1392,8 @@ export abstract class BaseWidget {
         }
 
         // provided macros overrides locally defined macros
-        const macros = GlobalMethods.refineMacros([...this.getMacros(), ...this.getAllMacros()]);
+        // const macros = GlobalMethods.refineMacros([...this.getMacros(), ...this.getAllMacros()]);
+        const macros = Macros.fromMacros(this.getMacros(), this.getAllMacros());
 
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
@@ -1470,7 +1472,7 @@ export abstract class BaseWidget {
         return channelNameLevel4;
     }
 
-    static channelNameLevel0to4 = (channelNameLevel0: string, macros: [string, string][] = []) => {
+    static channelNameLevel0to4 = (channelNameLevel0: string, macros?: Macros) => {
         // 0 --> 3
         const channelNameLevel3 = BaseWidget.expandChannelName(channelNameLevel0, macros, true);
         // 3 --> 4
@@ -1626,11 +1628,10 @@ export abstract class BaseWidget {
      * 
      * the local channel name (loc://xxx) is expaneded to loc://xxx@window_yyy where yyy is the display window ID
      */
-    static expandChannelName(str: string, macros: [string, string][], honorDisplayWindowId: boolean = true) {
+    static expandChannelName(str: string, macros?: Macros, honorDisplayWindowId: boolean = true) {
         try {
             let strTmp = str;
-            let count = 0;
-            const macros1 = [...macros];
+            // const macros1 = [...macros];
             if (honorDisplayWindowId) {
                 // const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                 // const displayWindowId = displayWindowClient.getWindowId();
@@ -1645,18 +1646,8 @@ export abstract class BaseWidget {
                 let tmp1 = tmp0.replace(/@.*/, "") + `@window_${displayWindowId}`;
                 strTmp = strTmp.replace(tmp0, tmp1);
             }
-
-            // loop no more than 10 times, this is practically enough for a value of macro is macro, 
-            // like [["ABC", "$(DEF)"], ["DEF", "$(GHI)"], ["GHI", "Ring"]]
-            for (let ii = 0; ii < 10; ii++) {
-                for (const macro of macros) {
-                    const name = macro[0];
-                    const value = macro[1];
-                    strTmp = strTmp.replaceAll("${" + name + "}", value).replaceAll("$(" + name + ")", value);
-                }
-                if ((!strTmp.includes("(")) && (!strTmp.includes("(")) && (!strTmp.includes("{")) && (!strTmp.includes("}"))) {
-                    break;
-                }
+            if (macros instanceof Macros) {
+                strTmp = macros.apply(strTmp);
             }
             return strTmp;
         }
@@ -1686,7 +1677,7 @@ export abstract class BaseWidget {
 
         const canvas = g_widgets1.getWidget("Canvas");
         if (!(canvas instanceof Canvas)) {
-            return [];
+            return new Macros([]);
         }
         // macros defined in Canvas
         const canvasMacros = canvas.getMacros();
@@ -1697,7 +1688,8 @@ export abstract class BaseWidget {
         // Higher priority macros appears first
         // external macros should override canvas macros
         // the local widget's macros is for special purpose, which is always highest priority
-        return GlobalMethods.refineMacros([...this.getMacros(), ...externalMacros, ...canvasMacros]);
+        return Macros.fromMacros(this.getMacros(), externalMacros, canvasMacros);
+        // return GlobalMethods.refineMacros([...this.getMacros(), ...externalMacros, ...canvasMacros]);
     }
 
 
@@ -1718,7 +1710,7 @@ export abstract class BaseWidget {
         return this._macros;
     }
 
-    setMacros = (newMacros: [string, string][]) => {
+    setMacros = (newMacros: Macros) => {
         this._macros = newMacros;
     }
 
@@ -2654,7 +2646,7 @@ export abstract class BaseWidget {
                         : 1;
         const theOtherWidgetKey = widgetKeys[newIndex];
         // (3)
-                    const [, widget] = GlobalMethods.deleteFromMapAtIndex(g_widgets1.getWidgets(), currentIndex);
+        const [, widget] = GlobalMethods.deleteFromMapAtIndex(g_widgets1.getWidgets(), currentIndex);
         // (4)
         GlobalMethods.insertToMapAtIndex(g_widgets1.getWidgets(), newIndex, widgetKey, widget);
         // (5)
