@@ -310,7 +310,7 @@ export class MainWindowProfileEditPage {
             const newIndex = oldIndex - 1;
             const propertyValue = this.getLocalProfile()[name];
             delete this.getLocalProfile()[name];
-            GlobalMethods.insertToObject(name, propertyValue, this.getLocalProfile(), newIndex);
+            GlobalMethods.insertToObjectAtIndex(this.getLocalProfile(), newIndex, name, propertyValue);
             this._forceUpdatePage();
         };
 
@@ -324,7 +324,7 @@ export class MainWindowProfileEditPage {
             const newIndex = oldIndex + 1;
             const propertyValue = localProfile[categoryName];
             delete localProfile[categoryName];
-            GlobalMethods.insertToObject(categoryName, propertyValue, localProfile, newIndex);
+            GlobalMethods.insertToObjectAtIndex(localProfile, newIndex, categoryName, propertyValue);
             this._forceUpdatePage();
         };
 
@@ -1176,7 +1176,7 @@ export class MainWindowProfileEditPage {
             }
             const origProperty = category[propertyName];
             delete category[propertyName];
-            GlobalMethods.insertToObject(propertyName, origProperty, category, index - 1);
+            GlobalMethods.insertToObjectAtIndex(category, index - 1, propertyName, origProperty);
             this._forceUpdatePage();
         };
         const moveDownProperty = () => {
@@ -1186,7 +1186,7 @@ export class MainWindowProfileEditPage {
             }
             const origProperty = category[propertyName];
             delete category[propertyName];
-            GlobalMethods.insertToObject(propertyName, origProperty, category, index + 1);
+            GlobalMethods.insertToObjectAtIndex(category, index + 1, propertyName, origProperty);
             this._forceUpdatePage();
         };
 
@@ -2249,7 +2249,7 @@ export class MainWindowProfileEditPage {
         }
         const value = obj[oldName];
         delete obj[oldName];
-        GlobalMethods.insertToObject(newName, value, obj, index);
+        GlobalMethods.insertToObjectAtIndex(obj, index, newName, value);
     };
 
     // --------------------- getters and setters ----------------

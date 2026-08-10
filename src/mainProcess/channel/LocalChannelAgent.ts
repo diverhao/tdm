@@ -2,8 +2,8 @@ import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
-import { converEpochTimeToEpicsTimeStamp } from "../../common//GlobalMethods";
 import { type_LocalChannel_data } from "../../common/GlobalVariables";
+import { EpicsDate } from "../../common/EpicsTime";
 
 export class LocalChannelAgent {
     _dbrData: type_LocalChannel_data;
@@ -59,8 +59,7 @@ export class LocalChannelAgent {
     };
 
     setDbrTime = () => {
-        const timeNow = Date.now();
-        const epochTimeNow = converEpochTimeToEpicsTimeStamp(timeNow);
+        const epochTimeNow = EpicsDate.fromNow().getEpicsTimeMs();
         const secondsSinceEpoch = Math.floor(epochTimeNow / 1000);
         const nanoSeconds = (epochTimeNow - Math.floor(epochTimeNow)) * 1000 * 1000;
         this.getDbrData()["secondsSinceEpoch"] = secondsSinceEpoch;

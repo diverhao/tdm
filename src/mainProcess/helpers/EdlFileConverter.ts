@@ -3,9 +3,9 @@ import { FileReader } from "../file/FileReader";
 import * as fs from "fs";
 
 import crypto from "crypto";
-import { convertEpochTimeToString } from "../../common/GlobalMethods";
 import { argv } from "process";
 import { Log } from "../../common/Log";
+import { EpicsDate } from "../../common/EpicsTime";
 
 // iterate over all the files in the folder, calculate the MD5, save to a new JSON files
 // {file-full-path: md5} -- F2
@@ -51,7 +51,7 @@ const edlFolder = argv[2];
 const tdlFolder = argv[3];
 
 // variables
-const tdlFolderTrash = path.join(tdlFolder, `edl-converter-trash-${convertEpochTimeToString(Date.now()).replace(" ", "_").replace(":", "_")}`)
+const tdlFolderTrash = path.join(tdlFolder, `edl-converter-trash-${EpicsDate.fromNow().toString().replace(" ", "_").replace(":", "_")}`)
 const jsonFullName = path.join(tdlFolder, "md5.json");
 const oldJsonFullName = path.join(tdlFolder, "md5_old.json");
 const logFullName = path.join(tdlFolder, "log.txt");
@@ -84,7 +84,7 @@ try {
 
 writeToLog(`\n--------------------------------------`)
 writeToLog(`Convert ${edlFolder} to ${tdlFolder}`)
-writeToLog(`Time: ${convertEpochTimeToString(Date.now())}`)
+writeToLog(`Time: ${EpicsDate.fromNow().toString()}`)
 
 const iterateFolder = (folderPath: string) => {
     const files = fs.readdirSync(folderPath);

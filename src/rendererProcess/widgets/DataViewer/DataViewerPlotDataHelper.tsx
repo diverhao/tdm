@@ -4,6 +4,7 @@ import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 /**
  * Helper class for data operations in DataViewerPlot.
@@ -242,7 +243,7 @@ export class DataViewerPlotDataHelper {
         // convert EPICS timestamp to UNIX timestamp
         let timeStamp = secondsSinceEpoch * 1000 + nanoSeconds * 1e-6;
         if (data["timeStamp"] === undefined) {
-            timeStamp = GlobalMethods.converEpicsTimeStampToEpochTime(timeStamp);
+            timeStamp = EpicsDate.fromEpicsTimeMs(timeStamp).getUnixTimeMs();
         }
 
         // sometimes the channel was never processed
@@ -286,7 +287,7 @@ export class DataViewerPlotDataHelper {
         const mainProcessMode = displayWindowClient.getMainProcessMode();
         if (mainProcessMode === "web") {
             const blob = new Blob([JSON.stringify(result, null, 4)], { type: "text/json" });
-            const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
+            const dateNowStr = EpicsDate.fromNow().toString();
             const suggestedName = `DataViewer-data-${dateNowStr}.json`;
             const description = "Data Viewer data";
             const applicationKey = "application/json";
@@ -325,8 +326,8 @@ export class DataViewerPlotDataHelper {
                 const xVal = x[jj];
                 const xValNext = x[jj + 1];
                 const yVal = y[jj];
-                if (xVal !== xValNext) {
-                    processedX.push(GlobalMethods.convertEpochTimeToString(xVal));
+                if (xVal !== xValNext) {            
+                    processedX.push(EpicsDate.fromUnixTimeMs(xVal).toString());
                     processedY.push(yVal);
                 }
             }

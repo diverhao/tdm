@@ -19,7 +19,7 @@ export class SidebarAngle extends SidebarComponent {
 	}
 
 	_Element = () => {
-		const [angle, setAngle] = React.useState<number>(GlobalMethods.parseIntAngle(this.getStyle().transform));
+		const [angle, setAngle] = React.useState<number>(GlobalMethods.parseCSSAngle(this.getStyle().transform));
 
 		this._updateFromWidget = (propertyValue: number) => {
 			setAngle(propertyValue);
@@ -67,7 +67,7 @@ export class SidebarAngle extends SidebarComponent {
 				const valueMin = 0;
 				const valueMax = 360;
 				const blockLeft =
-					((barWidth - blockWidth) * (GlobalMethods.parseIntAngle(this.getStyle().transform) - valueMin)) / (valueMax - valueMin);
+					((barWidth - blockWidth) * (GlobalMethods.parseCSSAngle(this.getStyle().transform) - valueMin)) / (valueMax - valueMin);
 				setBlockLeft(blockLeft);
 			}
 		});
@@ -131,7 +131,7 @@ export class SidebarAngle extends SidebarComponent {
 						}}
 						// must use enter to change the value
 						onBlur={(event) => {
-							const orig = GlobalMethods.parseIntAngle(this.getMainWidget().getStyle().transform);
+							const orig = GlobalMethods.parseCSSAngle(this.getMainWidget().getStyle().transform);
 							if (orig !== angle) {
 								setAngle(orig);
 							}
@@ -195,7 +195,7 @@ export class SidebarAngle extends SidebarComponent {
 		}
 
 		const oldValStr = this.getStyle()["transform"];
-		const newValStr = GlobalMethods.insertIntAngle(propertyValue as number, oldValStr);
+		const newValStr = GlobalMethods.replaceCSSAngle(propertyValue as number, oldValStr);
 
 		if (oldValStr === newValStr) {
 			return;

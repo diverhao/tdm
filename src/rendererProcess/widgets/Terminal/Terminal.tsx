@@ -712,7 +712,7 @@ export class Terminal extends BaseWidget {
         const value = g_widgets1.getChannelValue(channelName);
         if (value !== undefined && this.getExecutingCommand() === this.tcamonitor) {
             const timeStamp = g_widgets1.getChannelTimeStamp(channelName);
-            const timeStampStr = `${timeStamp}`.split(/\s+/).slice(1, 5).join(" ");
+            const timeStampStr = timeStamp?.toString();
             const severity = g_widgets1.getChannelSeverity(channelName);
             const severityStr = ChannelSeverity[severity];
             this.getTerminal().write(`${channelName}  ${timeStampStr}   ${value}  ${severityStr}\r\n`);

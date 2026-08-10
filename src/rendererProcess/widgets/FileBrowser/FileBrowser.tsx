@@ -9,6 +9,7 @@ import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
 import { IpcEventArgType2, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { defaultFileBrowserTdl, type_FileBrowser_tdl } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 
 enum type_sorting_method {
@@ -984,7 +985,7 @@ export class FileBrowser extends BaseWidget {
                             paddingLeft: 4,
                             paddingRight: 15,
                         }}>
-                            {GlobalMethods.convertEpochTimeToString(element["timeModified"])}
+                            {EpicsDate.fromUnixTimeMs(element["timeModified"]).toString()}
                         </td>
                         <td style={{
                             paddingTop: 3,

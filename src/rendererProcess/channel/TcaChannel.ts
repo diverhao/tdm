@@ -8,6 +8,7 @@ import { type_LocalChannel_data } from "../../common/GlobalVariables";
 import { Channel_ACCESS_RIGHTS } from "../../common/GlobalVariables";
 import { Log } from "../../common/Log";
 import { type_pva_value } from "../../common/GlobalVariables";
+import { EpicsDate } from "../../common/EpicsTime";
 
 export enum ChannelSeverity {
     NO_ALARM,
@@ -1721,7 +1722,7 @@ export class TcaChannel {
      * @returns {Date | undefined} A Date object that represents the time stamp. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
      */
-    getTimeStamp = (): Date | undefined => {
+    getTimeStamp = (): EpicsDate | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
@@ -1732,7 +1733,7 @@ export class TcaChannel {
                 return undefined;
             }
             const msSince1990UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
-            return new Date(GlobalMethods.converEpicsTimeStampToEpochTime(msSince1990UTC));
+            return EpicsDate.fromEpicsTimeMs(msSince1990UTC);
         } else if (TcaChannel.checkChannelName(this.getChannelName()) === "pva") {
             const timeStampData = this.getPvaValue("timeStamp");
             if (timeStampData === undefined) {
@@ -1742,7 +1743,7 @@ export class TcaChannel {
             const nanoseconds = timeStampData["nanoseconds"];
             if (typeof nanoseconds === "number" && typeof secondsSinceEpoch === "number") {
                 const msSince1970UTC = 1000 * secondsSinceEpoch + nanoseconds * 1e-6;
-                return new Date(msSince1970UTC);
+                return EpicsDate.fromUnixTimeMs(msSince1970UTC);
             }
         }
 

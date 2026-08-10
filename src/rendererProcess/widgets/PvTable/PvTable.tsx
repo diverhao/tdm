@@ -17,6 +17,7 @@ import { ElementDropDownMenu } from "../../helperWidgets/SharedElements/DropDown
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { defaultPvTableTdl, type_PvTable_tdl } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 
 
@@ -1283,7 +1284,8 @@ export class PvTable extends BaseWidget {
                         const s = dbrData["secondsSinceEpoch"];
                         const ns = dbrData["nanoSeconds"];
                         if (s !== undefined && ns !== undefined) {
-                            return GlobalMethods.converEpicsTimeStampToString(s * 1000 + ns / 1e6);
+                            const epicsTime = EpicsDate.fromEpicsTimeMs(s * 1000 + ns / 1e6);
+                            return epicsTime.toString();
                         } else {
                             return undefined;
                         }
@@ -1316,7 +1318,8 @@ export class PvTable extends BaseWidget {
                         const s = dbrData["secondsSinceEpoch"];
                         const ns = dbrData["nanoSeconds"];
                         if (s !== undefined && ns !== undefined) {
-                            return GlobalMethods.converEpicsTimeStampToString(s * 1000 + ns / 1e6);
+                            const epicsTime = EpicsDate.fromEpicsTimeMs(s * 1000 + ns / 1e6);
+                            return epicsTime.toString();
                         } else {
                             return undefined;
                         }

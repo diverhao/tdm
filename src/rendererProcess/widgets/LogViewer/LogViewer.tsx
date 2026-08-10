@@ -6,10 +6,10 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
-import { convertEpochTimeToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { type_logData } from "../../../common/IpcEventArgType";
 import { defaultLogViewerTdl, type_LogViewer_tdl } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 export class LogViewer extends BaseWidget {
     showProcessInfo = false;
@@ -270,7 +270,7 @@ export class LogViewer extends BaseWidget {
                         content = content + " " + JSON.stringify(arg);
                     }
                 }
-                const timeStr = convertEpochTimeToString(data["timeMsSinceEpoch"]);
+                const timeStr = EpicsDate.fromUnixTimeMs(data["timeMsSinceEpoch"]).toString();
                 return (
                     <this._ElementTableLine
                         key={`${timeStr}-${data["type"]}-${this.memoId}-${index}`}
@@ -544,7 +544,7 @@ export class LogViewer extends BaseWidget {
         };
         return result;
     };
-    
+
     // -------------------------- sidebar ---------------------------
     createSidebar = () => {
     }

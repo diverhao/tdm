@@ -1,19 +1,15 @@
 import * as React from "react";
-import { MouseEvent } from "react";
-import { convertDateObjToString } from "../../../common/GlobalMethods";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import { PvMonitorSidebar } from "./PvMonitorSidebar";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
-// import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import { Table } from "../../helperWidgets/Table/Table";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { defaultPvMonitorTdl, type_PvMonitor_tdl } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 type type_data = {
     time: string,
@@ -77,7 +73,7 @@ export class PvMonitor extends BaseWidget {
             let timeRaw = tcaChannel.getTimeStamp();
             let time = "undefined";
             if (timeRaw instanceof Date) {
-                time = convertDateObjToString(timeRaw);
+                time = EpicsDate.fromUnixTimeMs(timeRaw.getTime()).toString();
             }
             if (time === "undefined") {
                 return;
@@ -713,7 +709,7 @@ export class PvMonitor extends BaseWidget {
                 const mainProcessMode = displayWindowClient.getMainProcessMode();
                 if (mainProcessMode === "web") {
                     const blob = new Blob([JSON.stringify(result, null, 4)], { type: 'text/json' });
-                    const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
+                    const dateNowStr = EpicsDate.fromNow().toString();
                     const suggestedName = `PvMonitor-data-${dateNowStr}.json`;
                     const description = 'PV Monitor data';
                     const applicationKey = "application/json";
@@ -738,7 +734,7 @@ export class PvMonitor extends BaseWidget {
                 const mainProcessMode = displayWindowClient.getMainProcessMode();
                 if (mainProcessMode === "web") {
                     const blob = new Blob([JSON.stringify(this.getData(), null, 4)], { type: 'text/json' });
-                    const dateNowStr = GlobalMethods.convertEpochTimeToString(Date.now());
+                    const dateNowStr = EpicsDate.fromNow().toString();
                     const suggestedName = `PvMonitor-data-${dateNowStr}.json`;
                     const description = 'PV Monitor data';
                     const applicationKey = "application/json";

@@ -8,7 +8,7 @@ import { ScaledSliderSidebar } from "./ScaledSliderSidebar";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { ScaledSliderRule } from "./ScaledSliderRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { parseIntAngle } from "../../../common/GlobalMethods";
+import { parseCSSAngle } from "../../../common/GlobalMethods";
 import { Log } from "../../../common/Log";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
@@ -622,7 +622,7 @@ export class ScaledSlider extends BaseWidget {
         const dy = clientY - blockCenterY;
         const blockWidth = rect.width;
 
-        let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
+        let theta = (parseCSSAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
 
         const x1 = dx * Math.cos(theta) + dy * Math.sin(theta);
         const y1 = -1 * dx * Math.sin(theta) + dy * Math.cos(theta);
@@ -875,7 +875,7 @@ export class ScaledSlider extends BaseWidget {
         const dX0 = clientX - clientX0;
         const dY0 = clientY - clientY0;
 
-        let theta = (parseIntAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
+        let theta = (parseCSSAngle(this.getAllStyle()["transform"]) * 3.14159) / 180;
 
         const dX = dX0 * Math.cos(theta) + dY0 * Math.sin(theta);
 
@@ -949,7 +949,7 @@ export class ScaledSlider extends BaseWidget {
     };
 
     atRegularAngle = () => {
-        const angle = parseIntAngle(this.getAllStyle()["transform"]);
+        const angle = parseCSSAngle(this.getAllStyle()["transform"]);
         if (angle >= 135 && angle < 135 + 180) {
             return false;
         } else {

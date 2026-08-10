@@ -9,6 +9,7 @@ import { FontsData } from "../../../rendererProcess/global/FontsData";
 import { disableImageDragging } from "../../../rendererProcess/global/disableImageDragging";
 import { PromptOnMainWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnMainWindow";
 import { Log } from "../../../common/Log";
+import { type_MainProcessMode } from "../../../common/types/type_widget_tdl";
 
 
 export enum mainWindowState {
@@ -228,7 +229,7 @@ export class MainWindowClient {
     /**
      * get the main process mode: desktop or web
      *      */
-    getMainProcessMode = (): "desktop" | "web" => {
+    getMainProcessMode = (): type_MainProcessMode => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             // electron.js based

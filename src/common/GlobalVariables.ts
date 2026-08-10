@@ -297,3 +297,4 @@ export const liquidGlassStyle = {
     // submenuIndicatorWidth: 16,
 }
 
+export const epicsUnixDt: number = (Date.UTC(90, 0, 1, 0, 0, 0, 0) - Date.UTC(70, 0, 1, 0, 0, 0, 0));

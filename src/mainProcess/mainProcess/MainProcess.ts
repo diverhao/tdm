@@ -27,8 +27,8 @@ import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
 import { SymbolGallery } from "./SymbolGallery";
 import { Rpc } from "./Rpc";
 import { refineMacros } from "../../common/GlobalMethods";
-import { ArchiverAppliance } from "../archive/ArchiverAppliance";
 import { ArchiverAppliances } from "../archive/ArchiverAppliances";
+import { type_MainProcessMode } from "../../common/types/type_widget_tdl";
 
 /**
  * Represents a main process.
@@ -75,7 +75,7 @@ export class MainProcess {
 
     // is is mostly like the main process mode defined in MainProcesses, but
     // with one more mode: "ssh-client"
-    private _mainProcessMode: "desktop" | "web";
+    private _mainProcessMode: type_MainProcessMode;
 
     // CA snooper service
     // it listens to the search messages from CA client
@@ -128,7 +128,7 @@ export class MainProcess {
         args: type_args,
         // processId: string,
         callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
-        mainProcessMode: "web" | "desktop" = "desktop",
+        mainProcessMode: type_MainProcessMode = "desktop",
     ) {
 
         this._rawArgs = args;

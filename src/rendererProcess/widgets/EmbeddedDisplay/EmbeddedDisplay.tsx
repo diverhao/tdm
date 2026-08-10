@@ -482,7 +482,7 @@ export class EmbeddedDisplay extends BaseWidget {
         for (const widgetMapPair of widgetMapPairs) {
             widgetsMap.delete(widgetMapPair[0]);
         }
-        g_widgets1._widgets = GlobalMethods.insertAfter(widgetsMap, widgetKey, widgetMapPairs);
+        g_widgets1._widgets = GlobalMethods.insertToMapAfterKey(widgetsMap, widgetKey, widgetMapPairs);
 
         this.connectAllTcaChannels();
         g_widgets1.addToForceUpdateWidgets(widgetKey);

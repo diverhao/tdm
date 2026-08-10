@@ -16,6 +16,7 @@ import { DataViewerPlotTraceHelper } from "./DataViewerPlotTraceHelper";
 import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 
 type type_xAxis = {
@@ -971,7 +972,7 @@ export class DataViewerPlot {
                     let valueStr = "0";
                     if (xData.length > 1) {
                         // the last element is a patch
-                        timeStr = GlobalMethods.convertEpochTimeToString(xData[xData.length - 2]);
+                        timeStr = EpicsDate.fromUnixTimeMs(xData[xData.length - 2]).toString();
                         valueStr = yData[yData.length - 1].toString();
                     }
                     const backgroundColor = this.getSelectedTraceIndex() === index ? "rgba(210, 210, 210, 1)" : "rgba(0,0,0,0)";
@@ -1314,9 +1315,8 @@ export class DataViewerPlot {
         const yValMax = ticksInfo.yValMax;
 
         const [valX, valY] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
-        // const [valX, valY] = this.mapPointToXY(this.getSelectedTraceIndex(), [pointX, pointY]);
 
-        const timeStr = GlobalMethods.convertEpochTimeToString(valX);
+        const timeStr = EpicsDate.fromUnixTimeMs(valX).toString();
         const valYStr = valY.toPrecision(4).toString();
         this.setCursorValue(`(${timeStr}, ${valYStr})`);
     };

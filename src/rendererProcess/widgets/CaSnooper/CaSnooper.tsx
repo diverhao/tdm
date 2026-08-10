@@ -7,12 +7,12 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { convertDateObjToString, countDuplicates } from "../../../common/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
 import { defaultCaSnooperTdl, type_CaSnooper_tdl } from "../../../common/types/type_widget_tdl";
 import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 export type type_CaProtoSearchData = {
     msSinceEpoch: number,
@@ -744,7 +744,7 @@ export class CaSnooper extends BaseWidget {
                                 {index}
                             </this._ElementTableCell>
                             <this._ElementTableCell columnIndex={1} additionalStyle={{ justifyContent: "space-between" }}>
-                                {convertDateObjToString(new Date(data["msSinceEpoch"]))}
+                                {EpicsDate.fromUnixTimeMs(data["msSinceEpoch"]).toString()}
                             </this._ElementTableCell>
                             <this._ElementTableCell columnIndex={2} additionalStyle={{ justifyContent: "space-between" }}>
                                 {data["channelName"]}

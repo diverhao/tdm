@@ -21,7 +21,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ReadWriteIos } from "../channel/ReadWriteIos";
 import { ChannelSeverity, TcaChannel } from "../channel/TcaChannel";
 import { Root } from "../helperWidgets/Root/Root";
-import { insertToMap } from "../../common/GlobalMethods";
+import { insertToMapAtIndex } from "../../common/GlobalMethods";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { Probe } from "../widgets/Probe/Probe";
 import { DataViewer } from "../widgets/DataViewer/DataViewer";
@@ -75,6 +75,7 @@ import { SeqGraph } from "../widgets/SeqGraph/SeqGraph";
 import { type_tdl } from "../../common/GlobalVariables";
 import { Table } from "../widgets/Table/Table";
 import { ErrorBox } from "../widgets/ErrorBox/ErrorBox";
+import { EpicsDate } from "../../common/EpicsTime";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -857,7 +858,7 @@ export class Widgets {
         } else {
             if (this.hasWidget("GroupSelection2")) {
                 // add new widget after the display window is initialized
-                insertToMap(this._widgets, this._widgets.size - 1, widgetKey, widget);
+                insertToMapAtIndex(this._widgets, this._widgets.size - 1, widgetKey, widget);
             } else {
                 // display window is initializing
                 this._widgets.set(widgetKey, widget);
@@ -2142,7 +2143,7 @@ export class Widgets {
      * In operating mode, if TcaChannel object does not exist or the channel is not connected, returns undefined.
      *
      */
-    getChannelTimeStamp = (channelName: string): Date | undefined => {
+    getChannelTimeStamp = (channelName: string): EpicsDate | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }

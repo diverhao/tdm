@@ -23,6 +23,7 @@ import { SymbolGallery } from "../../helperWidgets/SymbolGallery/SymbolGallery";
 import { disableImageDragging } from "../../global/disableImageDragging";
 import { DisplayWindowFile } from "./DisplayWindowFile";
 import { DisplayWindowEvent } from "./DisplayWindowEvent";
+import { type_MainProcessMode } from "../../../common/types/type_widget_tdl";
 
 console.log(`[${Math.round(performance.now())}]`, "[INFO]\n  ", "Finished loading modules.")
 
@@ -388,7 +389,7 @@ export class DisplayWindowClient {
         this._processId = newId;
     };
 
-    getMainProcessMode = (): "desktop" | "web" => {
+    getMainProcessMode = (): type_MainProcessMode => {
         const userAgent = navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             return "desktop"

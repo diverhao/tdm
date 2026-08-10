@@ -4,7 +4,8 @@ import path from "path";
 import { g_widgets1,  } from "../../global/GlobalVariables";
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
-import { arrayBufferToBase64, getCurrentDateTimeStr } from "../../../common/GlobalMethods";
+import { arrayBufferToBase64 } from "../../../common/GlobalMethods";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 export class VideoRecorder {
     private _sourceId: string = "";
@@ -124,7 +125,7 @@ export class VideoRecorder {
 
     // folder already checked: exist and writable
     save = async (blobs: Blob[], folder: string) => {
-        const videoFileName = path.join(folder, "TDM-video-clip-" + getCurrentDateTimeStr(true) +`.webm`);
+        const videoFileName = path.join(folder, "TDM-video-clip-" + EpicsDate.fromNow().toStringAsFileName() +`.webm`);
         if (blobs.length >= 1) {
             const a = await blobs[0].arrayBuffer();
 

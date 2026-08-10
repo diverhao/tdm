@@ -2654,9 +2654,9 @@ export abstract class BaseWidget {
                         : 1;
         const theOtherWidgetKey = widgetKeys[newIndex];
         // (3)
-        const [, widget] = GlobalMethods.deleteFromMap(g_widgets1.getWidgets(), currentIndex);
+                    const [, widget] = GlobalMethods.deleteFromMapAtIndex(g_widgets1.getWidgets(), currentIndex);
         // (4)
-        GlobalMethods.insertToMap(g_widgets1.getWidgets(), newIndex, widgetKey, widget);
+        GlobalMethods.insertToMapAtIndex(g_widgets1.getWidgets(), newIndex, widgetKey, widget);
         // (5)
         g_widgets1.addToForceUpdateWidgets(widgetKey);
         g_widgets1.addToForceUpdateWidgets(theOtherWidgetKey);

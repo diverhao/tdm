@@ -23,8 +23,9 @@ import { PvMonitor } from "../../widgets/PvMonitor/PvMonitor";
 import { Probe } from "../../widgets/Probe/Probe";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { toBlob } from "dom-to-image-more";
-import { convertEpochTimeToString, isDataUri, isRemotePath } from "../../../common/GlobalMethods";
+import { isDataUri, isRemotePath } from "../../../common/GlobalMethods";
 import path from "path";
+import { EpicsDate } from "../../../common/EpicsTime";
 
 export class DisplayWindowFile {
     private readonly _displayWindowClient: DisplayWindowClient;
@@ -555,7 +556,7 @@ export class DisplayWindowFile {
         try {
             const blob = await toBlob(document.body);
             if (blob !== null) {
-                const dateNowStr = convertEpochTimeToString(Date.now());
+                const dateNowStr = EpicsDate.fromNow().toString();
                 const suggestedName = `TDM-screenshot-${dateNowStr}.png`;
                 const description = 'Screenshot Image';
                 const applicationKey = "application/image";

@@ -10,6 +10,10 @@ export type type_utilityWindowType =
     "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "PvMonitor" | "Help" |
     "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph";
 
+// ======================== Main Process Mode ========================
+
+export type type_MainProcessMode = "desktop" | "web";
+
 // ======================== Widget Style Schema ========================
 
 export const type_style_tdl_schema = {

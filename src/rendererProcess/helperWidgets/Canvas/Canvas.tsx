@@ -13,6 +13,7 @@ import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
 import { refineMacros, rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
+import { Macros } from "../../../common/Macros";
 
 /**
  * ! Note: this type is defined in 3 places: (1) here, (2) widgetConverters/CanvasHelper.ts, and (3) common/GlobalVariables
@@ -41,7 +42,8 @@ export class Canvas {
 
     // macros for this tdl is managed by Canvas
     // internal macros
-    private _macros: [string, string][];
+    // private _macros: [string, string][];
+    private _macros: Macros;
 
     // if the duplicated internal macros should be replaced by external macros
     // private _replaceMacros: boolean;

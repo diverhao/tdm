@@ -8,7 +8,6 @@ import { Table } from "../../helperWidgets/Table/Table";
 import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { XYPlot } from "../XYPlot/XYPlot";
-import { convertDateObjToString } from "../../../common/GlobalMethods";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { defaultFileConverterTdl, type_FileConverter_tdl } from "../../../common/types/type_widget_tdl";

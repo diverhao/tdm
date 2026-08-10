@@ -47,7 +47,7 @@ export class MainWindowStartupPage {
         const newIndex = oldIndex - 1;
         const propertyValue = profiles[name];
         delete profiles[name];
-        GlobalMethods.insertToObject(name, propertyValue, profiles, newIndex);
+        GlobalMethods.insertToObjectAtIndex(profiles, newIndex, name, propertyValue);
         this.saveProfile();
         this.forceUpdate();
     };
@@ -65,7 +65,7 @@ export class MainWindowStartupPage {
         const newIndex = oldIndex + 1;
         const propertyValue = profiles[name];
         delete profiles[name];
-        GlobalMethods.insertToObject(name, propertyValue, profiles, newIndex);
+        GlobalMethods.insertToObjectAtIndex(profiles, newIndex, name, propertyValue);
         this.saveProfile();
         this.forceUpdate();
     };
@@ -95,7 +95,7 @@ export class MainWindowStartupPage {
 
         const newIndex = Object.keys(profiles).length;
 
-        GlobalMethods.insertToObject(newName, propertyValue, profiles, newIndex);
+        GlobalMethods.insertToObjectAtIndex(profiles, newIndex, newName, propertyValue);
         this.saveProfile();
         this.forceUpdate();
     };
@@ -125,7 +125,7 @@ export class MainWindowStartupPage {
         }
 
         const newIndex = Object.keys(profiles).length;
-        GlobalMethods.insertToObject(newName, propertyValue, profiles, newIndex);
+        GlobalMethods.insertToObjectAtIndex(profiles, newIndex, newName, propertyValue);
         this.saveProfile();
         this.forceUpdate();
     };
@@ -709,7 +709,7 @@ export class MainWindowStartupPage {
         }
         const value = obj[oldName];
         delete obj[oldName];
-        GlobalMethods.insertToObject(newName, value, obj, index);
+        GlobalMethods.insertToObjectAtIndex(obj, index, newName, value);
     };
 
     // ------------------- setter and getter ------------------

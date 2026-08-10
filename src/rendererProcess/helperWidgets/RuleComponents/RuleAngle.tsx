@@ -17,7 +17,7 @@ export class RuleAngle extends RuleComponent {
 	};
 
 	ElementPropertyValue = () => {
-		const [angle, setAngle] = React.useState(GlobalMethods.parseIntAngle(`${this.getRule().getPropertyValue()}`));
+		const [angle, setAngle] = React.useState(GlobalMethods.parseCSSAngle(`${this.getRule().getPropertyValue()}`));
 
 		return (
 			<form
@@ -38,7 +38,7 @@ export class RuleAngle extends RuleComponent {
 					}}
 					// must use enter to change the value
 					onBlur={(event) => {
-						const orig = GlobalMethods.parseIntAngle(`${this.getRuleTdl()["propertyValue"]}`);
+						const orig = GlobalMethods.parseCSSAngle(`${this.getRuleTdl()["propertyValue"]}`);
 						if (orig !== angle) {
 							setAngle(orig);
 						}
@@ -54,7 +54,7 @@ export class RuleAngle extends RuleComponent {
 		}
 
 		const oldValStr = `${this.getRule().getPropertyValue()}`;
-		const newValStr = GlobalMethods.insertIntAngle(propertyValue as number, oldValStr);
+		const newValStr = GlobalMethods.replaceCSSAngle(propertyValue as number, oldValStr);
 
 		if (oldValStr === newValStr) {
 			return;
