@@ -3,7 +3,7 @@ import * as React from "react";
 import { type_dbrData } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { calcTickPositions, calcTicks, generateRgbaColor, mapPointToXy, mapXYsToPointsWebGl } from "../../../common/GlobalMethods";
+import { generateRgbaColor, mapPointToXy, mapXYsToPointsWebGl } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
@@ -11,6 +11,7 @@ import { XYPlotPlotSettings } from "./XYPlotPlotSettings";
 import { XYPlotPlotWebGl } from "./XYPlotPlotWebGl";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
 import { type_XYPlot_yAxis, type_XYPlot_ticksInfo, type_XYPlot_xAxis, defaultXYPlotTicksInfo, defaultXYPlotYAxis } from "../../../common/types/type_widget_tdl";
+import { calcTickPositions, calcTicks } from "../../global/PlotHelpers";
 
 // re-export for consumers that import from here
 export type type_yAxis = type_XYPlot_yAxis;

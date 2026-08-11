@@ -17,6 +17,7 @@ import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { calcTickPositions, calcTicks } from "../../global/PlotHelpers";
 
 
 type type_xAxis = {
@@ -593,10 +594,10 @@ export class DataViewerPlot {
         const width = this.getPlotWidth();
         const height = this.getPlotHeight();
 
-        const xTickValues = GlobalMethods.calcTicks(-10, 0, 10 + 1, { scale: "Linear" });
-        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, -10, 0, width, { scale: "Linear" }, "horizontal");
-        const yTickValues = GlobalMethods.calcTicks(0, 10, 5 + 1, { scale: "Linear" });
-        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, 0, 10, height, { scale: "Linear" }, "vertical");
+        const xTickValues = calcTicks(-10, 0, 10 + 1, { scale: "Linear" });
+        const xTickPositions = calcTickPositions(xTickValues, -10, 0, width, { scale: "Linear" }, "horizontal");
+        const yTickValues = calcTicks(0, 10, 5 + 1, { scale: "Linear" });
+        const yTickPositions = calcTickPositions(yTickValues, 0, 10, height, { scale: "Linear" }, "vertical");
 
         return (
             <div
@@ -1323,10 +1324,10 @@ export class DataViewerPlot {
 
         const { xTickValMin, xTickValMax, xTickUnit } = this.calcXTickRange(xValMin, xValMax);
 
-        const xTickValues = GlobalMethods.calcTicks(xTickValMin, xTickValMax, numXgrid + 1, { scale: scale });
-        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xTickValMin, xTickValMax, xLength, { scale: scale }, "horizontal");
-        const yTickValues = GlobalMethods.calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
-        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
+        const xTickValues = calcTicks(xTickValMin, xTickValMax, numXgrid + 1, { scale: scale });
+        const xTickPositions = calcTickPositions(xTickValues, xTickValMin, xTickValMax, xLength, { scale: scale }, "horizontal");
+        const yTickValues = calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
+        const yTickPositions = calcTickPositions(yTickValues, yValMin, yValMax, yLength, { scale: scale }, "vertical");
         yAxis["ticksInfo"] = {
             scale,
             xValMin,

@@ -5,6 +5,7 @@ import { Log } from "../../../common/Log";
 import { DataViewerPlot } from "./DataViewerPlot";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
+import { binarySearchRange } from "../../global/PlotHelpers";
 
 /**
  * Helper class for data operations in DataViewerPlot.
@@ -81,7 +82,7 @@ export class DataViewerPlotDataHelper {
                 return;
             }
 
-            let [leftIndex, rightIndex] = GlobalMethods.binarySearchRange(xData, minNewDataTime, maxNewDataTime);
+            let [leftIndex, rightIndex] = binarySearchRange(xData, minNewDataTime, maxNewDataTime);
             Log.info("Obtained archive data, replace data from index", leftIndex, "to index", rightIndex);
             // archive data is not within the range of existing data
             if (leftIndex === -100 || rightIndex === -100) {

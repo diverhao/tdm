@@ -7,8 +7,8 @@ import { BaseWidgetRules } from "../BaseWidget/BaseWidgetRules";
 import { ThermometerRule } from "./ThermometerRule";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Log } from "../../../common/Log";
-import { calcTicks, refineTicks } from "../../../common/GlobalMethods";
 import { defaultThermometerTdl, type_Thermometer_tdl } from "../../../common/types/type_widget_tdl";
+import { calcTicks, refineTicks } from "../../global/PlotHelpers";
 
 export class Thermometer extends BaseWidget {
 

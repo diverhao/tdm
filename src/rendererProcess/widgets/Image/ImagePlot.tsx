@@ -9,6 +9,7 @@ import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMapData";
 import { ImageConfigPage } from "./ImageConfigPage";
 import { ImageRoi } from "./ImageRoi";
+import { calcTickPositions, calcTicks } from "../../global/PlotHelpers";
 
 /**
  * Runtime image display state.
@@ -1296,10 +1297,10 @@ export class ImagePlot {
         const numYgrid = 5;
 
 
-        const xTickValues = GlobalMethods.calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
-        const xTickPositions = GlobalMethods.calcTickPositions(xTickValues, xValMin, xValMax, plotRegionWidth, { scale: scale }, "horizontal");
-        const yTickValues = GlobalMethods.calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
-        const yTickPositions = GlobalMethods.calcTickPositions(yTickValues, yValMin, yValMax, plotRegionHeight, { scale: scale }, "vertical");
+        const xTickValues = calcTicks(xValMin, xValMax, numXgrid + 1, { scale: scale });
+        const xTickPositions = calcTickPositions(xTickValues, xValMin, xValMax, plotRegionWidth, { scale: scale }, "horizontal");
+        const yTickValues = calcTicks(yValMin, yValMax, numYgrid + 1, { scale: scale });
+        const yTickPositions = calcTickPositions(yTickValues, yValMin, yValMax, plotRegionHeight, { scale: scale }, "vertical");
         return {
             plotRegionWidth,
             plotRegionHeight,
