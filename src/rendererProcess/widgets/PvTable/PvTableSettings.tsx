@@ -56,8 +56,10 @@ export class PvTableSettings {
                         <ElementMacrosTable
                             headlineName1={"Name"}
                             headlineName2={"Value"}
-                            macrosData={this.getMainWidget().getMacros()} // [string, string][]
-
+                            macrosData={this.getMainWidget().getMacros().getArr()} // [string, string][]
+                            addRowCallback={() => { }} // () => void
+                            deleteRowCallback={(index: number) => { }}
+                            modifyCellCallback={(rowIndex: number, columnIndex: number, value: string) => { }}
                         ></ElementMacrosTable>
                     </div>
                     <this._ElementFieldNames></this._ElementFieldNames>

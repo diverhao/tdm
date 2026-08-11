@@ -478,9 +478,12 @@ export class CanvasSidebar {
             <ElementMacrosTable
                 headlineName1={"Name"}
                 headlineName2={"Value"}
-                macrosData={this._mainWidget.getMacros()}
-            >
+                macrosData={this._mainWidget.getMacros().getArr()}
 
+                addRowCallback={() => { }}
+                deleteRowCallback={(index: number) => { }}
+                modifyCellCallback={(rowIndex: number, columnIndex: number, value: string) => { }}
+            >
             </ElementMacrosTable>
         )
     }

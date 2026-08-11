@@ -330,6 +330,9 @@ export class SidebarActionOpenDisplayItem {
                         headlineName1={"Name"}
                         headlineName2={"Value"}
                         macrosData={this.getTdl()["externalMacros"]}
+                        addRowCallback={() => { }} // () => void
+                        deleteRowCallback={(index: number) => { }}
+                        modifyCellCallback={(rowIndex: number, columnIndex: number, value: string) => { }}
                     >
                     </ElementMacrosTable>
                 </div>

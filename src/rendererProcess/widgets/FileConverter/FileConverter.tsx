@@ -1,17 +1,13 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { GlobalVariables } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Table } from "../../helperWidgets/Table/Table";
-import { v4 as uuidv4 } from "uuid";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { XYPlot } from "../XYPlot/XYPlot";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } from "../../helperWidgets/SharedElements/RectangleButton";
-import { Log } from "../../../common/Log";
 import { defaultFileConverterTdl, type_FileConverter_tdl } from "../../../common/types/type_widget_tdl";
-import { Macros } from "../../../common/Macros";
 
 
 export type type_FileConverterData = {
@@ -26,16 +22,7 @@ export type type_FileConverterData = {
 export class FileConverter extends BaseWidget {
     // -------------------------------------------
 
-    _macros: Macros = new Macros([]);
     _table: Table;
-
-    setMacros = (newMacros: Macros) => {
-        this._macros = newMacros;
-    };
-
-    getMacros = () => {
-        return this._macros;
-    };
 
     t0: number = 0;
 
@@ -65,8 +52,6 @@ export class FileConverter extends BaseWidget {
         this.initStyle(widgetTdl);
         this.initText(widgetTdl);
         this.setReadWriteType("write");
-
-        this.setMacros(new Macros(widgetTdl.macros));
 
         // columns: ms since epoch, channel name, ip, port
         this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 6, GlobalVariables.defaultFontSize * 8], this);
@@ -770,8 +755,6 @@ export class FileConverter extends BaseWidget {
 
     getTdlCopy = (newKey: boolean = true): Record<string, any> => {
         const result = super.getTdlCopy(newKey);
-        // result.fieldNames = this.getStrippedFieldNames();
-        result.macros = structuredClone(this.getMacros());
         result.channelNames = structuredClone(this.getChannelNamesLevel0());
         return result;
     };

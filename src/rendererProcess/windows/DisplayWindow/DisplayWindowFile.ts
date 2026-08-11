@@ -424,7 +424,7 @@ export class DisplayWindowFile {
 
     showTdlFileContents = () => {
         const tdl = this.generateTdl();
-        const externalMacros = g_widgets1.getRoot().getExternalMacros();
+        const externalMacros = g_widgets1.getRoot().getExternalMacros().getArr();
         const tdlFileName = this.getDisplayWindowClient().getTdlFileName();
         this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("create-utility-display-window",
             {

@@ -3106,7 +3106,7 @@ export class Widgets {
         const tdlFileName = this.getTdlFileName();
         const rendererWindowStatus = g_widgets1.isEditing() ? "editing" : "operating";
         const editable = this.getEditable();
-        const externalMacros = structuredClone(this.getRoot().getExternalMacros());
+        const externalMacros = structuredClone(this.getRoot().getExternalMacros().getArr());
         const externalReplaceMacros = this.getRoot().getUseExternalMacros();
         // (3)
         // this.removeAllWidgetsHard(false);
@@ -3116,7 +3116,7 @@ export class Widgets {
             tdlFileName: tdlFileName,
             mode: rendererWindowStatus,
             editable: editable,
-            externalMacros: externalMacros.getArr(),
+            externalMacros: externalMacros,
             replaceMacros: externalReplaceMacros,
         });
     };

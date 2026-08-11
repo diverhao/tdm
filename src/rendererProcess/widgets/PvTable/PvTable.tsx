@@ -18,7 +18,6 @@ import { ElementRectangleButton } from "../../helperWidgets/SharedElements/Recta
 import { Log } from "../../../common/Log";
 import { defaultPvTableTdl, type_PvTable_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
-import { Macro } from "../../helperWidgets/Help/contents/Macro";
 import { Macros } from "../../../common/Macros";
 
 
@@ -1397,7 +1396,7 @@ export class PvTable extends BaseWidget {
         const result = super.getTdlCopy(newKey);
         // result.fieldNames = this.getStrippedFieldNames();
         result.fieldNames = this.getFieldlNames();
-        result.macros = structuredClone(this.getMacros());
+        result.macros = structuredClone(this.getMacros().getArr());
         result.channelNames = structuredClone(this.getChannelNamesLevel5());
         result.channelValues = structuredClone(this.getChannelValues());
         result.channelSelects = structuredClone(this.getChannelSelects());

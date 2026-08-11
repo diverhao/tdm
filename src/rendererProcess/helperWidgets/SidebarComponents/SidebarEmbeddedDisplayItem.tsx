@@ -4,9 +4,6 @@ import { EmbeddedDisplay } from "../../widgets/EmbeddedDisplay/EmbeddedDisplay";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementButton, ElementMacrosTable } from "../SharedElements/MacrosTable";
-import { ElementMacroInput, ElementMacroTd, ElementMacroTr } from "../SharedElements/MacrosTable";
-import path from "path";
-import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 
 export class SidebarEmbeddedDisplayItem {
     _items: SidebarEmbeddedDisplayItems;
@@ -245,6 +242,9 @@ export class SidebarEmbeddedDisplayItem {
                         headlineName1={"Name"}
                         headlineName2={"Value"}
                         macrosData={this.getDisplay()?.macros ?? []}
+                        addRowCallback={() => { }} // () => void
+                        deleteRowCallback={(index: number) => { }}
+                        modifyCellCallback={(rowIndex: number, columnIndex: number, value: string) => { }}
                     >
                     </ElementMacrosTable>
                 </div>

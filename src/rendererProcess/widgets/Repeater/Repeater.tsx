@@ -424,7 +424,11 @@ export class Repeater extends BaseWidget {
     getTdlCopy(newKey: boolean) {
         const result = super.getTdlCopy(newKey);
         result["widgetKeys"] = structuredClone(this.getTemplateWidgetKeys());
-        result["widgetsMacros"] = structuredClone(this.getWidgetsMacros());
+        let widgetsMacros: type_macros_tdl[] = [];
+        for (const widgetMacros of this.getWidgetsMacros()) {
+            widgetsMacros.push(structuredClone(widgetMacros.getArr()));
+        }
+        result["widgetsMacros"] = widgetsMacros;
         return result;
     }
 

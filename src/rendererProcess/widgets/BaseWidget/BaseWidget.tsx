@@ -205,7 +205,9 @@ export abstract class BaseWidget {
     _eqChannelNameIndices: number[] = [];
 
     // a widget does not have dedicated macros
-    // this variable contains the macros from special purposes, e.g. the temporary EmbeddedDisplay macros
+    // this variable contains the macros from special purposes, 
+    // by far, 2 widgets, EmbeddedDisplay and Repeater, assign the temp macros to its children widgets
+    //         2 widgets, PvTable and SeqGraph, are using this _macros to define pv names inside
     _macros: Macros = new Macros([]);
 
     /**
@@ -1392,8 +1394,7 @@ export abstract class BaseWidget {
         }
 
         // provided macros overrides locally defined macros
-        // const macros = GlobalMethods.refineMacros([...this.getMacros(), ...this.getAllMacros()]);
-        const macros = Macros.fromMacros(this.getMacros(), this.getAllMacros());
+        const macros = Macros.fromMacros(this.getAllMacros(), this.getMacros());
 
         // ------------ level 1 --------------
         // (1) formula channel name or regular channel name
@@ -1661,17 +1662,17 @@ export abstract class BaseWidget {
 
 
     /**
-     * Get all macros for this widget.
+     * Get all macros that can be used for this widget, sorted by priorities.
      * 
-     * TDM does not provide macros option for a widget, a widget's macros come from (Priority high to low:)
-     *  (1) the user-provided, stored in Root
-     *  (2) upper-level provided, for now, it is only servicing widgets inside EmbeddedDisplay,
-     *      e.g. passed down from EmbeddedDisplay widget's item macros, or
-     *      the Canvas macros defined in TDL file
-     *      it is obtain via BaseWidget.getMacros()
-     *  (3) the Canvas definition, stored in Canvas
-     * 
-     * 
+     * There are 3 sources of macros:
+     *  - widget's own macros, only a handful of widgets can set these macros:
+     *    EmbeddedDisplay, Repeater, PvTable and SeqGraph
+     *    If this widget is inside an EmbeddedDisplay or Repeater, its macros can be temporarily modified 
+     *    These macros have the highest priority
+     *  - externally provided macros when we open the TDL: 
+     *    these macros could be provided by user or the ActionButton which opens this TDL
+     *  - the macros defined in the TDL file, namely the Canvas macros
+     *    they have the lowest priority
      */
     getAllMacros = () => {
 
@@ -1679,17 +1680,14 @@ export abstract class BaseWidget {
         if (!(canvas instanceof Canvas)) {
             return new Macros([]);
         }
-        // macros defined in Canvas
+        // Canvas macros
         const canvasMacros = canvas.getMacros();
 
-        // user-provided macros, may contain the parent window macros
+        // user/ActionButton-provided macros, may contain the parent window macros
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
 
         // Higher priority macros appears first
-        // external macros should override canvas macros
-        // the local widget's macros is for special purpose, which is always highest priority
         return Macros.fromMacros(this.getMacros(), externalMacros, canvasMacros);
-        // return GlobalMethods.refineMacros([...this.getMacros(), ...externalMacros, ...canvasMacros]);
     }
 
 

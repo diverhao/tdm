@@ -2,7 +2,7 @@ import * as React from "react"
 import { GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
-import { type_macro_tdl } from "../../../common/types/type_widget_tdl";
+import { type_macro_tdl, type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
 const disableImageDrag = (children: React.ReactNode): React.ReactNode => {
     return React.Children.map(children, (child) => {
@@ -34,11 +34,18 @@ export const ElementMacrosTable = (
     {
         headlineName1,
         headlineName2,
-        macrosData, // [string, string][]
-        addRowCallback, // () => void
-        deleteRowCallback, // (index: number) => void
-        modifyCellCallback, // (rowIndex: number, columnIndex: number, value: string) => void
-    }: any
+        macrosData,
+        addRowCallback,
+        deleteRowCallback,
+        modifyCellCallback,
+    }: {
+        headlineName1: string,
+        headlineName2: string,
+        macrosData: type_macros_tdl,
+        addRowCallback: () => void,
+        deleteRowCallback: (index: number) => void,
+        modifyCellCallback: (rowIndex: number, columnIndex: number, value: string) => void,
+    }
 ) => {
     const [, forceUpdate] = React.useState({});
 
@@ -133,6 +140,7 @@ export const ElementMacrosTable = (
                                 <ElementButton
                                     onClick={() => {
                                         macrosData.splice(index, 1);
+                                        // macrosData.splice(index, 1);
                                         if (deleteRowCallback !== undefined) {
                                             deleteRowCallback(index)
                                         }
@@ -282,7 +290,11 @@ export const ElementMacrosTableSingleColumnData = (
 }
 
 
-export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCellCallback }: any) => {
+export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCellCallback }:
+    {
+        rowIndex: number, columnIndex: number, macrosData: type_macros_tdl, modifyCellCallback: (rowIndex: number, columnIndex: number, value: string) => void
+    }
+) => {
     const refElement = React.useRef<HTMLInputElement>(null);
     const [value, setValue] = React.useState(macrosData[rowIndex][columnIndex]);
     return (
@@ -351,7 +363,7 @@ export const ElementMacroInput = ({ rowIndex, columnIndex, macrosData, modifyCel
     )
 }
 
-export const ElementMacroInputSingleColumnData = ({widgetKey, rowIndex, macrosData }: any) => {
+export const ElementMacroInputSingleColumnData = ({ widgetKey, rowIndex, macrosData }: any) => {
     const refElement = React.useRef<HTMLInputElement>(null);
     const [value, setValue] = React.useState(macrosData[rowIndex]);
     return (

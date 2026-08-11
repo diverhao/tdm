@@ -2,17 +2,14 @@ import { type_macros_tdl } from "./types/type_widget_tdl";
 
 
 export class Macros {
-    private data: Record<string, string> = {};
+    private arr: type_macros_tdl = [];
 
-    /**
-     * The later macro will override the previous one.
-     */
     constructor(arr: type_macros_tdl) {
         for (const macro of arr) {
             let name = macro[0];
             let value = macro[1];
             if (typeof name === "string" && typeof value === "string" && name.length > 0) {
-                this.data[name] = value;
+                this.arr.push([name, value]);
             }
         }
     }
@@ -42,30 +39,73 @@ export class Macros {
         return new Macros(totalArr);
     }
 
+    add = (name: string, value: string) => {
+        this.getArr().push([name, value]);
+    }
+
+    insert = (name: string, value: string, index: number) => {
+        this.getArr().splice(index, 0, [name, value]);
+    }
+
+    removeByIndex = (index: number) => {
+        this.getArr().splice(index, 1);
+    }
+
+    removeByName = (name: string) => {
+        let index = -1;
+        for (const macro of this.getArr()) {
+            index = index + 1;
+            const key = macro[0];
+            if (name === key) {
+                this.getArr().splice(index, 1);
+                return;
+            }
+        }
+    }
+
+    replace = (index: number, name: string, value: string) => {
+        let macroArr = this.getArr()[index];
+        if (macroArr !== undefined) {
+            macroArr[0] = name;
+            macroArr[1] = value;
+        }
+    }
+
+
     /**
      * Apply this Macros to the input string, replacing all the macros recursively
+     * 
+     * The macro in the front has higher priority
      */
     apply = (input: string) => {
-        let remainsBefore = -1;
-        let remainsAfter = 0;
-        const MAX_COUNT = 6;
-        let count = 0;
+        const MAX_COUNT = 10;
 
-        while (remainsBefore !== remainsAfter || count < MAX_COUNT) {
-            remainsBefore = input.split("$").length - 1;
-            for (const macro of Object.entries(this.getData())) {
+        // limit the recursive less than 6 times
+        // limit the result length < 128 characters
+        for (let count = 0; count < MAX_COUNT; count++) {
+            const before = input;
+            for (const macro of this.getArr()) {
                 const name = macro[0];
                 const value = macro[1];
                 input = input.replaceAll("${" + name + "}", value).replaceAll("$(" + name + ")", value);
             }
-            remainsAfter = input.split("$").length - 1;
-            count = count + 1;
+            // converge
+            if (input === before) {
+                break;
+            }
+            // prevent exponential increase of string length if "A = ${A}${A}"
+            if (input.length > 128) {
+                break;
+            }
         }
         return input;
     }
 
+
     /**
      * Format the macros as a table for logging and display.
+     * 
+     * Use in in this way: console.log(`${macros}`)
      */
     toString = (): string => {
         const formatCell = (value: string): string => {
@@ -94,7 +134,7 @@ export class Macros {
      */
     getStr = () => {
         let str = "";
-        for (const [name, value] of Object.entries(this.getData())) {
+        for (const [name, value] of this.getArr()) {
             str = str + `, ${name} = ${value}`;
         }
         if (str.length > 0) {
@@ -108,15 +148,18 @@ export class Macros {
     }
 
     getValue = (name: string): string | undefined => {
-        return this.getData()[name];
+        for (let macro of this.getArr()) {
+            let key = macro[0];
+            if (name === key) {
+                return macro[1];
+            }
+        }
+        return undefined;
     }
 
-    getData = (): Record<string, string> => {
-        return this.data;
-    }
 
     getArr = (): type_macros_tdl => {
-        return Object.entries(this.getData());
+        return this.arr;
     }
 
 }

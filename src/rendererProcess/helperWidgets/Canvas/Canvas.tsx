@@ -64,7 +64,7 @@ export class Canvas {
         this._widgetKey = widgetTdl.widgetKey;
 
         this._style = { ...Canvas._defaultTdl.style, ...widgetTdl.style };
-        this._macros = structuredClone(widgetTdl.macros);
+        this._macros = new Macros(widgetTdl.macros);
         // this._replaceMacros = widgetTdl.replaceMacros;
         this._windowName = widgetTdl.windowName === undefined ? "" : widgetTdl.windowName;
 
@@ -314,7 +314,7 @@ export class Canvas {
             widgetKey: "Canvas",
             key: "Canvas",
             style: structuredClone(this.getStyle()),
-            macros: this.getMacros().getArr(),
+            macros: structuredClone(this.getMacros().getArr()),
             // replaceMacros: this.getReplaceMacros(),
             windowName: this.getWindowName(),
             script: this.getScript(),
@@ -402,11 +402,10 @@ export class Canvas {
         // user-provided macros, may contain the parent window macros
         const externalMacros = g_widgets1.getRoot().getExternalMacros();
         const internalMacros = this.getMacros();
-        // the BaseWidget.expandChannelName() picks the macro that appears first in macros array
         if (useExternalMacros) {
-            return Macros.fromMacros(internalMacros, externalMacros);
-        } else {
             return Macros.fromMacros(externalMacros, internalMacros);
+        } else {
+            return Macros.fromMacros(internalMacros, externalMacros);
         }
 
     };

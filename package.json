@@ -10,7 +10,7 @@
         "email": "haoh@ornl.gov"
     },
     "desktopName": "tdm.desktop",
-    "buildDate": "2026-08-09T04:50:41Z",
+    "buildDate": "2026-08-11T01:16:23Z",
     "site": "sns-office-engineer",
     "scripts": {
         "start": "ROOT=`pwd`; ./scripts/npm_start.sh $ROOT; electron .",

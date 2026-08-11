@@ -706,8 +706,10 @@ export class SeqGraph extends BaseWidget {
                         <ElementMacrosTable
                             headlineName1={"Name"}
                             headlineName2={"Value"}
-                            macrosData={this.getMacros()} // [string, string][]
-
+                            macrosData={this.getMacros().getArr()} // [string, string][]
+                            addRowCallback={() => { }} // () => void
+                            deleteRowCallback={(index: number) => { }}
+                            modifyCellCallback={(rowIndex: number, columnIndex: number, value: string) => { }}
                         ></ElementMacrosTable>
                     </div>
 
@@ -1648,7 +1650,7 @@ ss volt_check {
         const result = super.getTdlCopy(newKey);
         // channels names should be extracted from seq program
         result.channelNames = [];
-        result.macros = this.getMacros();
+        result.macros = structuredClone(this.getMacros().getArr());
         // result.recordTypes = {};
         // result.menus = {};
         return result;
