@@ -3,7 +3,7 @@ import * as React from "react";
 import { type_dbrData } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { calcTickPositions, calcTicks, mapPointToXy, mapXYsToPointsWebGl, mapXyToPoint, mapXyToPointGl, refineTicks } from "../../../common/GlobalMethods";
+import { calcTickPositions, calcTicks, generateRgbaColor, mapPointToXy, mapXYsToPointsWebGl } from "../../../common/GlobalMethods";
 import { getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
@@ -1077,11 +1077,10 @@ export class XYPlotPlot {
     generateDefaultYAxis = (index: number): type_yAxis => {
 
         const index1 = index % presetColors.length;
-        const lineColor = presetColors[index1];
         return {
             ...structuredClone(defaultXYPlotYAxis),
             label: `y${index}`,
-            lineColor: lineColor,
+            lineColor: generateRgbaColor(index1),
         }
     };
 

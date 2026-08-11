@@ -106,6 +106,15 @@ export class Symbol extends BaseWidget {
             fileName = this.resolveFileName(fallbackFileNameRaw);
         }
 
+
+        const truncateString = (str: string, length: number = 3) => {
+            if (str && str.length > length) {
+                return str.substring(0, length) + '...';
+            }
+            return str;
+        };
+
+
         const [imageError, setImageError] = React.useState(false);
         React.useEffect(() => {
             setImageError(false);
@@ -131,7 +140,7 @@ export class Symbol extends BaseWidget {
                         fontSize="36"
                         fill="#999"
                     >
-                        {GlobalMethods.truncateString(`${value}`)}
+                        {truncateString(`${value}`)}
                     </text>
                 </svg>
             );
@@ -254,7 +263,7 @@ export class Symbol extends BaseWidget {
     getItemNames() {
         return this._itemNames;
     };
-    
+
     getItemValues() {
         return this._itemValues;
     };

@@ -9,7 +9,6 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import { FileReader } from "../file/FileReader";
 import { type_options_createDisplayWindow } from "../windows/WindowAgentsManager";
 import { type_tdl } from "../../common/GlobalVariables";
-import { generateDisplayWindowHtml } from "../../common/GlobalMethods";
 
 export class WebServer {
     private _server: Express | undefined;
@@ -60,7 +59,7 @@ export class WebServer {
                 return;
             }
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                response.type("html").send(generateDisplayWindowHtml({
+                response.type("html").send(this.generateDisplayWindowHtml({
                     basePath: this.getBasePath(),
                     displayWindowId: displayWindowAgent.getId(),
                 }));
@@ -87,7 +86,7 @@ export class WebServer {
 
             const nav = request.query.nav;
             if (nav === "new") {
-                response.type("html").send(generateDisplayWindowHtml({
+                response.type("html").send(this.generateDisplayWindowHtml({
                     basePath: this.getBasePath(),
                     displayWindowId: displayWindowId,
                 }));
@@ -257,5 +256,64 @@ export class WebServer {
         return this._basePath === "" ? suffix : `${this._basePath}${suffix}`;
     }
 
+
+    generateDisplayWindowHtml = (option: { basePath: string, displayWindowId: string }) => {
+
+        const { basePath, displayWindowId } = option;
+
+        return (
+            `
+<!DOCTYPE html>
+
+<html>
+	<head>
+	</head>
+
+	<body style="-webkit-print-color-adjust: exact; width: 100%; height: 100%;">
+		<div id="root"></div>
+		<!-- one solution for Electron's "exports is not defined" error -->
+		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
+		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
+		<!-- another solution for Electron's "exports is not defined" error -->
+		<!-- manually define a global variable "exports" -->
+		<script>
+			var exports = {};
+            window.basePath = ${JSON.stringify(basePath)};
+		</script>
+
+		<!-- load from webpack package  -->
+		<!-- the webpack package is transpiled to ESM module type (import/export), it can be loade by both -->
+		<!-- electron.js and browser. The embedded display (iframe) can be correctly displayed in this way. -->
+		<!-- it takes a significant amount of time to bundle the stuff -->
+		<!-- one significant difference between bundled and un-bundled versions is the __dirname is always / in bundled -->
+		<!-- version. In un-bundled version, the __dirname is the .js file's path on hard drive -->
+		<!-- The relative path for img (e.g. "../../abc.svg") is w.r.t. this html file. The "file://" prefix should always -->
+		<!-- come with absolute path -->
+		<!-- it is recommended to use for production -->
+		<script type="module" src="${basePath}/webpack/DisplayWindowClient.js"></script>
+
+		<script type="module">
+			const urlParams = new URLSearchParams(window.location.search);
+			const ipcServerPort = urlParams.get("ipcServerPort");
+			// const displayWindowId = urlParams.get("displayWindowId");
+            const displayWindowId = ${JSON.stringify(displayWindowId)};
+			const hostnameRaw = urlParams.get("hostname"); // might be null
+			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
+            console.log("display window Id", displayWindowId);
+            console.log("ipcServerPort", ipcServerPort, "displayWindowId", displayWindowId);
+
+
+            const nav = performance.getEntriesByType("navigation")[0];
+            const isReload = nav?.type === "reload";
+            
+            console.log("isReload =", isReload);
+          	new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
+
+		</script>
+	</body>
+</html>
+`
+        )
+    }
 
 }

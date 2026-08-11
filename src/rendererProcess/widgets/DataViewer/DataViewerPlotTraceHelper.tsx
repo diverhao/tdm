@@ -1,10 +1,9 @@
-import { Channel_DBR_TYPES } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { settingsIndexChoices } from "./DataViewerPlot";
 import type { DataViewerPlot } from "./DataViewerPlot";
-import { traceColors } from "./DataViewerPlot";
 import { defaultDataViewerYAxis } from "../../../common/types/type_widget_tdl";
 import { TcaChannel } from "../../channel/TcaChannel";
+import { generateRgbaColor } from "../../../common/GlobalMethods";
 
 
 /**
@@ -54,7 +53,7 @@ export class DataViewerPlotTraceHelper {
         // (2)
         const yAxis = structuredClone(defaultDataViewerYAxis);
         yAxis["label"] = newChannelName;
-        yAxis["lineColor"] = `rgba(${this.getNewColor()})`;
+        yAxis["lineColor"] = generateRgbaColor(plot.yAxes.length);
         plot.yAxes.push(yAxis);
 
         // (3)
@@ -178,12 +177,6 @@ export class DataViewerPlotTraceHelper {
 
         // (6)
         plot.updatePlot();
-    };
-
-    getNewColor = (): [number, number, number, number] => {
-        const numTraces = this.getPlot().yAxes.length;
-        const newColorIndex = numTraces % traceColors.length;
-        return traceColors[newColorIndex];
     };
 
     updateTraceShowOrHide = (index: number, showTrace: boolean) => {

@@ -2376,12 +2376,11 @@ export abstract class BaseWidget {
             bgColor = `${this.getAllStyle()["backgroundColor"]}`;
         }
 
-        const borderRadius = this.getAllStyle()["borderRadius"];
-        const topColor = GlobalMethods.adjustRgba(bgColor, 8);
-        const bottomColor = GlobalMethods.adjustRgba(bgColor, -18);
-        const borderColor = GlobalMethods.adjustRgba(bgColor, -18);
-        const lightEdge = GlobalMethods.adjustRgba(bgColor, 26);
-        const darkEdge = GlobalMethods.adjustRgba(bgColor, -18);
+        const topColor = this.adjustRgba(bgColor, 8);
+        const bottomColor = this.adjustRgba(bgColor, -18);
+        const borderColor = this.adjustRgba(bgColor, -18);
+        const lightEdge = this.adjustRgba(bgColor, 26);
+        const darkEdge = this.adjustRgba(bgColor, -18);
 
         return {
             width: "",
@@ -2399,8 +2398,24 @@ export abstract class BaseWidget {
         `,
             borderRadius: 3,
         };
-
     }
+
+
+    adjustRgba = (color: string, delta: number) => {
+        const match = color.match(
+            /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/i
+        );
+        if (!match) {
+            return color;
+        }
+
+        const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+        const [, r, g, b, a = "1"] = match;
+
+        return `rgba(${clamp(Number(r) + delta)}, ${clamp(Number(g) + delta)}, ${clamp(
+            Number(b) + delta
+        )}, ${a})`;
+    };
 
     /**
      * expand a string to latex or macros

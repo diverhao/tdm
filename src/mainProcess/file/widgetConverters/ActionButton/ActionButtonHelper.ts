@@ -6,7 +6,8 @@ import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { defaultActionButtonTdl, type_ActionButton_tdl, type_action_opendisplay_tdl_schema, type_action_opendisplay_tdl, type_actions_tdl } from "../../../../common/types/type_widget_tdl";
-import { generateWidgetKey, isOfType } from "../../../../common/GlobalMethods";
+import { generateWidgetKey } from "../../../../common/GlobalMethods";
+import { isOfType } from "../../../../common/types/type_checker";
 
 
 export class ActionButtonHelper extends BaseWidgetHelper {

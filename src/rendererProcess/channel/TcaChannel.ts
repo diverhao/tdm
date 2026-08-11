@@ -1924,13 +1924,13 @@ export class TcaChannel {
             for (const dbrData of newDbrData) {
                 // deep merge
                 if (typeof dbrData === "object") {
-                    this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, dbrData) as any;
+                    this._dbrData = GlobalMethods.deepMerge(this._dbrData, dbrData, false) as any;
                 }
             }
         } else {
             // deep merge: PVA may skip some data if they were already delivered
             if (typeof newDbrData === "object") {
-                this._dbrData = GlobalMethods.deepMergeObj(this._dbrData, newDbrData) as any;
+                this._dbrData = GlobalMethods.deepMerge(this._dbrData, newDbrData, false) as any;
             }
         }
     };

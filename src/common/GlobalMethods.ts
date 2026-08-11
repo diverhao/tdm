@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 import { Log } from "./Log";
-import { FieldType, PrimitiveFieldType, TypeSchema } from "./types/type_schema";
 
 // -------------------- color -----------------------
 
@@ -138,22 +137,6 @@ export const insertToMapAtIndex = (map: Map<string, any>, index: number, newKey:
 };
 
 /**
- * Insert one or more new entries to the map, after a particular key.
- */
-export const insertToMapAfterKey = <K, V>(map: Map<K, V>, afterKey: K, entriesToInsert: [K, V][]) => {
-    const newMap = new Map<K, V>();
-    for (const [key, value] of map) {
-        newMap.set(key, value);
-        if (key === afterKey) {
-            for (const [insertKey, insertValue] of entriesToInsert) {
-                newMap.set(insertKey, insertValue);
-            }
-        }
-    }
-    return newMap;
-};
-
-/**
  * Delete a map entry at the index
  * 
  * Return the deleted key-value
@@ -173,6 +156,22 @@ export const deleteFromMapAtIndex = (map: Map<string, any>, index: number): [str
         map.set(key, value);
     }
     return [key, value];
+};
+
+/**
+ * Insert one or more new entries to the map, after a particular key.
+ */
+export const insertToMapAfterKey = <K, V>(map: Map<K, V>, afterKey: K, entriesToInsert: [K, V][]) => {
+    const newMap = new Map<K, V>();
+    for (const [key, value] of map) {
+        newMap.set(key, value);
+        if (key === afterKey) {
+            for (const [insertKey, insertValue] of entriesToInsert) {
+                newMap.set(insertKey, insertValue);
+            }
+        }
+    }
+    return newMap;
 };
 
 /**
@@ -198,25 +197,50 @@ export const insertToObjectAtIndex = (obj: Record<string, any>, index: number, p
 };
 
 /**
- * Deep merge 2 objects with all 
+ * Merge two arrays or two plain objects into a new top-level value.
+ *
+ * Top-level arrays are merged by index. Objects are merged recursively, while
+ * nested arrays and other non-plain-object values from `source` replace the
+ * corresponding values in `target`.
+ *
+ * Set `clone` to `false` for structural sharing of nested values, such as
+ * high-frequency DBR updates containing waveform arrays.
  */
-export const deepMergeObj = (target: Record<string, any>, source: Record<string, any>) => {
-    const result = { ...target };
-
-    for (const key in source) {
-        if (
-            source[key] &&
-            typeof source[key] === "object" &&
-            !Array.isArray(source[key]) &&
-            typeof target[key] === "object"
-        ) {
-            result[key] = deepMergeObj(target[key], source[key]);
-        } else {
-            result[key] = source[key];
+export const deepMerge = (target: any, source: any, clone: boolean = true): any => {
+    const isPlainObject = (value: any): value is Record<string, any> => {
+        if (typeof value !== "object" || value === null) {
+            return false;
         }
-    }
-    return result;
-}
+        const prototype = Object.getPrototypeOf(value);
+        return prototype === Object.prototype || prototype === null;
+    };
+
+    const merge = (targetValue: any, sourceValue: any): any => {
+        if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+            const result = [...targetValue];
+            sourceValue.forEach((value, index) => result[index] = value);
+            return result;
+        }
+
+        if (isPlainObject(targetValue) && isPlainObject(sourceValue)) {
+            const result = { ...targetValue };
+            for (const key of Object.keys(sourceValue)) {
+                const targetChild = targetValue[key];
+                const sourceChild = sourceValue[key];
+                result[key] = isPlainObject(targetChild) && isPlainObject(sourceChild)
+                    ? merge(targetChild, sourceChild)
+                    : sourceChild;
+            }
+            return result;
+        }
+
+        throw new TypeError("deepMerge expects two arrays or two plain objects");
+    };
+
+    const result = merge(target, source);
+    return clone ? structuredClone(result) : result;
+};
+
 
 
 // ---------------------------------- plot ticks -------------------------
@@ -581,360 +605,11 @@ const binarySearch = (data: number[], target: number, mode: boolean) => {
     return left;
 }
 
-// -------------------- macros -------------------------
-
-
-/**
- * "SYS=RNG, SUBSYS=BPM --> [["SYS", "RNG"], ["SUBSYS", "BPM"]]
- */
-export const deserializeMacros = (str: string): [string, string][] => {
-    const result: [string, string][] = [];
-    const macroStrList = str.split(/[\s\t]*[,]+[\s\t]*/); // ["SYS=RNG", "SUBSYS="BPM]
-
-    try {
-        for (const macroStr of macroStrList) {
-            const macroKeyValuePair = macroStr.trim().replaceAll(",", "").split(/[\s]*=[\s]*/); // ["SYS", "RNG"]
-            if (macroKeyValuePair.length === 2) {
-                const key = macroKeyValuePair[0].trim();
-                const value = macroKeyValuePair[1].trim();
-                if (key !== "") {
-                    result.push([key, value]);
-                }
-
-            }
-        }
-        return result;
-    } catch (e) {
-        return [];
-    }
-}
-
+// -------------------- color -------------------------
 
 /**
- * [["SYS", "RNG"], ["SUBSYS", "BPM"]] --> "SYS=RNG, SUBSYS=BPM"
+ * Verify if a string represents a valid rgba color, i.e. "rgba(255, 255, 255 ,1)"
  */
-export const serializeMacros = (macros: [string, string][]) => {
-    try {
-        let result: string = "";
-        for (const macro of macros) {
-            const key = macro[0];
-            const value = macro[1];
-            result = result + key + "=" + value + ", ";
-        }
-        if (result.endsWith(", ")) {
-            result = result.substring(0, result.length - 2);
-        }
-        return result;
-    } catch (e) {
-        return "";
-    }
-
-}
-
-/**
- * Merge the PVA type and pva data
- */
-export const mergePvaTypeAndData = (type: Record<string, any>, key: string | undefined, data: Record<string, any> | number | string | number[] | string[] | Record<string, any>[]) => {
-
-    if (type === undefined) {
-        return {
-            key: key,
-            data: data
-        };
-    }
-
-    const typeIndex = type["typeIndex"];
-
-    if (
-        typeIndex === "0x83" ||
-        typeIndex === "0x60" ||
-        typeIndex === "0x43" ||
-        typeIndex === "0x42" ||
-        typeIndex === "0x27" ||
-        typeIndex === "0x26" ||
-        typeIndex === "0x25" ||
-        typeIndex === "0x24" ||
-        typeIndex === "0x23" ||
-        typeIndex === "0x22" ||
-        typeIndex === "0x21" ||
-        typeIndex === "0x20" ||
-        typeIndex === "0x0") {
-        // primitive data
-        if (key !== undefined) {
-            let typeName = "";
-            if (typeIndex === "0x83") {
-                typeName = "string(length<=" + type["size"] + ")";
-            } else if (typeIndex === "0x60") {
-                typeName = "string";
-            } else if (typeIndex === "0x43") {
-                typeName = "double"
-            } else if (typeIndex === "0x42") {
-                typeName = "float";
-            } else if (typeIndex === "0x27") {
-                typeName = "ulong";
-            } else if (typeIndex === "0x26") {
-                typeName = "uint";
-            } else if (typeIndex === "0x25") {
-                typeName = "ushort";
-            } else if (typeIndex === "0x24") {
-                typeName = "ubyte";
-            } else if (typeIndex === "0x23") {
-                typeName = "long";
-            } else if (typeIndex === "0x22") {
-                typeName = "int";
-            } else if (typeIndex === "0x21") {
-                typeName = "short";
-            } else if (typeIndex === "0x20") {
-                typeName = "byte";
-            } else if (typeIndex === "0x0") {
-                typeName = "boolean";
-            }
-            return {
-                key: typeName + " " + key,
-                data: data,
-            }
-        } else {
-            return {
-                data: data,
-            }
-        }
-    } else if (
-        typeIndex === "0x78" ||
-        typeIndex === "0x70" ||
-        typeIndex === "0x68" ||
-        typeIndex === "0x5b" ||
-        typeIndex === "0x5a" ||
-        typeIndex === "0x53" ||
-        typeIndex === "0x52" ||
-        typeIndex === "0x4b" ||
-        typeIndex === "0x4a" ||
-        typeIndex === "0x3f" ||
-        typeIndex === "0x3e" ||
-        typeIndex === "0x3d" ||
-        typeIndex === "0x3c" ||
-        typeIndex === "0x3b" ||
-        typeIndex === "0x3a" ||
-        typeIndex === "0x39" ||
-        typeIndex === "0x38" ||
-        typeIndex === "0x37" ||
-        typeIndex === "0x36" ||
-        typeIndex === "0x35" ||
-        typeIndex === "0x34" ||
-        typeIndex === "0x33" ||
-        typeIndex === "0x32" ||
-        typeIndex === "0x31" ||
-        typeIndex === "0x30" ||
-        typeIndex === "0x2f" ||
-        typeIndex === "0x2e" ||
-        typeIndex === "0x2d" ||
-        typeIndex === "0x2c" ||
-        typeIndex === "0x2b" ||
-        typeIndex === "0x2a" ||
-        typeIndex === "0x29" ||
-        typeIndex === "0x28" ||
-        typeIndex === "0x18" ||
-        typeIndex === "0x10" ||
-        typeIndex === "0x8"
-    ) {
-        // array of primitive data
-        let typeName = "";
-        if (typeIndex === "0x78") {
-            typeName = "string[" + type["size"] + "]";
-        } else if (typeIndex === "0x70") {
-            typeName = "string[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x68") {
-            typeName = "string[]";
-        } else if (typeIndex === "0x5b") {
-            typeName = "double[" + type["size"] + "]";
-        } else if (typeIndex === "0x5a") {
-            typeName = "float[" + type["size"] + "]";
-        } else if (typeIndex === "0x53") {
-            typeName = "double[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x52") {
-            typeName = "float[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x4b") {
-            typeName = "double[]";
-        } else if (typeIndex === "0x4a") {
-            typeName = "float[]";
-        } else if (typeIndex === "0x3f") {
-            typeName = "ulong[" + type["size"] + "]";
-        } else if (typeIndex === "0x3e") {
-            typeName = "uint[" + type["size"] + "]";
-        } else if (typeIndex === "0x3d") {
-            typeName = "ushort[" + type["size"] + "]";
-        } else if (typeIndex === "0x3c") {
-            typeName = "ubyte[" + type["size"] + "]";
-        } else if (typeIndex === "0x3b") {
-            typeName = "long[" + type["size"] + "]";
-        } else if (typeIndex === "0x3a") {
-            typeName = "int[" + type["size"] + "]";
-        } else if (typeIndex === "0x39") {
-            typeName = "short[" + type["size"] + "]";
-        } else if (typeIndex === "0x38") {
-            typeName = "byte[" + type["size"] + "]";
-        } else if (typeIndex === "0x37") {
-            typeName = "ulong[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x36") {
-            typeName = "uint[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x35") {
-            typeName = "ushort[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x34") {
-            typeName = "ubyte[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x33") {
-            typeName = "long[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x32") {
-            typeName = "int[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x31") {
-            typeName = "short[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x30") {
-            typeName = "byte[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x2f") {
-            typeName = "ulong[]";
-        } else if (typeIndex === "0x2e") {
-            typeName = "uint[]";
-        } else if (typeIndex === "0x2d") {
-            typeName = "ushort[]";
-        } else if (typeIndex === "0x2c") {
-            typeName = "ubyte[]";
-        } else if (typeIndex === "0x2b") {
-            typeName = "long[]";
-        } else if (typeIndex === "0x2a") {
-            typeName = "int[]";
-        } else if (typeIndex === "0x29") {
-            typeName = "short[]";
-        } else if (typeIndex === "0x28") {
-            typeName = "byte[]";
-        } else if (typeIndex === "0x18") {
-            typeName = "boolean[" + type["size"] + "]";
-        } else if (typeIndex === "0x10") {
-            typeName = "boolean[length<=" + type["size"] + "]";
-        } else if (typeIndex === "0x8") {
-            typeName = "boolean[]";
-        }
-
-        if (key !== undefined) {
-            return {
-                key: typeName + " " + key,
-                data: data,
-            }
-        } else {
-            return {
-                data: data,
-            }
-        }
-
-    } else if (
-        typeIndex === "0x80"
-    ) {
-        // struct
-        const structName = type["name"];
-        const structTmp: Record<string, any> = {};
-        for (const [fieldName, fieldData] of Object.entries(data)) {
-            const fieldType = type["fields"][fieldName];
-
-            const fieldTmp = mergePvaTypeAndData(fieldType, fieldName, fieldData);
-            const newFieldName = fieldTmp["key"];
-            const newFieldData = fieldTmp["data"];
-            // console.log("\n\n\n", fieldType, fieldName, fieldData, fieldTmp)
-            structTmp[newFieldName] = newFieldData;
-
-        }
-        return {
-            key: "struct " + structName + " " + key,
-            data: structTmp
-        };
-    } else if (
-        typeIndex === "0x81"
-    ) {
-        // union
-        const unionName = type["name"];
-        if (typeof data === "object") {
-            const choiceIndex = (data as any)["index"];
-            const choiceName = (Object.keys(type["fields"]) as any)[choiceIndex];
-            const choiceData = (data as any)["value"];
-            if (choiceData !== undefined && choiceIndex !== undefined) {
-                const choiceType = Object.values(type["fields"])[choiceIndex] as any;
-                if (choiceType !== undefined && choiceType !== null) {
-                    const unionTmp = mergePvaTypeAndData(choiceType, key + " [union " + unionName + "." + choiceName + "]", choiceData) as any;
-                    return {
-                        key: unionTmp["key"],
-                        data: { index: choiceIndex, value: unionTmp["data"] },
-                    };
-                }
-            }
-        }
-
-    } else if (
-        typeIndex === "0x88"
-    ) {
-        // struct[]
-        const structName = type["name"];
-        const structType = structuredClone(type);
-        structType["typeIndex"] = "0x80";
-        const result: any[] = [];
-        if (Array.isArray(data)) {
-            for (const structData of data) {
-                result.push(mergePvaTypeAndData(structType, structName, structData)["data"]);
-            }
-
-        }
-        return {
-            key: "struct[] " + structName + " " + key,
-            data: result
-        };
-
-    } else if (
-        typeIndex === "0x89"
-    ) {
-        // union[]
-        const unionName = type["name"];
-        const unionType = structuredClone(type);
-        unionType["typeIndex"] = "0x81";
-        const result: any[] = [];
-        if (Array.isArray(data)) {
-            for (const unionData of data) {
-                result.push(mergePvaTypeAndData(unionType, unionName, unionData)["data"]);
-            }
-
-        }
-        return {
-            key: "union[] " + unionName + " " + key,
-            data: result
-        };
-    } else {
-        // should not happen
-        Log.error("NA encountered")
-    }
-    return {
-        key: undefined,
-        data: undefined
-    }
-
-}
-
-
-export const isStringArray = (value: unknown): value is string[] => {
-    return Array.isArray(value) && value.every(item => typeof item === 'string');
-}
-
-export const isRuleElement = (item: unknown): boolean => {
-    return (
-        typeof item === 'object' &&
-        item !== null &&
-        'id' in item &&
-        'boolExpression' in item &&
-        'propertyName' in item &&
-        'propertyValue' in item &&
-        typeof (item as any).id === 'string' &&
-        typeof (item as any).boolExpression === 'string' &&
-        typeof (item as any).propertyName === 'string'
-    );
-}
-
-export const isRuleElementArray = (value: unknown): boolean => {
-    return Array.isArray(value) && value.every(isRuleElement);
-}
-
 export const isValidRgbaColor = (color: string): boolean => {
     const rgbaRegex = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0?\.?\d+|1)\s*\)$/;
 
@@ -949,476 +624,13 @@ export const isValidRgbaColor = (color: string): boolean => {
     return r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255;
 }
 
-
-export const deepMerge = (obj1: any, obj2: any): any => {
-    if (Array.isArray(obj1) && Array.isArray(obj2)) {
-        const result = [...obj1];
-        obj2.forEach((val, i) => result[i] = val);
-        return result;
-    } else {
-        return structuredClone({ ...obj1, ...obj2 });
-    }
-};
-
-export const generateWidgetKey = (type: string) => {
-    return `${type}_${uuidv4()}`
-}
-
-export const truncateString = (str: string, length: number = 3) => {
-    if (str && str.length > length) {
-        return str.substring(0, length) + '...';
-    }
-    return str;
-};
-
-
 /**
- * Check if a string is a data URI (e.g., data:image/png;base64,...)
+ * Return if the operating system is running in dark mode.
  */
-export const isDataUri = (str: string): boolean => {
-    return str.startsWith('data:');
-};
-
-/**
- * Extract MIME type from a data URI
- * Example: "data:image/png;base64,..." returns "image/png"
- */
-export const getDataUriMimeType = (dataUri: string): string => {
-    if (!isDataUri(dataUri)) {
-        return "";
-    }
-    // Format: data:[<mediatype>][;base64],<data>
-    const match = dataUri.match(/^data:([^;,]+)/);
-    return match ? match[1] : "";
-};
-
-/**
- * Determine if a data URI is an image (png, jpg, svg, gif, webp, etc.)
- */
-export const isImageDataUri = (dataUri: string): boolean => {
-    const mimeType = getDataUriMimeType(dataUri);
-    return mimeType.startsWith('image/');
-};
-
-/**
- * Determine if a data URI is a PDF
- */
-export const isPdfDataUri = (dataUri: string): boolean => {
-    const mimeType = getDataUriMimeType(dataUri);
-    return mimeType === 'application/pdf';
-};
-
-/**
- * Get the specific image type from a data URI
- * Example: "data:image/png;base64,..." returns "png"
- */
-export const getImageTypeFromDataUri = (dataUri: string): string => {
-    const mimeType = getDataUriMimeType(dataUri);
-    if (!mimeType.startsWith('image/')) {
-        return "";
-    }
-    return mimeType.split('/')[1]; // e.g., "png", "svg+xml"
-};
+export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 
-export const isRemotePath = (path: string) => {
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-        return true;
-    } else {
-        return false;
-    }
-};
 
-export const mapXyToPointGl = (
-    x: number,
-    y: number,
-    xMin: number,
-    xMax: number,
-    yMin: number,
-    yMax: number,
-): [number, number, number] => {
-
-    // min point is -1, max point is 1
-    const pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
-    const pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
-
-    if (isNaN(pointX) || isNaN(pointY)) {
-        return [0, 0, 0];
-    }
-
-    return [pointX, pointY, 0];
-}
-
-export const mapXYsToPointsWebGl = (xData: number[], yData: number[], xMin: number, xMax: number, yMin: number, yMax: number,) => {
-
-    const len = Math.min(xData.length, yData.length);
-    const result = new Float32Array(len * 3);
-
-    for (let ii = 0; ii < len; ii++) {
-        const x = xData[ii];
-        const y = yData[ii];
-        let pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
-        let pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
-        if (isNaN(pointX) || isNaN(pointY)) {
-            pointX = 0;
-            pointY = 0;
-        }
-
-        result[3 * ii] = pointX;
-        result[3 * ii + 1] = pointY;
-        result[3 * ii + 2] = 0;
-    }
-    return result;
-
-}
-
-export const mapXyToPoint = (
-    x: number,
-    y: number,
-    xMin: number,
-    xMax: number,
-    yMin: number,
-    yMax: number,
-    width: number,
-    height: number,
-): [number, number] => {
-    const pointX = width * (x - xMin) / (xMax - xMin);
-    const pointY = height - height * (y - yMin) / (yMax - yMin);
-
-    if (isNaN(pointX) || isNaN(pointY)) {
-        return [0, 0];
-    }
-
-    return [pointX, pointY];
-}
-
-export const mapPointToXy = (
-    pointX: number,
-    pointY: number,
-    xMin: number,
-    xMax: number,
-    yMin: number,
-    yMax: number,
-    width: number,
-    height: number,
-): [number, number] => {
-    const x = xMin + pointX / width * (xMax - xMin);
-    const y = yMax - pointY / height * (yMax - yMin);
-
-    if (isNaN(x) || isNaN(y)) {
-        return [0, 0];
-    }
-    return [x, y];
-}
-
-export const calcWebGlShadeColor = (rgbaColor: string) => {
-    // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
-    const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
-    const colorStrs = color1.split(",");
-
-    let result: string = "";
-    if (colorStrs.length !== 4) {
-        return "0.0, 0.0, 0.0, 1.0";
-    }
-
-    for (let ii = 0; ii < colorStrs.length; ii++) {
-        const colorStr = colorStrs[ii];
-        const colorNum = parseFloat(colorStr);
-        if (isNaN(colorNum)) {
-            return "0.0, 0.0, 0.0, 1.0";
-        }
-        if (ii < 3) {
-            result = result + `${colorNum / 255}` + ", ";
-        } else {
-            result = result + `${colorNum}`;
-        }
-    }
-    return result;
-}
-
-export type type_TypeCheckError = {
-    expected: string;
-    message: string;
-    path: string;
-    received: string;
-    value: unknown;
-    valuePreview: string;
-};
-
-const truncateForError = (text: string, maxLength: number = 240) => {
-    if (text.length <= maxLength) {
-        return text;
-    }
-    return `${text.slice(0, maxLength)}...`;
-};
-
-const describeValue = (value: unknown) => {
-    if (typeof value === "string") {
-        return truncateForError(JSON.stringify(value));
-    }
-    if (value === undefined) {
-        return "undefined";
-    }
-    try {
-        const serialized = JSON.stringify(value);
-        if (serialized !== undefined) {
-            return truncateForError(serialized);
-        }
-    } catch {
-        // Fall back to String(value) below.
-    }
-    return truncateForError(String(value));
-};
-
-const describeReceivedType = (value: unknown) => {
-    if (value === undefined) {
-        return "undefined";
-    }
-    if (value === null) {
-        return "null";
-    }
-    if (Array.isArray(value)) {
-        return "array";
-    }
-    return typeof value;
-};
-
-const describeSchema = (schema: TypeSchema) => {
-    return `object {${Object.keys(schema).join(", ")}}`;
-};
-
-const describeExpectedType = (expectedType: FieldType | PrimitiveFieldType[] | string): string => {
-    if (typeof expectedType === "string") {
-        return expectedType;
-    }
-    if (Array.isArray(expectedType)) {
-        return expectedType.map((item) => describeExpectedType(item)).join(" | ");
-    }
-    if ("arrayOfUnion" in expectedType) {
-        const schemas = expectedType.arrayOfUnion as readonly TypeSchema[];
-        return `Array<${schemas.map((schema: TypeSchema) => describeSchema(schema)).join(" | ")}>`;
-    }
-    if ("tuple" in expectedType) {
-        const tupleDef = expectedType.tuple as readonly PrimitiveFieldType[];
-        return `[${tupleDef.join(", ")}]`;
-    }
-    if ("arrayOfTuple" in expectedType) {
-        const tupleDef = expectedType.arrayOfTuple as readonly PrimitiveFieldType[];
-        return `Array<[${tupleDef.join(", ")}]>`;
-    }
-    if ("literalUnion" in expectedType) {
-        const allowed = expectedType.literalUnion as readonly string[];
-        return allowed.map((item: string) => JSON.stringify(item)).join(" | ");
-    }
-    if ("arrayOf" in expectedType) {
-        return `Array<${describeExpectedType(expectedType.arrayOf)}>`;
-    }
-    if ("dictionaryOf" in expectedType) {
-        const innerSchema = expectedType.dictionaryOf as TypeSchema;
-        return `Record<string, ${describeSchema(innerSchema)}>`;
-    }
-    return describeSchema(expectedType);
-};
-
-const createTypeCheckError = (fieldPath: string, expectedType: FieldType | PrimitiveFieldType[] | string, value: unknown): type_TypeCheckError => {
-    const path = fieldPath || "(root)";
-    const expected = describeExpectedType(expectedType);
-    const received = describeReceivedType(value);
-    const valuePreview = describeValue(value);
-    return {
-        expected,
-        message: `[isOfType] Type check failed at "${path}": expected ${expected}, got ${received} (${valuePreview})`,
-        path,
-        received,
-        value,
-        valuePreview,
-    };
-};
-
-function getSingleTypeError(value: unknown, expectedType: FieldType, fieldPath: string = ""): type_TypeCheckError | undefined {
-    if (Array.isArray(expectedType)) {
-        const matched = expectedType.some((typeCandidate) => getSingleTypeError(value, typeCandidate, fieldPath) === undefined);
-        return matched ? undefined : createTypeCheckError(fieldPath, expectedType, value);
-    }
-
-    if (expectedType === "undefined") {
-        return value === undefined ? undefined : createTypeCheckError(fieldPath, expectedType, value);
-    }
-
-    if (value === undefined) {
-        return createTypeCheckError(fieldPath, expectedType, value);
-    }
-
-    // Array where each item matches one of several schemas: { arrayOfUnion: TypeSchema[] }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfUnion" in expectedType) {
-        if (!Array.isArray(value)) {
-            return createTypeCheckError(fieldPath, expectedType, value);
-        }
-        const schemas = expectedType.arrayOfUnion as TypeSchema[];
-        for (let idx = 0; idx < value.length; idx++) {
-            const item = value[idx];
-            const itemPath = `${fieldPath}[${idx}]`;
-            const matched = schemas.some((schema) => getTypeCheckError(item, schema, itemPath) === undefined);
-            if (!matched) {
-                return createTypeCheckError(itemPath, expectedType, item);
-            }
-        }
-        return undefined;
-    }
-
-    // Fixed-length tuple of primitive types: { tuple: PrimitiveFieldType[] }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "tuple" in expectedType) {
-        const tupleDef = expectedType.tuple as PrimitiveFieldType[];
-        if (!Array.isArray(value) || value.length !== tupleDef.length) {
-            return createTypeCheckError(fieldPath, expectedType, value);
-        }
-        for (let ii = 0; ii < tupleDef.length; ii++) {
-            const error = getSingleTypeError((value as unknown[])[ii], tupleDef[ii], `${fieldPath}[${ii}]`);
-            if (error !== undefined) {
-                return error;
-            }
-        }
-        return undefined;
-    }
-
-    // Array of fixed-length tuples: { arrayOfTuple: PrimitiveFieldType[] }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOfTuple" in expectedType) {
-        const tupleDef = expectedType.arrayOfTuple as PrimitiveFieldType[];
-        if (!Array.isArray(value)) {
-            return createTypeCheckError(fieldPath, expectedType, value);
-        }
-        for (let idx = 0; idx < value.length; idx++) {
-            const item = value[idx];
-            const itemPath = `${fieldPath}[${idx}]`;
-            if (!Array.isArray(item) || item.length !== tupleDef.length) {
-                return createTypeCheckError(itemPath, expectedType, item);
-            }
-            for (let ii = 0; ii < tupleDef.length; ii++) {
-                const error = getSingleTypeError(item[ii], tupleDef[ii], `${itemPath}[${ii}]`);
-                if (error !== undefined) {
-                    return error;
-                }
-            }
-        }
-        return undefined;
-    }
-
-    // String literal union: { literalUnion: string[] }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "literalUnion" in expectedType) {
-        const allowed = expectedType.literalUnion as string[];
-        return typeof value === "string" && allowed.includes(value)
-            ? undefined
-            : createTypeCheckError(fieldPath, expectedType, value);
-    }
-
-    // Array of objects matching a schema: { arrayOf: TypeSchema }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "arrayOf" in expectedType) {
-        if (!Array.isArray(value)) {
-            return createTypeCheckError(fieldPath, expectedType, value);
-        }
-        const arrayItemType = expectedType.arrayOf as FieldType;
-        for (let idx = 0; idx < value.length; idx++) {
-            const error = getSingleTypeError(value[idx], arrayItemType, `${fieldPath}[${idx}]`);
-            if (error !== undefined) {
-                return error;
-            }
-        }
-        return undefined;
-    }
-
-    // Dictionary of objects matching a schema: { dictionaryOf: TypeSchema }
-    if (typeof expectedType === "object" && !Array.isArray(expectedType) && "dictionaryOf" in expectedType) {
-        if (typeof value !== "object" || value === null || Array.isArray(value)) {
-            return createTypeCheckError(fieldPath, expectedType, value);
-        }
-        const innerSchema = expectedType.dictionaryOf as TypeSchema;
-        const dict = value as Record<string, unknown>;
-        for (const [key, item] of Object.entries(dict)) {
-            const error = getTypeCheckError(item, innerSchema, fieldPath ? `${fieldPath}.${key}` : key);
-            if (error !== undefined) {
-                return error;
-            }
-        }
-        return undefined;
-    }
-
-    // Nested schema (object)
-    if (typeof expectedType === "object" && !Array.isArray(expectedType)) {
-        return getTypeCheckError(value, expectedType, fieldPath);
-    }
-
-    switch (expectedType) {
-        case "string":
-        case "number":
-        case "boolean":
-            return typeof value === expectedType ? undefined : createTypeCheckError(fieldPath, expectedType, value);
-        case "string[]":
-            return Array.isArray(value) && value.every((v) => typeof v === "string")
-                ? undefined
-                : createTypeCheckError(fieldPath, expectedType, value);
-        case "number[]":
-            return Array.isArray(value) && value.every((v) => typeof v === "number")
-                ? undefined
-                : createTypeCheckError(fieldPath, expectedType, value);
-        case "boolean[]":
-            return Array.isArray(value) && value.every((v) => typeof v === "boolean")
-                ? undefined
-                : createTypeCheckError(fieldPath, expectedType, value);
-        default:
-            return createTypeCheckError(fieldPath, expectedType, value);
-    }
-}
-
-export function getTypeCheckError(obj: unknown, schema: TypeSchema, _path: string = ""): type_TypeCheckError | undefined {
-    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
-        return createTypeCheckError(_path, "plain object", obj);
-    }
-
-    // Top-level dictionaryOf: every value in obj must match the inner schema
-    if ("dictionaryOf" in schema && Object.keys(schema).length === 1) {
-        const innerSchema = schema.dictionaryOf as TypeSchema;
-        const dict = obj as Record<string, unknown>;
-        for (const [key, value] of Object.entries(dict)) {
-            const error = getTypeCheckError(value, innerSchema, _path ? `${_path}.${key}` : key);
-            if (error !== undefined) {
-                return error;
-            }
-        }
-        return undefined;
-    }
-
-    const record = obj as Record<string, unknown>;
-
-    for (const [key, expectedType] of Object.entries(schema)) {
-        const value = record[key];
-        const fieldPath = _path ? `${_path}.${key}` : key;
-
-        // If expectedType is an array, the value must match any of the types in the array
-        if (Array.isArray(expectedType)) {
-            const matched = expectedType.some((typeCandidate) => getSingleTypeError(value, typeCandidate, fieldPath) === undefined);
-            if (!matched) {
-                return createTypeCheckError(fieldPath, expectedType, value);
-            }
-            continue;
-        }
-
-        const error = getSingleTypeError(value, expectedType, fieldPath);
-        if (error !== undefined) {
-            return error;
-        }
-    }
-
-    return undefined;
-}
-
-export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): boolean {
-    const error = getTypeCheckError(obj, schema, _path);
-    if (error !== undefined) {
-        Log.error(error.message);
-        return false;
-    }
-    return true;
-}
 
 const _RGBA_COLORS: string[] = [
     "rgba(255, 0, 0, 1)",
@@ -1477,100 +689,97 @@ export const generateRgbaColor = (index: number): string => {
     return _RGBA_COLORS[index % _RGBA_COLORS.length];
 };
 
-
-
-export const generateDisplayWindowHtml = (option: { basePath: string, displayWindowId: string }) => {
-
-    const { basePath, displayWindowId } = option;
-
-    return (
-        `
-<!DOCTYPE html>
-
-<html>
-	<head>
-	</head>
-
-	<body style="-webkit-print-color-adjust: exact; width: 100%; height: 100%;">
-		<div id="root"></div>
-		<!-- one solution for Electron's "exports is not defined" error -->
-		<!-- We must also change "nodeIntegration" and "contextIsolation" in "app.js" -->
-		<!-- https://stackoverflow.com/questions/54619111/typescript-electron-exports-is-not-defined -->
-		<!-- another solution for Electron's "exports is not defined" error -->
-		<!-- manually define a global variable "exports" -->
-		<script>
-			var exports = {};
-            window.basePath = ${JSON.stringify(basePath)};
-		</script>
-
-		<!-- load from webpack package  -->
-		<!-- the webpack package is transpiled to ESM module type (import/export), it can be loade by both -->
-		<!-- electron.js and browser. The embedded display (iframe) can be correctly displayed in this way. -->
-		<!-- it takes a significant amount of time to bundle the stuff -->
-		<!-- one significant difference between bundled and un-bundled versions is the __dirname is always / in bundled -->
-		<!-- version. In un-bundled version, the __dirname is the .js file's path on hard drive -->
-		<!-- The relative path for img (e.g. "../../abc.svg") is w.r.t. this html file. The "file://" prefix should always -->
-		<!-- come with absolute path -->
-		<!-- it is recommended to use for production -->
-		<script type="module" src="${basePath}/webpack/DisplayWindowClient.js"></script>
-
-		<script type="module">
-			const urlParams = new URLSearchParams(window.location.search);
-			const ipcServerPort = urlParams.get("ipcServerPort");
-			// const displayWindowId = urlParams.get("displayWindowId");
-            const displayWindowId = ${JSON.stringify(displayWindowId)};
-			const hostnameRaw = urlParams.get("hostname"); // might be null
-			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
-            console.log("display window Id", displayWindowId);
-            console.log("ipcServerPort", ipcServerPort, "displayWindowId", displayWindowId);
-
-
-            const nav = performance.getEntriesByType("navigation")[0];
-            const isReload = nav?.type === "reload";
-            
-            console.log("isReload =", isReload);
-          	new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
-
-		</script>
-	</body>
-</html>
-`
-    )
+export const generateWidgetKey = (type: string) => {
+    return `${type}_${uuidv4()}`
 }
 
 
-export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-
-export const adjustRgba = (color: string, delta: number) => {
-    const match = color.match(
-        /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/i
-    );
-    if (!match) {
-        return color;
-    }
-
-    const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
-    const [, r, g, b, a = "1"] = match;
-
-    return `rgba(${clamp(Number(r) + delta)}, ${clamp(Number(g) + delta)}, ${clamp(
-        Number(b) + delta
-    )}, ${a})`;
+/**
+ * Check if a string is a data URI (e.g., data:image/png;base64,...)
+ */
+export const isDataUri = (str: string): boolean => {
+    return str.startsWith('data:');
 };
 
 
-// export const refineMacros = (macros: [string, string][]) => {
-//     const result: [string, string][] = [];
-//     const names: string[] = [];
-//     for (const macro of macros) {
-//         const name = macro[0];
-//         if (!(names.includes(name))) {
-//             names.push(name);
-//             result.push(macro);
-//         }
-//     }
-//     return result;
-// }
+export const isRemotePath = (path: string) => {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+export const mapXYsToPointsWebGl = (xData: number[], yData: number[], xMin: number, xMax: number, yMin: number, yMax: number,) => {
+
+    const len = Math.min(xData.length, yData.length);
+    const result = new Float32Array(len * 3);
+
+    for (let ii = 0; ii < len; ii++) {
+        const x = xData[ii];
+        const y = yData[ii];
+        let pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
+        let pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
+        if (isNaN(pointX) || isNaN(pointY)) {
+            pointX = 0;
+            pointY = 0;
+        }
+
+        result[3 * ii] = pointX;
+        result[3 * ii + 1] = pointY;
+        result[3 * ii + 2] = 0;
+    }
+    return result;
+
+}
+
+export const mapPointToXy = (
+    pointX: number,
+    pointY: number,
+    xMin: number,
+    xMax: number,
+    yMin: number,
+    yMax: number,
+    width: number,
+    height: number,
+): [number, number] => {
+    const x = xMin + pointX / width * (xMax - xMin);
+    const y = yMax - pointY / height * (yMax - yMin);
+
+    if (isNaN(x) || isNaN(y)) {
+        return [0, 0];
+    }
+    return [x, y];
+}
+
+export const calcWebGlShadeColor = (rgbaColor: string) => {
+    // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
+    const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
+    const colorStrs = color1.split(",");
+
+    let result: string = "";
+    if (colorStrs.length !== 4) {
+        return "0.0, 0.0, 0.0, 1.0";
+    }
+
+    for (let ii = 0; ii < colorStrs.length; ii++) {
+        const colorStr = colorStrs[ii];
+        const colorNum = parseFloat(colorStr);
+        if (isNaN(colorNum)) {
+            return "0.0, 0.0, 0.0, 1.0";
+        }
+        if (ii < 3) {
+            result = result + `${colorNum / 255}` + ", ";
+        } else {
+            result = result + `${colorNum}`;
+        }
+    }
+    return result;
+}
+
+
+
+
 
 export const generateNewWidgetKey = (): string => {
     return uuidv4();

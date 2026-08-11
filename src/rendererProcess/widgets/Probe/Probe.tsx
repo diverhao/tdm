@@ -11,7 +11,7 @@ import { TcaChannel } from "../../channel/TcaChannel";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
-import { mergePvaTypeAndData } from "../../../common/GlobalMethods";
+import { mergePvaTypeAndData } from "./PvaHelper";
 import { type_Probe_tdl, defaultProbeTdl } from "../../../common/types/type_widget_tdl";
 import { type_dbd, type_dbd_menus } from "../../../common/types/type_dbd";
 import { Table } from "../../helperWidgets/Table/Table";

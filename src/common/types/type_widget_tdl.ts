@@ -1,4 +1,4 @@
-import { getTypeCheckError } from "../GlobalMethods";
+import { getTypeCheckError } from "./type_checker";
 import { GlobalVariables } from "../GlobalVariables";
 import { TypeSchema, InferType, Mutable } from "./type_schema";
 

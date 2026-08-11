@@ -337,12 +337,34 @@ export class Media extends BaseWidget {
         const pdfTypes = ["pdf"];
         const localVideoFileTypes = ["mp4", "ogg", "webm", "mp3", "mov", "mkv"];
 
+        /**
+         * Extract MIME type from a data URI
+         * Example: "data:image/png;base64,..." returns "image/png"
+         */
+        const getDataUriMimeType = (dataUri: string): string => {
+            if (!GlobalMethods.isDataUri(dataUri)) {
+                return "";
+            }
+            // Format: data:[<mediatype>][;base64],<data>
+            const match = dataUri.match(/^data:([^;,]+)/);
+            return match ? match[1] : "";
+        };
+
+        /**
+         * Determine if a data URI is an image (png, jpg, svg, gif, webp, etc.)
+         */
+        const isImageDataUri = (dataUri: string): boolean => {
+            const mimeType = getDataUriMimeType(dataUri);
+            return mimeType.startsWith('image/');
+        };
+
+
         const fileNameArray = fileName.split(".");
         const fileType = fileNameArray[fileNameArray.length - 1].toLowerCase();
 
         if (imageTypes.includes(fileType)) {
             return "image";
-        } else if (GlobalMethods.isImageDataUri(fileName)) {
+        } else if (isImageDataUri(fileName)) {
             return "image";
         } else if (pdfTypes.includes(fileType)) {
             return "pdf";

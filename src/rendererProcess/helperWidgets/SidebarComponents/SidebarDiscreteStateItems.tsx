@@ -6,6 +6,7 @@ import { SidebarDiscreteStateItem } from "./SidebarDiscreteStateItem";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
 import { DiscreteStateWidget } from "../../global/Widgets";
+import { generateRgbaColor } from "../../../common/GlobalMethods";
 
 export class SidebarDiscreteStateItems extends SidebarComponent {
     _members: SidebarDiscreteStateItem[] = [];
@@ -85,7 +86,7 @@ export class SidebarDiscreteStateItems extends SidebarComponent {
         const newIndex = mainWidget.getItemNames().length;
         mainWidget.getItemNames().push(`item-${newIndex}`);
         mainWidget.getItemValues().push(newIndex);
-        mainWidget.getItemColors().push("rgba(0,0,255,1)");
+        mainWidget.getItemColors().push(generateRgbaColor(newIndex));
         this.getMembers().push(new SidebarDiscreteStateItem(this, newIndex));
 
         this._forceUpdate();
