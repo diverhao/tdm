@@ -718,17 +718,15 @@ export class FileConverter extends BaseWidget {
                                     const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                                     const displayWindowId = displayWindowClient.getWindowId();
                                     displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                                        options: {
-                                            // tdl?: type_tdl;
-                                            tdlFileNames: [data["destFileName"]],
-                                            mode: "operating",
-                                            editable: true,
-                                            // external macros: user-provided and parent display macros
-                                            macros: [],
-                                            replaceMacros: false,
-                                            // currentTdlFolder?: string;
-                                            windowId: displayWindowId,
-                                        }
+                                        // tdl?: type_tdl;
+                                        tdlFileNames: [data["destFileName"]],
+                                        mode: "operating",
+                                        editable: true,
+                                        // external macros: user-provided and parent display macros
+                                        macros: [],
+                                        replaceMacros: false,
+                                        // currentTdlFolder?: string;
+                                        windowId: displayWindowId,
                                     })
                                 }}
                                     style={{

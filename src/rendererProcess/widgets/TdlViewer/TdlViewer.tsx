@@ -177,15 +177,13 @@ export class TdlViewer extends BaseWidget {
                             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
                             const externalMacros = this.getText()["externalMacros"];
                             displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                                options: {
-                                    tdlFileNames: [tdlFileName],
-                                    mode: "operating",
-                                    editable: true,
-                                    macros: externalMacros,
-                                    replaceMacros: false, // not used
-                                    currentTdlFolder: "",
-                                    windowId: displayWindowClient.getWindowId(),
-                                }
+                                tdlFileNames: [tdlFileName],
+                                mode: "operating",
+                                editable: true,
+                                macros: externalMacros,
+                                replaceMacros: false, // not used
+                                currentTdlFolder: "",
+                                windowId: displayWindowClient.getWindowId(),
                             })
                         }}
                     >

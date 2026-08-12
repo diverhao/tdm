@@ -44,7 +44,7 @@ import path from "path";
  *  - sns-office-user
  */
 import { site } from "../../package.json";
-import { type_args } from "../common/IpcEventArgType";
+import { type_input_args } from "../common/IpcEventArgType";
 import { openTdlInFirstExistingInstance, openTdlInNewInstance, openTdlInSpecificExistingInstance, processArgsAttach } from "./global/GlobalMethods";
 import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
 // import { type_sshServerConfig } from "./mainProcesses/SshClient";
@@ -52,7 +52,7 @@ import { defaultWebsocketOpenerServerPort } from "./global/GlobalVariables";
 /**
  * load command line arguments
  */
-const args: type_args = ArgParser.parseArgs(process.argv, site);
+const args: type_input_args = ArgParser.parseArgs(process.argv, site);
 
 // Electron 36+ defaults to GTK 4 on GNOME, which makes native context menus
 // noticeably taller on some Linux desktops. GTK 3 keeps the desktop menus compact.

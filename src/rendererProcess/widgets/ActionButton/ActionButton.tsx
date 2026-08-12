@@ -373,15 +373,13 @@ export class ActionButton extends BaseWidget {
         const currentTdlFolder = path.dirname(currentTdlFileName);
         if (g_widgets1.getRoot().getDisplayWindowClient().getMainProcessMode() === "desktop") {
             ipcManager.sendFromRendererProcess("open-tdl-file", {
-                options: {
-                    tdlFileNames: [tdlFileName],
-                    mode: mode,
-                    editable: editable,
-                    macros: externalMacros.getArr(),
-                    replaceMacros: true, // not used
-                    currentTdlFolder: currentTdlFolder,
-                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                }
+                tdlFileNames: [tdlFileName],
+                mode: mode,
+                editable: editable,
+                macros: externalMacros.getArr(),
+                replaceMacros: true, // not used
+                currentTdlFolder: currentTdlFolder,
+                windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
             });
         } else {
             // web mode
@@ -429,8 +427,7 @@ export class ActionButton extends BaseWidget {
             if (text["confirmOnWriteUsePassword"] === true) {
                 const humanReadableMessage2 = "A password is required."
                 const password = text["confirmOnWritePassword"];
-                ipcManager.handleDialogShowInputBox(undefined,
-                    {
+                ipcManager.handleDialogShowInputBox({
                         info: {
                             command: "write-pv-confirmation-with-password",
                             humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
@@ -440,8 +437,7 @@ export class ActionButton extends BaseWidget {
                                     handleClick: (dialogInputText?: string) => {
                                         if (dialogInputText !== password) {
                                             // password does not match
-                                            ipcManager.handleDialogShowMessageBox(undefined,
-                                                {
+                                            ipcManager.handleDialogShowMessageBox({
                                                     info: {
                                                         command: "write-pv-confirmation-wit-password-failed",
                                                         humanReadableMessages: ["Wrong password."],
@@ -477,8 +473,7 @@ export class ActionButton extends BaseWidget {
             } else {
                 // password not required, but need confirm
                 const humanReadableMessage2 = "Are you sure to continue?"
-                ipcManager.handleDialogShowMessageBox(undefined,
-                    {
+                ipcManager.handleDialogShowMessageBox({
                         info: {
                             command: "write-pv-confirmation-without-password",
                             humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],

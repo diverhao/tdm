@@ -2535,8 +2535,7 @@ export abstract class BaseWidget {
                 if (text["confirmOnWriteUsePassword"] === true) {
                     const humanReadableMessage2 = "A password is required."
                     const password = text["confirmOnWritePassword"];
-                    ipcManager.handleDialogShowInputBox(undefined,
-                        {
+                    ipcManager.handleDialogShowInputBox({
                             info: {
                                 command: "write-pv-confirmation-with-password",
                                 humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],
@@ -2548,8 +2547,7 @@ export abstract class BaseWidget {
                                             if (dialogInputText !== password) {
                                                 // password does not match
                                                 // console.log("pass word does notmatch")
-                                                ipcManager.handleDialogShowMessageBox(undefined,
-                                                    {
+                                                ipcManager.handleDialogShowMessageBox({
                                                         info: {
                                                             command: "write-pv-confirmation-wit-password-failed",
                                                             humanReadableMessages: ["Wrong password."],
@@ -2585,8 +2583,7 @@ export abstract class BaseWidget {
                 } else {
                     // password not required
                     const humanReadableMessage2 = "Are you sure to continue?"
-                    ipcManager.handleDialogShowMessageBox(undefined,
-                        {
+                    ipcManager.handleDialogShowMessageBox({
                             info: {
                                 command: "write-pv-confirmation-without-password",
                                 humanReadableMessages: [humanReadableMessage1, humanReadableMessage2],

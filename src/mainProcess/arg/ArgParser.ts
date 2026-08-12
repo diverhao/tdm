@@ -4,7 +4,7 @@ import { defaultWebServerPort } from "../global/GlobalVariables";
 import { Log } from "../../common/Log";
 import { type_log_levels } from "../../common/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
-import { type_args } from "../../common/IpcEventArgType";
+import { type_input_args } from "../../common/IpcEventArgType";
 import { type_macros_tdl } from "../../common/types/type_widget_tdl";
 
 
@@ -53,7 +53,7 @@ Options:
 
     static parseArgs = (argv: string[], site: string) => {
         this.printHelp();
-        const result: type_args = {
+        const result: type_input_args = {
             macros: [],
             settings: path.join(`${os.homedir()}`, ".tdm/profiles.json"),
             profile: "",
@@ -142,7 +142,7 @@ Options:
             }
         } catch (e) {
             console.log("error -------***", e)
-            const resultTmp: type_args = {
+            const resultTmp: type_input_args = {
                 macros: [],
                 settings: "",
                 profile: "",

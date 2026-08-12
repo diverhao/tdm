@@ -294,15 +294,13 @@ export class SidebarActionOpenDisplayItem {
                     onClick={() => {
                         const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
                         ipcManager.sendFromRendererProcess("open-tdl-file", {
-                            options: {
-                                tdlFileNames: [tdlFileName],
-                                mode: "editing",
-                                editable: true,
-                                macros: externalMacros.getArr(),
-                                replaceMacros: true, // not used
-                                currentTdlFolder: currentTdlFolder,
-                                windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                            }
+                            tdlFileNames: [tdlFileName],
+                            mode: "editing",
+                            editable: true,
+                            macros: externalMacros.getArr(),
+                            replaceMacros: true, // not used
+                            currentTdlFolder: currentTdlFolder,
+                            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                         });
 
                     }}

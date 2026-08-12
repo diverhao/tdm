@@ -82,3 +82,18 @@ export enum NDArray_ColorMode {
     yuv422,
     yuv411,
 };
+
+
+export enum PVA_STATUS_TYPE {
+    OK = 0,
+    WARNING = 1,
+    ERROR = 2,
+    FATAL = 3,
+    OKOK = 255
+}
+
+export type type_pva_status = {
+    type: PVA_STATUS_TYPE;
+    message?: string;
+    callTree?: string;
+};

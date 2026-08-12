@@ -10,7 +10,7 @@ import { websocketPvServerPort } from "../global/GlobalVariables";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { IpcDispWinToMainProc, type_args } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, type_input_args } from "../../common/IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
 import { WsOpenerServer } from "./WsOpenerServer";
@@ -106,7 +106,7 @@ export class MainProcess {
     private _localFontNames: string[] = [];
 
     // command line args, should not be changed
-    private readonly _rawArgs: type_args;
+    private readonly _rawArgs: type_input_args;
 
     // profiles
     private _profiles: Profiles;
@@ -125,9 +125,9 @@ export class MainProcess {
 
     constructor(
         // mainProcesses: MainProcesses,
-        args: type_args,
+        args: type_input_args,
         // processId: string,
-        callback: ((mainProcess: MainProcess, args: type_args) => any) | undefined = undefined,
+        callback: ((mainProcess: MainProcess, args: type_input_args) => any) | undefined = undefined,
         mainProcessMode: type_MainProcessMode = "desktop",
     ) {
 
@@ -220,9 +220,7 @@ export class MainProcess {
              */
             // (1)
             const firstProfileName = this.getProfiles().getFirstProfileName();
-            this.getIpcManager().handleProfileSelected("", {
-                selectedProfileName: firstProfileName,
-            })
+            this.initializeFromProfile(firstProfileName, undefined);
         } else {
             // no such mode
             Log.error("No such a mode", this.getMainProcessMode(), "Quit ...")
@@ -643,7 +641,7 @@ export class MainProcess {
      *
      * @param {string} args The command line arguments. We can select the profile from command line.
      */
-    initializeFromProfile = async (profileName: string, args: type_args | undefined): Promise<any> => {
+    initializeFromProfile = async (profileName: string, args: type_input_args | undefined): Promise<any> => {
 
         const mainProcess = this;
         const mainProcessMode = mainProcess.getMainProcessMode();

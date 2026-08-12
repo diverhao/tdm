@@ -27,9 +27,9 @@ export class DisplayWindowIpc {
         }
 
         try {
-            Log.debug("send from main process:", { processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] });
+            Log.debug("send from main process:", { processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: arg });
             if (typeof wsClient !== "string") {
-                const str = JSON.stringify({ processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: [arg] });
+                const str = JSON.stringify({ processId: "0", windowId: displayWindowAgent.getId(), eventName: channel, data: arg });
                 wsClient.send(str);
             }
 

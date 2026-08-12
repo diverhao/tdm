@@ -481,7 +481,7 @@ export class Probe extends BaseWidget {
                                 const record = this.generateRecord();
                                 if (record.startsWith("# failed to")) {
                                     const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-                                    ipcManager.handleDialogShowMessageBox(undefined, {
+                                    ipcManager.handleDialogShowMessageBox({
                                         info: {
                                             messageType: "error",
                                             humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`],
@@ -519,7 +519,7 @@ export class Probe extends BaseWidget {
                                 const record = this.generateRecord(true);
                                 if (record.startsWith("# failed to")) {
                                     const ipcManager = g_widgets1.getRoot().getDisplayWindowClient().getIpcManager();
-                                    ipcManager.handleDialogShowMessageBox(undefined, {
+                                    ipcManager.handleDialogShowMessageBox({
                                         info: {
                                             messageType: "error",
                                             humanReadableMessages: [`Failed to generate record for channel ${this.getChannelNames()[0]}`],

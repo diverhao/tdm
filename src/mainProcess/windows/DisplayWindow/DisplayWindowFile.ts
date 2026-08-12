@@ -351,8 +351,7 @@ export class DisplayWindowFile {
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
     openTdlFiles = async (data: IpcDispWinToMainProc["open-tdl-file"]) => {
-        const { options } = data;
-        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
+        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = data;
         const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
         const windowAgentsManager = mainProcess.getWindowAgentsManager();
         const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
@@ -400,14 +399,14 @@ export class DisplayWindowFile {
                     editable = true;
                 }
 
-                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, macros, currentTdlFolder, windowId);
 
             } else if (tdlFileNames.length === 0) { // create a blank window, available in all modes
                 // (3)
-                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
+                windowAgentsManager.createBlankDisplayWindow(windowId);
             } else if (tdlFileNames.length > 0) { // open all the files, available in all modes
                 // (4)
-                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, windowId);
             }
         } catch (e) {
             Log.error(e);

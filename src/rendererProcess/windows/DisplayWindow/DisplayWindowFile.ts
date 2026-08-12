@@ -519,8 +519,7 @@ export class DisplayWindowFile {
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
-                this.getDisplayWindowClient().getIpcManager().handleDialogShowMessageBox(undefined,
-                    {
+                this.getDisplayWindowClient().getIpcManager().handleDialogShowMessageBox({
                         info: {
                             messageType: "info",
                             humanReadableMessages: ["You have successfully downloaded the data or file.",
@@ -539,8 +538,7 @@ export class DisplayWindowFile {
                 return;
             }
             Log.error("Error on saving data file", e);
-            this.getDisplayWindowClient().getIpcManager().handleDialogShowMessageBox(undefined,
-                {
+            this.getDisplayWindowClient().getIpcManager().handleDialogShowMessageBox({
                     info: {
                         messageType: "error",
                         humanReadableMessages: ["Failed to save data or file."],
@@ -596,17 +594,15 @@ export class DisplayWindowFile {
             const tdlStr = event.target.result;
             const tdl = JSON.parse(tdlStr);
             this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", {
-                options: {
-                    tdl: tdl,
-                    // tdl file name is empty, otherwise it will be a file on server
-                    tdlFileNames: [""],
-                    mode: g_widgets1.isEditing() ? "editing" : "operating",
-                    editable: true,
-                    macros: [],
-                    replaceMacros: true,
-                    currentTdlFolder: undefined,
-                    windowId: this.getDisplayWindowClient().getWindowId(),
-                }
+                tdl: tdl,
+                // tdl file name is empty, otherwise it will be a file on server
+                tdlFileNames: [""],
+                mode: g_widgets1.isEditing() ? "editing" : "operating",
+                editable: true,
+                macros: [],
+                replaceMacros: true,
+                currentTdlFolder: undefined,
+                windowId: this.getDisplayWindowClient().getWindowId(),
             });
         };
         reader.readAsText(fileBlob);
@@ -644,16 +640,14 @@ export class DisplayWindowFile {
         }
 
         this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", {
-            options: {
-                tdlFileNames: [fileName],
-                mode: g_widgets1.isEditing() ? "editing" : "operating",
-                editable: true,
-                // external macros: user-provided and parent display macros
-                macros: [],
-                replaceMacros: true,
-                // currentTdlFolder: currentTdlFolder,
-                windowId: this.getDisplayWindowClient().getWindowId(),
-            }
+            tdlFileNames: [fileName],
+            mode: g_widgets1.isEditing() ? "editing" : "operating",
+            editable: true,
+            // external macros: user-provided and parent display macros
+            macros: [],
+            replaceMacros: true,
+            // currentTdlFolder: currentTdlFolder,
+            windowId: this.getDisplayWindowClient().getWindowId(),
         })
 
     }
@@ -746,15 +740,13 @@ export class DisplayWindowFile {
 
         this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
             {
-                options: {
-                    // tdlFileNames?: string[];
-                    mode: statusStr as "operating" | "editing", // seems like it is disgarded
-                    editable: false, // seems like it is disgarded
-                    macros: [],
-                    replaceMacros: false,
-                    // currentTdlFolder?: string;
-                    windowId: this.getDisplayWindowClient().getWindowId(),
-                }
+                // tdlFileNames?: string[];
+                mode: statusStr as "operating" | "editing", // seems like it is disgarded
+                editable: false, // seems like it is disgarded
+                macros: [],
+                replaceMacros: false,
+                // currentTdlFolder?: string;
+                windowId: this.getDisplayWindowClient().getWindowId(),
             });
 
     };

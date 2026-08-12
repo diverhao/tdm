@@ -3,7 +3,7 @@ import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Log } from "../../common/Log";
-import { type_args } from "../../common/IpcEventArgType";
+import { type_input_args } from "../../common/IpcEventArgType";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess
@@ -60,7 +60,7 @@ export class WsOpenerServer {
             wsClient.on("message", async (messageBuffer: RawData) => {
                 const message = JSON.parse(messageBuffer.toString());
                 this.handleMessage(message);
-                // if the mesage is of type_args, then tell the other instance that 
+                // if the message is of type_input_args, then tell the other instance that
                 // you have successfully delivered the message, then you can quit
                 if (message["attach"] !== undefined &&
                     message["macros"] !== undefined &&
@@ -103,7 +103,7 @@ export class WsOpenerServer {
     };
 
     // the argv must have contained "--attach" option
-    handleMessage = (args: type_args) => {
+    handleMessage = (args: type_input_args) => {
         // file names in args will be used 
         openTdlFileAsRequestedByAnotherInstance("", this.getMainProcess(), args);
     };

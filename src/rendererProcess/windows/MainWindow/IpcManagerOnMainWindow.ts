@@ -260,17 +260,15 @@ export class IpcManagerOnMainWindow {
                 }
                 this.sendFromRendererProcess("open-tdl-file",
                     {
-                        options: {
-                            tdlFileNames: tdlFileNames,
-                            mode: mode,
-                            // manually opened, always editable
-                            editable: true,
-                            // use parent window's macros
-                            macros: [],
-                            replaceMacros: true,
-                            // currentTdlFolder?: string;
-                            windowId: this.getMainWindowClient().getWindowId(),
-                        }
+                        tdlFileNames: tdlFileNames,
+                        mode: mode,
+                        // manually opened, always editable
+                        editable: true,
+                        // use parent window's macros
+                        macros: [],
+                        replaceMacros: true,
+                        // currentTdlFolder?: string;
+                        windowId: this.getMainWindowClient().getWindowId(),
                     }
                 );
             }

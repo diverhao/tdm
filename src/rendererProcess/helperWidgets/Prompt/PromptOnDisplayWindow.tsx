@@ -43,16 +43,13 @@ export class PromptOnDisplayWindow extends Prompt {
                     }
                     this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
                         {
-                            options:
-                            {
-                                tdlFileNames: [result],
-                                mode: "operating",
-                                editable: true,
-                                macros: [],
-                                replaceMacros: true, // not used
-                                // currentTdlFolder: currentTdlFolder,
-                                windowId: this.getDisplayWindowClient().getWindowId(),
-                            }
+                            tdlFileNames: [result],
+                            mode: "operating",
+                            editable: true,
+                            macros: [],
+                            replaceMacros: true, // not used
+                            // currentTdlFolder: currentTdlFolder,
+                            windowId: this.getDisplayWindowClient().getWindowId(),
                         });
                     this.removeElement();
                 }}
@@ -83,16 +80,13 @@ export class PromptOnDisplayWindow extends Prompt {
                         const mode = g_widgets1.isEditing() ? "editing" : "operating";
                         this.getDisplayWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
                             {
-                                options:
-                                {
-                                    tdlFileNames: [fileName],
-                                    mode: mode,
-                                    editable: true,
-                                    macros: [],
-                                    replaceMacros: true, // not used
-                                    // currentTdlFolder: currentTdlFolder,
-                                    windowId: this.getDisplayWindowClient().getWindowId(),
-                                }
+                                tdlFileNames: [fileName],
+                                mode: mode,
+                                editable: true,
+                                macros: [],
+                                replaceMacros: true, // not used
+                                // currentTdlFolder: currentTdlFolder,
+                                windowId: this.getDisplayWindowClient().getWindowId(),
                             });
                         this.removeElement();
                     }}

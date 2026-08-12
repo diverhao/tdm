@@ -86,17 +86,15 @@ export class WsPvServer {
 
                 if (command === "GET") {
                     Log.debug(`WebSocket PV server, GET ${message}`);
-                    const dbrData = await this.getIpcManager().handleTcaGet("",
-                        {
-                            channelName: channelName,
-                            displayWindowId: displayWindowId,
-                            widgetKey: undefined,
-                            ioId: -1,
-                            ioTimeout: 1,
-                            dbrType: undefined,
-                            useInterval: false
-                        }
-                    );
+                    const dbrData = await displayWindowAgent.getDisplayWindowChannel().handleTcaGet({
+                        channelName: channelName,
+                        displayWindowId: displayWindowId,
+                        widgetKey: undefined,
+                        ioId: -1,
+                        ioTimeout: 1,
+                        dbrType: undefined,
+                        useInterval: false
+                    });
                     if (typeof dbrData === "object") {
                         wsClient.send(JSON.stringify({ ...dbrData, ...message, channelName: channelName }));
                     }
@@ -110,23 +108,16 @@ export class WsPvServer {
                         }
                     }
                     // if the channel does not exist, create and monitor it
-                    this.getIpcManager().handleTcaMonitor("",
-                        {
-                            displayWindowId: displayWindowId,
-                            channelName: channelName,
-                        }
-                    );
+                    displayWindowAgent.tcaMonitor(channelName);
                 } else if (command === "PUT") {
                     const value = message["value"];
-                    this.getIpcManager().handleTcaPut("",
-                        {
-                            channelName: channelName,
-                            displayWindowId: displayWindowId,
-                            dbrData: message,
-                            ioTimeout: 1,
-                            pvaValueField: ""
-                        }
-                    );
+                    displayWindowAgent.getDisplayWindowChannel().handleTcaPut({
+                        channelName: channelName,
+                        displayWindowId: displayWindowId,
+                        dbrData: message,
+                        ioTimeout: 1,
+                        pvaValueField: ""
+                    });
                 } else {
                     Log.debug(`Unknow command ${command}`);
                 }

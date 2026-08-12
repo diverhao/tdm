@@ -98,8 +98,9 @@ export const type_Canvas_tdl_schema = {
 } as const satisfies TypeSchema;
 
 export type type_Canvas_style_tdl = Mutable<InferType<typeof type_Canvas_style_tdl_schema>>;
-export type type_Canvas_tdl = Omit<Mutable<InferType<typeof type_Canvas_tdl_schema>>, "macros"> & {
+export type type_Canvas_tdl = Omit<Mutable<InferType<typeof type_Canvas_tdl_schema>>, "macros" | "replaceMacros"> & {
     macros: type_macros_tdl;
+    replaceMacros?: boolean;
 };
 
 export const defaultCanvasTdl: type_Canvas_tdl = {

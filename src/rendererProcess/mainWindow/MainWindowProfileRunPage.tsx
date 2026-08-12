@@ -43,15 +43,13 @@ export class MainWindowProfileRunPage {
             // this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file", undefined, "operating", false, [], false);
             this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
                 {
-                    options: {
-                        // tdlFileNames?: string[];
-                        mode: "operating",
-                        editable: false,
-                        macros: [],
-                        replaceMacros: false,
-                        // currentTdlFolder?: string;
-                        windowId: this.getMainWindowClient().getWindowId(),
-                    }
+                    // tdlFileNames?: string[];
+                    mode: "operating",
+                    editable: false,
+                    macros: [],
+                    replaceMacros: false,
+                    // currentTdlFolder?: string;
+                    windowId: this.getMainWindowClient().getWindowId(),
                 }
             );
         };
@@ -68,15 +66,13 @@ export class MainWindowProfileRunPage {
             if (typeof tdlFileName === "string") {
                 this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
                     {
-                        options: {
-                            tdlFileNames: [tdlFileName],
-                            mode: "operating",
-                            editable: false,
-                            macros: [],
-                            replaceMacros: false,
-                            // currentTdlFolder?: string;
-                            windowId: this.getMainWindowClient().getWindowId(),
-                        }
+                        tdlFileNames: [tdlFileName],
+                        mode: "operating",
+                        editable: false,
+                        macros: [],
+                        replaceMacros: false,
+                        // currentTdlFolder?: string;
+                        windowId: this.getMainWindowClient().getWindowId(),
                     }
                 );
             }
@@ -84,15 +80,13 @@ export class MainWindowProfileRunPage {
             // this._largeInput.createElement("", (newValue: "string") => { }, "Remote TDL File Path", (newValue: string) => {
             //     this.getMainWindowClient().getIpcManager().sendFromRendererProcess("open-tdl-file",
             //         {
-            //             options: {
-            //                 tdlFileNames: [newValue],
-            //                 mode: "operating",
-            //                 editable: false,
-            //                 macros: [],
-            //                 replaceMacros: false,
-            //                 // currentTdlFolder?: string;
-            //                 windowId: this.getMainWindowClient().getWindowId(),
-            //             }
+            //             tdlFileNames: [newValue],
+            //             mode: "operating",
+            //             editable: false,
+            //             macros: [],
+            //             replaceMacros: false,
+            //             // currentTdlFolder?: string;
+            //             windowId: this.getMainWindowClient().getWindowId(),
             //         }
             //     );
             // }, false, "MainWindow")

@@ -262,16 +262,14 @@ export class Terminal extends BaseWidget {
             const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
             displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file",
                 {
-                    options: {
-                        tdlFileNames: [tdlFileName],
-                        mode: "operating",
-                        editable: false,
-                        // external macros: user-provided and parent display macros
-                        macros: [],
-                        replaceMacros: false,
-                        currentTdlFolder: this.currentDir,
-                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                    }
+                    tdlFileNames: [tdlFileName],
+                    mode: "operating",
+                    editable: false,
+                    // external macros: user-provided and parent display macros
+                    macros: [],
+                    replaceMacros: false,
+                    currentTdlFolder: this.currentDir,
+                    windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                 });
         } else if (tdlFileName.startsWith("[dir]")) {
             tdlFileName = tdlFileName.replace("[dir]", "");
@@ -523,15 +521,13 @@ export class Terminal extends BaseWidget {
                 const ipcManager = displayWindowClient.getIpcManager();
                 ipcManager.sendFromRendererProcess("open-tdl-file",
                     {
-                        options: {
-                            tdlFileNames: [tdlFileName],
-                            mode: "operating",
-                            editable: false,
-                            macros: [],
-                            replaceMacros: false, // not used
-                            currentTdlFolder: currentTdlFolder,
-                            windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
-                        }
+                        tdlFileNames: [tdlFileName],
+                        mode: "operating",
+                        editable: false,
+                        macros: [],
+                        replaceMacros: false, // not used
+                        currentTdlFolder: currentTdlFolder,
+                        windowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
                     });
             }
             this.commandFinished();

@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import path from "path";
 import { Log } from "../../common/Log";
-import { type_about_info, type_args } from "../../common/IpcEventArgType";
+import { type_about_info, type_input_args } from "../../common/IpcEventArgType";
 import { execSync } from "child_process";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
@@ -107,7 +107,7 @@ export const getCurrentDateTimeStr = (useAsFileName: boolean = false) => {
  * @returns `true` if the file is opened in another instance and this instance is quit; 
  *          `false` if there is no existing TDM instance running
  */
-export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
+export const openTdlInFirstExistingInstance = (args: type_input_args): boolean => {
 
     const mainProcessMode = args["mainProcessMode"];
 
@@ -144,7 +144,7 @@ export const openTdlInFirstExistingInstance = (args: type_args): boolean => {
  *         `false` if there is no existing TDM instance running on the specified port.
  * 
  */
-export const openTdlInSpecificExistingInstance = async (args: type_args): Promise<boolean> => {
+export const openTdlInSpecificExistingInstance = async (args: type_input_args): Promise<boolean> => {
     const port = args["attach"];
 
     let setSuccess: any = undefined;;
@@ -207,7 +207,7 @@ export const openTdlInSpecificExistingInstance = async (args: type_args): Promis
  * 
  * @param args The command line arguments for the new TDM instance.
  */
-export const openTdlInNewInstance = (args: type_args) => {
+export const openTdlInNewInstance = (args: type_input_args) => {
 
     const mainProcessMode = args["mainProcessMode"];
 
@@ -335,7 +335,7 @@ export function isStartedFromShell() {
  * 
  * if the main process mode is "ssh-server", change attach to -1
  */
-export const processArgsAttach = (args: type_args) => {
+export const processArgsAttach = (args: type_input_args) => {
     /**
      * When we double-click a TDL file in file manager, TDM will first try to open this file
      * in the existing instance. If it cannot find one, then create a new TDM instance.
@@ -362,7 +362,7 @@ export const processArgsAttach = (args: type_args) => {
  * 
  * (4) if already selected a profile, then ignore the requested profile
  */
-export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcess: MainProcess, args?: type_args) => {
+export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainProcess: MainProcess, args?: type_input_args) => {
 
     // (1)
     if (path.isAbsolute(filePath) === false && args === undefined) {
@@ -397,46 +397,39 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
                 return;
             }
 
-            mainProcess.getIpcManager().handleProfileSelected("",
-                {
-                    selectedProfileName: profileName,
-                    args: {
-                        macros: macros,
-                        cwd: cwd,
-                        fileNames: fileNames,
-                        settings: "", // ignored
-                        profile: profileName, // ignored, will use the above selectedProfileName
-                        alsoOpenDefaults: false, // ignored
-                        attach: -1, // ignored as the attach port is set when the MainProcesses is created
-                        flexibleAttach: true, // ignored, same reason as above
-                        httpServerPort: 3000, // ignored, same reason as above
-                        httpServerBasePath: "/",
-                        site: "", // ignored
-                        mainProcessMode: "desktop", // this function is called only in desktop mode
-                    },
-                }
-            )
+            mainProcess.initializeFromProfile(profileName, {
+                macros: macros,
+                cwd: cwd,
+                fileNames: fileNames,
+                settings: "", // ignored
+                profile: profileName, // ignored, will use profileName
+                alsoOpenDefaults: false, // ignored
+                attach: -1, // ignored as the attach port is set when the MainProcesses is created
+                flexibleAttach: true, // ignored, same reason as above
+                httpServerPort: 3000, // ignored, same reason as above
+                httpServerBasePath: "/",
+                site: "", // ignored
+                mainProcessMode: "desktop", // this function is called only in desktop mode
+            });
             return;
 
         } else {
             // (4)
             const editable = `${selectedProfile.getEntry("EPICS Custom Environment", "Manually Opened TDL Editable")}`.toUpperCase() === "YES" ? true : false;
-            mainProcess.getIpcManager().handleOpenTdlFiles(
-                "",
-                {
-                    options: {
-                        // tdl?: type_tdl;
-                        tdlFileNames: fileNames,
-                        mode: "operating", // always operating
-                        editable: editable,
-                        // external macros: user-provided and parent display macros
-                        macros: macros,
-                        replaceMacros: false,
-                        // currentTdlFolder?: string;
-                        windowId: "0", // let main window take the burden
-                    },
-                }
-            )
+            const mainWindowAgent = mainProcess.getWindowAgentsManager().getMainWindowAgent();
+            if (mainWindowAgent === undefined) {
+                Log.error("Cannot open TDL files because the main window agent does not exist.");
+                return;
+            }
+            mainWindowAgent.getMainWindowFile().openTdlFiles({
+                tdlFileNames: fileNames,
+                mode: "operating", // always operating
+                editable: editable,
+                // external macros: user-provided and parent display macros
+                macros: macros,
+                replaceMacros: false,
+                windowId: mainWindowAgent.getId(),
+            });
         }
 
     }
@@ -448,7 +441,7 @@ export const openTdlFileAsRequestedByAnotherInstance = (filePath: string, mainPr
  * 
  * It takes the command line arguments to run in main process.
  */
-export const cmdLineCallback = (mainProcess: MainProcess, args: type_args) => {
+export const cmdLineCallback = (mainProcess: MainProcess, args: type_input_args) => {
     // command line selected profile and command line tdl files
     const windowAgentsManager = mainProcess.getWindowAgentsManager();
     const cmdLineSelectedProfile = args["profile"];

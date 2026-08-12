@@ -213,8 +213,7 @@ export class MainWindowFile {
     // ------------------- event handlers ------------------------
 
     openTdlFiles = async (data: IpcMainWinToMainProc["open-tdl-file"]) => {
-        const { options } = data;
-        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros } = options;
+        let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = data;
         const mainProcess = this.getMainWindowAgent().getWindowAgentsManager().getMainProcess();
         const windowAgentsManager = mainProcess.getWindowAgentsManager();
         const selectedProfile = mainProcess.getProfiles().getSelectedProfile();
@@ -253,11 +252,11 @@ export class MainWindowFile {
                     editable = true;
                 }
 
-                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+                windowAgentsManager.createDisplayWindows([tdlFileName], mode, editable, macros, currentTdlFolder, windowId);
             } else if (tdlFileNames.length === 0) {
-                windowAgentsManager.createBlankDisplayWindow(options["windowId"]);
+                windowAgentsManager.createBlankDisplayWindow(windowId);
             } else if (tdlFileNames.length > 0) {
-                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, options["macros"], options["currentTdlFolder"], windowId);
+                windowAgentsManager.createDisplayWindows(tdlFileNames, mode, editable, macros, currentTdlFolder, windowId);
             }
         } catch (e) {
             Log.error(e);

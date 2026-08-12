@@ -190,19 +190,14 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
-                        {
-                            options: {
-                                tdlFileNames: undefined, // open dialog
-                                mode: editable === true ? "editing" : "operating",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }
-                        }
-                    );
+                    this.getDisplayWindowAgent().getDisplayWindowFile().openTdlFiles({
+                        tdlFileNames: undefined, // open dialog
+                        mode: editable === true ? "editing" : "operating",
+                        editable: editable,
+                        macros: [],
+                        replaceMacros: false,
+                        windowId: this.getDisplayWindowAgent().getId(),
+                    });
                 } else {
                     Log.error("main process mode must be desktop");
                 }
@@ -1031,19 +1026,14 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
-                        {
-                            options: {
-                                tdlFileNames: undefined, // open dialog
-                                mode: "operating",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }
-                        }
-                    );
+                    this.getDisplayWindowAgent().getDisplayWindowFile().openTdlFiles({
+                        tdlFileNames: undefined, // open dialog
+                        mode: "operating",
+                        editable: editable,
+                        macros: [],
+                        replaceMacros: false,
+                        windowId: this.getDisplayWindowAgent().getId(),
+                    });
                 } else {
                     Log.error("main process mode must be desktop");
                 }
@@ -1321,19 +1311,14 @@ export class ContextMenuDesktop {
                     editable = selectedProfile.getManuallyOpenedTdlEditable()
                 }
                 if (mainProcessMode === "desktop") {
-                    this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess().getIpcManager().handleOpenTdlFiles("",
-                        {
-                            options: {
-                                tdlFileNames: undefined, // open dialog
-                                mode: "editing",
-                                editable: editable,
-                                macros: [],
-                                replaceMacros: false,
-                                // currentTdlFolder?: string;
-                                windowId: this.getDisplayWindowAgent().getId(),
-                            }
-                        }
-                    );
+                    this.getDisplayWindowAgent().getDisplayWindowFile().openTdlFiles({
+                        tdlFileNames: undefined, // open dialog
+                        mode: "editing",
+                        editable: editable,
+                        macros: [],
+                        replaceMacros: false,
+                        windowId: this.getDisplayWindowAgent().getId(),
+                    });
                 } else {
                     Log.error("main process mode must be desktop");
                 }

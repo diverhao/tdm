@@ -564,15 +564,13 @@ export class EmbeddedDisplay extends BaseWidget {
         }
 
         displayWindowClient.getIpcManager().sendFromRendererProcess("open-tdl-file", {
-            options: {
-                tdlFileNames: [tdlFileName],
-                mode: "operating",
-                editable: true,
-                macros: macros.getArr(),
-                replaceMacros: true,
-                currentTdlFolder: currentTdlFolder,
-                windowId: displayWindowId,
-            }
+            tdlFileNames: [tdlFileName],
+            mode: "operating",
+            editable: true,
+            macros: macros.getArr(),
+            replaceMacros: true,
+            currentTdlFolder: currentTdlFolder,
+            windowId: displayWindowId,
         });
     }
 

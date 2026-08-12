@@ -1264,15 +1264,13 @@ export class FileBrowser extends BaseWidget {
                 }
 
                 ipcManager.sendFromRendererProcess("open-tdl-file", {
-                    options: {
-                        tdlFileNames: [fullTdlFileName],
-                        mode: mode as "operating" | "editing",
-                        editable: editable,
-                        macros: [],
-                        replaceMacros: false,
-                        currentTdlFolder: this.getFolderPath(),
-                        windowId: displayWindowId,
-                    }
+                    tdlFileNames: [fullTdlFileName],
+                    mode: mode as "operating" | "editing",
+                    editable: editable,
+                    macros: [],
+                    replaceMacros: false,
+                    currentTdlFolder: this.getFolderPath(),
+                    windowId: displayWindowId,
                 })
 
 
@@ -1377,8 +1375,7 @@ export class FileBrowser extends BaseWidget {
                 }
             }
             if (allowToVisit === false) {
-                displayWindowClient.getIpcManager().handleDialogShowMessageBox(undefined,
-                    {
+                displayWindowClient.getIpcManager().handleDialogShowMessageBox({
                         info: {
                             messageType: "error", // | "warning" | "info";
                             humanReadableMessages: [`You are not allowed to visit ${folderPath}.`],
