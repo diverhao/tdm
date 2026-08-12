@@ -1,4 +1,4 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { FileReader } from "../../file/FileReader";
 import type { DisplayWindowAgent } from "./DisplayWindowAgent";
@@ -10,7 +10,7 @@ export class DisplayWindowEmbeddedDisplay {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    handleReadEmbeddedDisplayTdl = async (data: IpcEventArgType["read-embedded-display-tdl"]) => {
+    handleReadEmbeddedDisplayTdl = async (data: IpcDispWinToMainProc["read-embedded-display-tdl"]) => {
         const { displayWindowId, widgetKey, tdlFileName, currentTdlFolder, macros, widgetWidth, widgetHeight, resize } = data;
         const selectedProfile = this.getMainProcess().getProfiles().getSelectedProfile();
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -18,7 +18,7 @@ export class DisplayWindowEmbeddedDisplay {
         try {
             const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile, currentTdlFolder);
             if (tdlResult !== undefined) {
-                displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
+                displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl-reply", {
                     displayWindowId: displayWindowId,
                     widgetKey: widgetKey,
                     tdl: tdlResult["tdl"],
@@ -31,7 +31,7 @@ export class DisplayWindowEmbeddedDisplay {
                 });
             } else {
                 Log.error(`Cannot read file ${tdlFileName}`);
-                displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
+                displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl-reply", {
                     displayWindowId: displayWindowId,
                     widgetKey: widgetKey,
                     macros: macros,
@@ -43,7 +43,7 @@ export class DisplayWindowEmbeddedDisplay {
             }
         } catch (e) {
             Log.error(`Cannot read file ${tdlFileName}`, e);
-            displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl", {
+            displayWindowAgent.sendFromMainProcess("read-embedded-display-tdl-reply", {
                 displayWindowId: displayWindowId,
                 widgetKey: widgetKey,
                 macros: macros,

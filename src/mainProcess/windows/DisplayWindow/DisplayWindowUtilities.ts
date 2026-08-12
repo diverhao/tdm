@@ -7,13 +7,13 @@ import { generateAboutInfo, getCurrentDateTimeStr } from "../../global/GlobalMet
 import { Log } from "../../../common/Log";
 import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
 import { v4 as uuidv4 } from "uuid";
 import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
 
-type type_DialogShowMessageBoxInfo = IpcEventArgType2["dialog-show-message-box"]["info"];
+type type_DialogShowMessageBoxInfo = IpcMainProcToDispWin["dialog-show-message-box"]["info"];
 type type_DialogShowMessageBoxExtraInfo = Omit<Partial<type_DialogShowMessageBoxInfo>, "messageType" | "humanReadableMessages" | "rawMessages">;
-type type_DialogShowInputBoxInfo = IpcEventArgType2["dialog-show-input-box"]["info"];
+type type_DialogShowInputBoxInfo = IpcMainProcToDispWin["dialog-show-input-box"]["info"];
 
 export class DisplayWindowUtilities {
 

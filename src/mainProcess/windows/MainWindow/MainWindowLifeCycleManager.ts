@@ -2,7 +2,6 @@ import { app, BrowserWindow, WebContents } from "electron";
 import * as path from "path";
 import * as url from "url";
 import { Log } from "../../../common/Log";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
 import { MainWindowAgent } from "./MainWindowAgent";
 import { Environment } from "epics-tca";
 

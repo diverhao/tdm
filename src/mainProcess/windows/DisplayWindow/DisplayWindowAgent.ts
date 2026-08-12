@@ -6,7 +6,7 @@ import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Promises, type_pva_status, type_pva_value } from "epics-tca";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
 import { DisplayWindowAttachedScript } from "./DisplayWindowAttachedScript";
 import { DisplayWindowChannel } from "./DisplayWindowChannel";
 import { DisplayWindowChannelsManager } from "./DisplayWindowChannelsManager";
@@ -375,18 +375,18 @@ export class DisplayWindowAgent {
         await this.getDisplayWindowUtilities().printToPdf();
     };
 
-    showNotification = (info: IpcEventArgType2["dialog-show-message-box"]["info"]): void => {
+    showNotification = (info: IpcMainProcToDispWin["dialog-show-message-box"]["info"]): void => {
         this.getDisplayWindowUtilities().showNotification(info);
     };
 
-    showInputBox = (info: IpcEventArgType2["dialog-show-input-box"]["info"]): void => {
+    showInputBox = (info: IpcMainProcToDispWin["dialog-show-input-box"]["info"]): void => {
         this.getDisplayWindowUtilities().showInputBox(info);
     };
 
     showError = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToDispWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getDisplayWindowUtilities().showError(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -394,7 +394,7 @@ export class DisplayWindowAgent {
     showInfo = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToDispWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getDisplayWindowUtilities().showInfo(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -402,7 +402,7 @@ export class DisplayWindowAgent {
     showWarning = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType2["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToDispWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getDisplayWindowUtilities().showWarning(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -481,7 +481,7 @@ export class DisplayWindowAgent {
      * to avoid stack overflow. In this case, we only send the message out to the renderer process.
     */
 
-    sendFromMainProcess = <T extends keyof IpcEventArgType2>(channel: T, arg: IpcEventArgType2[T]): void => {
+    sendFromMainProcess = <T extends keyof IpcMainProcToDispWin>(channel: T, arg: IpcMainProcToDispWin[T]): void => {
         this.getDisplayWindowIpc().sendFromMainProcess(channel, arg);
     };
 

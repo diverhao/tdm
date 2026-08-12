@@ -1,4 +1,4 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import type { DisplayWindowAgent } from "./DisplayWindowAgent";
 
@@ -9,7 +9,7 @@ export class DisplayWindowChannel {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    handleTcaGet = async (options: IpcEventArgType["tca-get"]) => {
+    handleTcaGet = async (options: IpcDispWinToMainProc["tca-get"]) => {
         const { channelName, widgetKey, ioId, ioTimeout, dbrType, useInterval } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
 
@@ -27,7 +27,7 @@ export class DisplayWindowChannel {
         return data;
     };
 
-    handleTcaGetMeta = async (options: IpcEventArgType["tca-get-meta"]) => {
+    handleTcaGetMeta = async (options: IpcDispWinToMainProc["tca-get-meta"]) => {
         const { channelName, widgetKey, ioId, timeout } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
         const channelType = this.getChannelType(channelName);
@@ -40,7 +40,7 @@ export class DisplayWindowChannel {
 
         Log.debug("tca-get-meta result for", channelName, "is", data);
         if (channelType === "pva") {
-            displayWindowAgent.sendFromMainProcess("fetch-pva-type", {
+            displayWindowAgent.sendFromMainProcess("fetch-pva-type-reply", {
                 channelName: channelName,
                 widgetKey: widgetKey,
                 fullPvaType: data,
@@ -56,13 +56,13 @@ export class DisplayWindowChannel {
         });
     };
 
-    handleFetchPvaType = async (options: IpcEventArgType["fetch-pva-type"]) => {
+    handleFetchPvaType = async (options: IpcDispWinToMainProc["fetch-pva-type"]) => {
         const { channelName, widgetKey, ioId, timeout } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
         const data = await displayWindowAgent.fetchPvaType(channelName, timeout);
 
         Log.debug("fetch Pva Type for", channelName, "is", data);
-        displayWindowAgent.sendFromMainProcess("fetch-pva-type", {
+        displayWindowAgent.sendFromMainProcess("fetch-pva-type-reply", {
             channelName: channelName,
             widgetKey: widgetKey,
             fullPvaType: data,
@@ -70,7 +70,7 @@ export class DisplayWindowChannel {
         });
     };
 
-    handleTcaPut = async (options: IpcEventArgType["tca-put"]) => {
+    handleTcaPut = async (options: IpcDispWinToMainProc["tca-put"]) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const channelName = options["channelName"];
         const displayWindowId = options["displayWindowId"];

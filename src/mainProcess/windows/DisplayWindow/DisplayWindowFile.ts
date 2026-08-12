@@ -1,4 +1,4 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";
@@ -159,7 +159,7 @@ export class DisplayWindowFile {
 
     // -------------------- db file ----------------------
 
-    loadDbFileContents = async (data: IpcEventArgType["load-db-file-contents"]) => {
+    loadDbFileContents = async (data: IpcDispWinToMainProc["load-db-file-contents"]) => {
         const { widgetKey, displayWindowId } = data;
         let dbFileName = data["dbFileName"] ?? "";
         const manualOpen = data["dbFileName"] === undefined || data["dbFileName"] === "";
@@ -180,7 +180,7 @@ export class DisplayWindowFile {
             }
 
             const dbFileContents = FileReader.parseDb(fileResult.fileContent);
-            this.getDisplayWindowAgent().sendFromMainProcess("load-db-file-contents", {
+            this.getDisplayWindowAgent().sendFromMainProcess("load-db-file-contents-reply", {
                 dbFileName: fileResult.fileName,
                 displayWindowId: displayWindowId,
                 widgetKey: widgetKey,
@@ -350,7 +350,7 @@ export class DisplayWindowFile {
      * 
      * @param sendContentsToWindow whether to send file back to display window, only used by .db 
      */
-    openTdlFiles = async (data: IpcEventArgType["open-tdl-file"]) => {
+    openTdlFiles = async (data: IpcDispWinToMainProc["open-tdl-file"]) => {
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros, currentTdlFolder } = options;
         const mainProcess = this.getDisplayWindowAgent().getWindowAgentsManager().getMainProcess();
@@ -418,7 +418,7 @@ export class DisplayWindowFile {
     /**
      * Reload TDL file from web page or desktop mode
      */
-    reloadTdlFile = async (data: IpcEventArgType["reload-tdl-file"], selectedProfile: Profile) => {
+    reloadTdlFile = async (data: IpcDispWinToMainProc["reload-tdl-file"], selectedProfile: Profile) => {
         const { displayWindowId, tdlFileName, mode, editable, externalMacros, replaceMacros } = data;
         const displayWindowAgent = this.getDisplayWindowAgent();
         const tdlResult = await FileReader.readTdlFile(tdlFileName, selectedProfile);
@@ -437,14 +437,14 @@ export class DisplayWindowFile {
     }
 
     private sendFileConverterFinished = (widgetKey: string, status: "success" | "failed") => {
-        this.getDisplayWindowAgent().sendFromMainProcess("file-converter-command", {
+        this.getDisplayWindowAgent().sendFromMainProcess("file-converter-command-reply", {
             type: "all-file-conversion-finished",
             status: status,
             widgetKey: widgetKey,
         });
     };
 
-    executeFileConverterCommand = (options: IpcEventArgType["file-converter-command"]) => {
+    executeFileConverterCommand = (options: IpcDispWinToMainProc["file-converter-command"]) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
 
@@ -470,7 +470,7 @@ export class DisplayWindowFile {
         }
     };
 
-    saveVideoFile = (options: IpcEventArgType["save-video-file"]) => {
+    saveVideoFile = (options: IpcDispWinToMainProc["save-video-file"]) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const buffer = Buffer.from(options["fileContents"], "base64");
 
@@ -483,14 +483,14 @@ export class DisplayWindowFile {
         });
     };
 
-    getMediaContent = (options: IpcEventArgType["get-media-content"]) => {
+    getMediaContent = (options: IpcDispWinToMainProc["get-media-content"]) => {
         const { fullFileName, displayWindowId, widgetKey } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
 
         if (fullFileName !== "") {
             const fileBase64Str = fileToDataUri(fullFileName, 10240);
             if (fileBase64Str !== "") {
-                displayWindowAgent.sendFromMainProcess("get-media-content", {
+                displayWindowAgent.sendFromMainProcess("get-media-content-reply", {
                     content: fileBase64Str,
                     displayWindowId: displayWindowId,
                     widgetKey: widgetKey,
@@ -504,7 +504,7 @@ export class DisplayWindowFile {
     };
 
 
-    saveTdlFile = async (options: IpcEventArgType["save-tdl-file"]): Promise<void> => {
+    saveTdlFile = async (options: IpcDispWinToMainProc["save-tdl-file"]): Promise<void> => {
         const { windowId, tdl, tdlFileName1 } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
         const mainProcess = displayWindowAgent.getWindowAgentsManager().getMainProcess();
@@ -528,7 +528,7 @@ export class DisplayWindowFile {
         }
     }
 
-    saveDataToFile = async (options: IpcEventArgType["save-data-to-file"]): Promise<void> => {
+    saveDataToFile = async (options: IpcDispWinToMainProc["save-data-to-file"]): Promise<void> => {
         let { fileName, displayWindowId, data } = options;
         const fileContent = JSON.stringify(data, null, 4);
         const result = await this.saveFile(fileName, fileContent, "data-viewer");
@@ -575,7 +575,7 @@ export class DisplayWindowFile {
         }
     }
 
-    readFolder = (options: IpcEventArgType["fetch-folder-content"]) => {
+    readFolder = (options: IpcDispWinToMainProc["fetch-folder-content"]) => {
         const { widgetKey, folderPath } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
 
@@ -608,7 +608,7 @@ export class DisplayWindowFile {
                 });
             }
             // send back
-            displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+            displayWindowAgent.sendFromMainProcess("fetch-folder-content-reply", {
                 widgetKey: widgetKey,
                 folderContent: result,
             })
@@ -616,7 +616,7 @@ export class DisplayWindowFile {
             Log.error(`Failed to read folder ${options["folderPath"]}`);
             displayWindowAgent.showError([`Failed to read folder ${options["folderPath"]}.`]);
             // let 
-            displayWindowAgent.sendFromMainProcess("fetch-folder-content", {
+            displayWindowAgent.sendFromMainProcess("fetch-folder-content-reply", {
                 widgetKey: options["widgetKey"],
                 folderContent: [],
                 success: false,
@@ -625,7 +625,7 @@ export class DisplayWindowFile {
     }
 
 
-    selectAFile = async (data: IpcEventArgType["select-a-file"]) => {
+    selectAFile = async (data: IpcDispWinToMainProc["select-a-file"]) => {
         let { options, fileName1, } = data;
         if (fileName1 === undefined) {
             fileName1 = "";
@@ -642,7 +642,7 @@ export class DisplayWindowFile {
         if (fileName === undefined) {
             // do not show error message on display window, the user may just canceled it
         } else {
-            displayWindowAgent.sendFromMainProcess("select-a-file", {
+            displayWindowAgent.sendFromMainProcess("select-a-file-reply", {
                 options, fileName
             });
         }

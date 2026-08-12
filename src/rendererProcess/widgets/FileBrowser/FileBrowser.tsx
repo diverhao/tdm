@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { IpcEventArgType2, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
 import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { defaultFileBrowserTdl, type_FileBrowser_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
@@ -1104,8 +1104,8 @@ export class FileBrowser extends BaseWidget {
         }
     }
 
-    handleFileBrowserCommand = (message: IpcEventArgType2["file-browser-command"]) => {
-        const handlers: Record<IpcEventArgType2["file-browser-command"]["command"], (message: IpcEventArgType2["file-browser-command"]) => void> = {
+    handleFileBrowserCommand = (message: IpcMainProcToDispWin["file-browser-command-reply"]) => {
+        const handlers: Record<IpcMainProcToDispWin["file-browser-command-reply"]["command"], (message: IpcMainProcToDispWin["file-browser-command-reply"]) => void> = {
             "change-item-name": this._handleChangeItemNameCommand,
             "create-tdl-file": this._handleCreateTdlFileCommand,
             "create-folder": this._handleCreateFolderCommand,
@@ -1114,7 +1114,7 @@ export class FileBrowser extends BaseWidget {
         handlers[message["command"]](message);
     }
 
-    private _handleChangeItemNameCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+    private _handleChangeItemNameCommand = (message: IpcMainProcToDispWin["file-browser-command-reply"]) => {
         if (message["success"] === true) {
             this.setItemNameBeingEdited(false);
             const folder = message["folder"];
@@ -1137,13 +1137,13 @@ export class FileBrowser extends BaseWidget {
         }
     }
 
-    private _handleCreateTdlFileCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+    private _handleCreateTdlFileCommand = (message: IpcMainProcToDispWin["file-browser-command-reply"]) => {
         if (message["success"] === true) {
             this.fetchFolderContent();
         }
     }
 
-    private _handleCreateFolderCommand = (message: IpcEventArgType2["file-browser-command"]) => {
+    private _handleCreateFolderCommand = (message: IpcMainProcToDispWin["file-browser-command-reply"]) => {
         if (message["success"] === true) {
             this.fetchFolderContent();
         }

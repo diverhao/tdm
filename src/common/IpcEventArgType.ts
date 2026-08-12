@@ -104,24 +104,12 @@ export type type_DialogInputBox = {
 
 
 /**
- * Input argument types for IPC event handlers in main process.
- * Data is sent from Display Window (not Main Window) to main process.
- * 
- * For the event handler in main process, it is used like
- * `handlerWebSocketIpcConnected(event: any, options: IpcEventArgType["websocket-ipc-connected])`
- * 
- * For event sender in renderer process, it is used like
- * `sendFromRendererProcess("websocket-ipc-connected", {processId: "0", windowId: "0-1"})`
- * where the `options` argument is checked and enforced by TypeScript. 
- * The `sendFromRendererProcess()` function uses the `IpcEventArgType` for type check.
- * 
+ * Input argument types for IPC messages sent from a DisplayWindow renderer to
+ * the main process.
  */
-export type IpcEventArgType = {
+export type IpcDispWinToMainProc = {
 
-    "new-tdm-process": {
-
-    },
-
+    /** Also used by `IpcMainWinToMainProc`. */
     "input-file-path": {
         windowId: string,
         fileName: string,
@@ -141,6 +129,7 @@ export type IpcEventArgType = {
         widgetKey: string;
     };
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "quit-tdm-process": {
         confirmToQuit: boolean
     }
@@ -151,26 +140,16 @@ export type IpcEventArgType = {
         reconnect: boolean,
     },
 
-    "websocket-ipc-connected-on-main-window": {
-        processId: string,
-        windowId: string,
-        reconnect: boolean,
-    },
-
-    "profile-selected": {
-        selectedProfileName: string;
-        args?: type_args;
-        openDefaultDisplayWindows?: boolean;
-    };
-
     "bring-up-main-window": {
 
     }
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "focus-window": {
         displayWindowId: string
     },
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "close-window": {
         displayWindowId: string
     },
@@ -190,11 +169,6 @@ export type IpcEventArgType = {
         dataType: type_fileType;
     },
 
-    "open-default-display-windows": {
-        windowId: string,
-    },
-
-
     "duplicate-display": {
         options: {
             tdl: type_tdl;
@@ -204,6 +178,7 @@ export type IpcEventArgType = {
         },
     },
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "create-blank-display-window": {
         windowId: string,
     },
@@ -224,6 +199,7 @@ export type IpcEventArgType = {
         state: boolean
     },
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "open-tdl-file": {
         options: {
             tdl?: type_tdl;
@@ -336,10 +312,7 @@ export type IpcEventArgType = {
         options?: Record<string, any>
     },
 
-    "main-window-show-context-menu": {
-        menu: ("copy" | "cut" | "paste")[]
-    },
-
+    /** Also used by `IpcMainWinToMainProc`. */
     "create-utility-display-window": {
         utilityType: "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" | "Terminal" | "Calculator" | "ChannelGraph" | "CaSnooper" | "Casw" | "Help" | "PvMonitor" | "FileConverter" | "Talhk" | "FileBrowser" | "SeqGraph",
         utilityOptions: Record<string, any>,
@@ -398,25 +371,12 @@ export type IpcEventArgType = {
         tdlFileName: string
     },
 
-    "open-profiles": {
-        profilesFileName1?: string
-    },
-
-    "save-profiles": {
-        modifiedProfiles: Record<string, any>,
-        filePath1?: string
-    },
-
-    "save-profiles-as": {
-        modifiedProfiles: Record<string, any>,
-        filePath1?: string
-    },
-
     "select-a-file": {
         options: Record<string, any>,
         fileName1?: string
     },
 
+    /** Also used by `IpcMainWinToMainProc`. */
     "open-webpage": {
         url: string
     },
@@ -456,7 +416,7 @@ export type IpcEventArgType = {
     "register-log-viewer": {
 
     }
-    
+
     "file-converter-command": {
         command: "start",
         src: string,
@@ -517,18 +477,79 @@ export type IpcEventArgType = {
 
 };
 
+/**
+ * Input argument types for IPC messages sent from the MainWindow renderer to
+ * the main process.
+ *
+ * Payloads for events sent by both window types are defined in
+ * `IpcDispWinToMainProc` and referenced here.
+ */
+export type IpcMainWinToMainProc = {
+    "new-tdm-process": {},
+
+    "input-file-path": IpcDispWinToMainProc["input-file-path"],
+
+    "quit-tdm-process": IpcDispWinToMainProc["quit-tdm-process"],
+
+    "websocket-ipc-connected-on-main-window": {
+        processId: string,
+        windowId: string,
+        reconnect: boolean,
+    },
+
+    "profile-selected": {
+        selectedProfileName: string;
+        args?: type_args;
+        openDefaultDisplayWindows?: boolean;
+    },
+
+    "focus-window": IpcDispWinToMainProc["focus-window"],
+
+    "close-window": IpcDispWinToMainProc["close-window"],
+
+    "open-default-display-windows": {
+        windowId: string,
+    },
+
+    "create-blank-display-window": IpcDispWinToMainProc["create-blank-display-window"],
+
+    "open-tdl-file": IpcDispWinToMainProc["open-tdl-file"],
+
+    "main-window-show-context-menu": {
+        menu: ("copy" | "cut" | "paste")[]
+    },
+
+    "create-utility-display-window": IpcDispWinToMainProc["create-utility-display-window"],
+
+    "open-profiles": {
+        profilesFileName1?: string
+    },
+
+    "save-profiles": {
+        modifiedProfiles: Record<string, any>,
+        filePath1?: string
+    },
+
+    "save-profiles-as": {
+        modifiedProfiles: Record<string, any>,
+        filePath1?: string
+    },
+
+    "open-webpage": IpcDispWinToMainProc["open-webpage"],
+};
+
 
 /**
  * Input argument types for IPC event handlers in DisplayWindow
  * Data is sent from Main Process to Display Window
  */
-export type IpcEventArgType2 = {
+export type IpcMainProcToDispWin = {
     "context-menu-command": {
         command: string,
         subcommand?: string | string[] | [string, boolean]
     },
 
-    "get-symbol-gallery": {
+    "get-symbol-gallery-reply": {
         displayWindowId: string,
         widgetKey: string,
         pageNames: string[],
@@ -536,7 +557,7 @@ export type IpcEventArgType2 = {
         pageImages: Record<string, string>,
     }
 
-    "load-db-file-contents": {
+    "load-db-file-contents-reply": {
         dbFileName: string;
         displayWindowId: string;
         widgetKey: string;
@@ -585,7 +606,7 @@ export type IpcEventArgType2 = {
         status?: number | type_pva_status, // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
     },
 
-    "fetch-pva-type": {
+    "fetch-pva-type-reply": {
         channelName: string,
         widgetKey?: string,
         fullPvaType: any,
@@ -605,7 +626,7 @@ export type IpcEventArgType2 = {
         newTdlFileName: string
     },
 
-    "select-a-file": {
+    "select-a-file-reply": {
         options: Record<string, any>,
         fileName: string
     },
@@ -628,7 +649,7 @@ export type IpcEventArgType2 = {
 
     },
 
-    "request-epics-dbd": {
+    "request-epics-dbd-reply": {
         widgetKey: string;
         menus: Record<string, any>,
         recordTypes: Record<string, any>,
@@ -645,7 +666,7 @@ export type IpcEventArgType2 = {
         result: any[],
     },
 
-    "processes-info": {
+    "processes-info-reply": {
         widgetKey: string,
         processesInfo: {
             "Type": string;
@@ -662,7 +683,7 @@ export type IpcEventArgType2 = {
         }[];
     },
 
-    "epics-stats": {
+    "epics-stats-reply": {
         widgetKey: string,
         epicsStats: {
             udp: Record<string, any>,
@@ -712,7 +733,7 @@ export type IpcEventArgType2 = {
         data: type_logData
     },
 
-    "file-converter-command": {
+    "file-converter-command-reply": {
         type: "one-file-conversion-started" | "one-file-conversion-finished" | "all-file-conversion-finished",
         widgetKey: string,
         srcFileName?: string,
@@ -723,13 +744,13 @@ export type IpcEventArgType2 = {
         numWidgetsTdl?: number, // number of widgets in tdl file
     },
 
-    "fetch-folder-content": {
+    "fetch-folder-content-reply": {
         widgetKey: string,
         folderContent: type_folder_content,
         success?: boolean, // false if failed, otherwise success
     },
 
-    "file-browser-command": {
+    "file-browser-command-reply": {
         displayWindowId: string,
         widgetKey: string,
         command: "change-item-name" | "create-tdl-file" | "create-folder",
@@ -740,7 +761,7 @@ export type IpcEventArgType2 = {
         success: boolean,
     },
 
-    "fetch-thumbnail": {
+    "fetch-thumbnail-reply": {
         widgetKey: string,
         tdlFileName: string,
         image: string,
@@ -754,7 +775,7 @@ export type IpcEventArgType2 = {
         displayWindowId: string,
     },
 
-    "get-media-content": {
+    "get-media-content-reply": {
         displayWindowId: string,
         widgetKey: string,
         content: string,
@@ -766,7 +787,7 @@ export type IpcEventArgType2 = {
         time: number,
     },
 
-    "read-embedded-display-tdl": {
+    "read-embedded-display-tdl-reply": {
         displayWindowId: string,
         widgetKey: string,
         macros: type_macros_tdl,
@@ -788,7 +809,7 @@ export type IpcEventArgType2 = {
  * Input argument types for IPC event handlers in MainWindow
  */
 
-export type IpcEventArgType3 = {
+export type IpcMainProcToMainWin = {
     "after-main-window-gui-created": {
         profiles: Record<string, any>,
         profilesFileName: string,

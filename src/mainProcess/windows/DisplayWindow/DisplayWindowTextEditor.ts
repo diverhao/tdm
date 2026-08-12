@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { dialog } from "electron";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import type { DisplayWindowAgent } from "./DisplayWindowAgent";
 
@@ -17,7 +17,7 @@ export class DisplayWindowTextEditor {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    handleOpenTextFile = async (options: IpcEventArgType["open-text-file"]) => {
+    handleOpenTextFile = async (options: IpcDispWinToMainProc["open-text-file"]) => {
         const { displayWindowId, widgetKey, openNewWindow, fileName, fileContent, manualOpen } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
 
@@ -51,7 +51,7 @@ export class DisplayWindowTextEditor {
         }
     };
 
-    handleSaveTextFile = (data: IpcEventArgType["save-text-file"]): boolean => {
+    handleSaveTextFile = (data: IpcDispWinToMainProc["save-text-file"]): boolean => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         if (mainProcessMode === "web") {
             return false;
@@ -89,7 +89,7 @@ export class DisplayWindowTextEditor {
         }
     };
 
-    private _selectTextFileToSave = (data: IpcEventArgType["save-text-file"]): string => {
+    private _selectTextFileToSave = (data: IpcDispWinToMainProc["save-text-file"]): string => {
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
         const displayWindowAgent = this.getDisplayWindowAgent();
         let fileName: string | undefined = data["fileName"];

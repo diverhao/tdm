@@ -4,7 +4,7 @@ import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/Ma
 import { Log } from "../../../common/Log";
 import { MainWindowProfileEditPage } from "../../../rendererProcess/mainWindow/MainWindowProfileEditPage";
 import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainWindowStartupPage";
-import { IpcEventArgType, IpcEventArgType3, type_DialogMessageBox } from "../../../common/IpcEventArgType";
+import { IpcMainWinToMainProc, IpcMainProcToMainWin, type_DialogMessageBox } from "../../../common/IpcEventArgType";
 
 /**
  * Manage IPC messages sent from main process for main window. <br>
@@ -175,9 +175,9 @@ export class IpcManagerOnMainWindow {
     };
 
 
-    sendFromRendererProcess = <T extends keyof IpcEventArgType>(
+    sendFromRendererProcess = <T extends keyof IpcMainWinToMainProc>(
         channelName: T,
-        data: IpcEventArgType[T]
+        data: IpcMainWinToMainProc[T]
     ): void => {
         Log.info("send message to IPC server", channelName);
         const processId = this.getMainWindowClient().getProcessId();
@@ -299,7 +299,7 @@ export class IpcManagerOnMainWindow {
         });
     };
 
-    _handleCmdLineSelectedProfile = (event: undefined, data: IpcEventArgType3["cmd-line-selected-profile"]) => {
+    _handleCmdLineSelectedProfile = (event: undefined, data: IpcMainProcToMainWin["cmd-line-selected-profile"]) => {
         const { cmdLineSelectedProfile, args } = data;
         this.getMainWindowClient().getIpcManager().sendFromRendererProcess("profile-selected",
 
@@ -310,13 +310,13 @@ export class IpcManagerOnMainWindow {
         );
     };
 
-    _handleUpdateWsOpenerPort = (event: undefined, data: IpcEventArgType3["update-ws-opener-port"]) => {
+    _handleUpdateWsOpenerPort = (event: undefined, data: IpcMainProcToMainWin["update-ws-opener-port"]) => {
         const { newPort } = data;
         this.getMainWindowClient().setWsOpenerPort(newPort);
         this.getMainWindowClient().getProfileRunPage()?.forceUpdateWsOpenerPort();
     };
 
-    _handleNewThumbnail = (event: undefined, info: IpcEventArgType3["new-thumbnail"]) => {
+    _handleNewThumbnail = (event: undefined, info: IpcMainProcToMainWin["new-thumbnail"]) => {
         const { data } = info;
         
         const profileRunPage = this.getMainWindowClient().getProfileRunPage();
@@ -329,7 +329,7 @@ export class IpcManagerOnMainWindow {
      * After the main window GUI is created, the profiles and its file name are sent from main process. This function
      * is also invoked when the Profiles is changed. <br>
      */
-    private _handleAfterMainWindowGuiCreated = (event: undefined, data: IpcEventArgType3["after-main-window-gui-created"]) => {
+    private _handleAfterMainWindowGuiCreated = (event: undefined, data: IpcMainProcToMainWin["after-main-window-gui-created"]) => {
         const { envDefault, envOs, profiles, profilesFileName, logFileName, site } = data;
         const mainWindowClient = this.getMainWindowClient();
         // in editing page, we need the env default and env os
@@ -349,7 +349,7 @@ export class IpcManagerOnMainWindow {
     /**
      * After the profile selected. The main process already prepared the EPICS context.
      */
-    private _handleAfterProfileSelected = (event: undefined, data: IpcEventArgType3["after-profile-selected"]) => {
+    private _handleAfterProfileSelected = (event: undefined, data: IpcMainProcToMainWin["after-profile-selected"]) => {
         const { profileName } = data;
         this.getMainWindowClient().setSelectedProfileName(profileName);
         this.getMainWindowClient().setProfileRunPage(new MainWindowProfileRunPage(this.getMainWindowClient()));
@@ -364,7 +364,7 @@ export class IpcManagerOnMainWindow {
      * 
      * error, info, and warning are handled by diag-show-message-box event
      */
-    private _handleShowPrompt = (event: undefined, info: IpcEventArgType3["show-prompt"]) => {
+    private _handleShowPrompt = (event: undefined, info: IpcMainProcToMainWin["show-prompt"]) => {
         const { data } = info;
         Log.debug("Show prompt of", data);
         const startupPage = this.getMainWindowClient().getStartupPage();
@@ -375,7 +375,7 @@ export class IpcManagerOnMainWindow {
         }
     }
 
-    handleDialogShowMessageBox = (event: undefined, data: IpcEventArgType3["dialog-show-message-box"]) => {
+    handleDialogShowMessageBox = (event: undefined, data: IpcMainProcToMainWin["dialog-show-message-box"]) => {
 
         const { info } = data;
         const command = info["command"];
@@ -399,11 +399,11 @@ export class IpcManagerOnMainWindow {
         }
     };
 
-    handleDialogShowInputBox = (event: undefined, data: IpcEventArgType3["dialog-show-input-box"]) => {
+    handleDialogShowInputBox = (event: undefined, data: IpcMainProcToMainWin["dialog-show-input-box"]) => {
         const { info } = data;
         const prompt = this.getMainWindowClient().getPrompt();
 
-        const shouldCreateElement = prompt.getPromptInputBoxHandlers().handleDialogShowInputBox(
+        const shouldCreateElement = prompt.getPromptInputBoxHandlers().handleDialogShowInputBoxOnMainWindow(
             info,
             (channelName, payload) => {
                 this.sendFromRendererProcess(channelName, payload);
@@ -427,7 +427,7 @@ export class IpcManagerOnMainWindow {
     };
 
 
-    handleShowAboutTdm = (event: undefined, info: IpcEventArgType3["show-about-tdm"]) => {
+    handleShowAboutTdm = (event: undefined, info: IpcMainProcToMainWin["show-about-tdm"]) => {
         this.getMainWindowClient().getPrompt().createElement("about-tdm", info);
     }
 
@@ -437,7 +437,7 @@ export class IpcManagerOnMainWindow {
      * 
      * If the log file defined in profiles is not writable, then the logFileName is ""
      */
-    handleLogFileName = (event: undefined, data: IpcEventArgType3["log-file-name"]) => {
+    handleLogFileName = (event: undefined, data: IpcMainProcToMainWin["log-file-name"]) => {
         const { logFileName } = data;
         this.getMainWindowClient().setLogFileName(logFileName);
         // force update startup page, it contains the log file name

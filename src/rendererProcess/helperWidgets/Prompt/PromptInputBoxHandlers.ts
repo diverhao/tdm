@@ -1,7 +1,12 @@
-import { IpcEventArgType, type_DialogInputBox } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, IpcMainWinToMainProc, type_DialogInputBox } from "../../../common/IpcEventArgType";
 import type { Prompt } from "./Prompt";
 
-type type_SendFromRendererProcess = (channelName: keyof IpcEventArgType, data: any) => void;
+type type_SendFromDisplayWindow = <T extends keyof IpcDispWinToMainProc>(channelName: T, data: IpcDispWinToMainProc[T]) => void;
+type type_SendFromMainWindow = <T extends keyof IpcMainWinToMainProc>(channelName: T, data: IpcMainWinToMainProc[T]) => void;
+type type_SendSharedPromptEvent = {
+    (channelName: "input-file-path", data: IpcDispWinToMainProc["input-file-path"]): void;
+    (channelName: "open-tdl-file", data: IpcDispWinToMainProc["open-tdl-file"]): void;
+};
 
 export class PromptInputBoxHandlers {
     private readonly _prompt: Prompt;
@@ -10,12 +15,10 @@ export class PromptInputBoxHandlers {
         this._prompt = prompt;
     }
 
-    handleDialogShowInputBox = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    handleDialogShowInputBoxOnDisplayWindow = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const command = info["command"];
-        const handlers: Record<string, (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => void> = {
-            "open-profiles": this._handleOpenProfiles,
+        const handlers: Record<string, (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => void> = {
             "hide": this._handleHide,
-            "save-profiles-as": this._handleSaveProfilesAs,
             "save-tdl-file": this._handleSaveTdlFile,
             "window-will-be-closed-user-select-save": this._handleWindowWillBeClosedUserSelectSave,
             "save-data-to-file": this._handleSaveDataToFile,
@@ -34,7 +37,25 @@ export class PromptInputBoxHandlers {
         return command !== "hide";
     }
 
-    private _handleOpenProfiles = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    handleDialogShowInputBoxOnMainWindow = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromMainWindow) => {
+        const command = info["command"];
+        const handlers: Record<string, (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromMainWindow) => void> = {
+            "open-profiles": this._handleOpenProfiles,
+            "hide": this._handleHide,
+            "save-profiles-as": this._handleSaveProfilesAs,
+            "open-tdl-file": this._handleOpenTdlFile,
+            "input-file-path": this._handleInputFilePath,
+        };
+
+        const handler = handlers[command];
+        if (handler !== undefined) {
+            handler(info, sendFromRendererProcess);
+        }
+
+        return command !== "hide";
+    }
+
+    private _handleOpenProfiles = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromMainWindow) => {
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
             if (fileName !== "") {
@@ -45,11 +66,11 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleHide = (_info: type_DialogInputBox, _sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleHide = (_info: type_DialogInputBox, _sendFromRendererProcess: type_SendFromDisplayWindow | type_SendFromMainWindow) => {
         this.getPrompt().removeElement();
     }
 
-    private _handleSaveProfilesAs = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleSaveProfilesAs = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromMainWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const filePath = this.getPrompt().getDialogInputBoxText();
@@ -63,7 +84,7 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleSaveTdlFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleSaveTdlFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const tdlFileName = this.getPrompt().getDialogInputBoxText();
@@ -79,7 +100,7 @@ export class PromptInputBoxHandlers {
     }
 
 
-    private _handleWindowWillBeClosedUserSelectSave = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleWindowWillBeClosedUserSelectSave = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
@@ -90,7 +111,7 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleSaveDataToFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleSaveDataToFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
@@ -102,7 +123,7 @@ export class PromptInputBoxHandlers {
     }
 
 
-    private _handleSaveTextFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleSaveTextFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
@@ -113,7 +134,7 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleSelectAFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleSelectAFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
@@ -126,7 +147,7 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleOpenTextFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleOpenTextFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromDisplayWindow) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
@@ -137,7 +158,7 @@ export class PromptInputBoxHandlers {
         });
     }
 
-    private _handleInputFilePath = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleInputFilePath = (info: type_DialogInputBox, sendFromRendererProcess: type_SendSharedPromptEvent) => {
         this._setTwoButtonHandlers(info, () => {
             const fileName = this.getPrompt().getDialogInputBoxText();
             if (fileName !== "") {
@@ -155,7 +176,7 @@ export class PromptInputBoxHandlers {
 
 
 
-    private _handleOpenTdlFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendFromRendererProcess) => {
+    private _handleOpenTdlFile = (info: type_DialogInputBox, sendFromRendererProcess: type_SendSharedPromptEvent) => {
         const attachment = info["attachment"];
         this._setTwoButtonHandlers(info, () => {
             const tdlFileName = this.getPrompt().getDialogInputBoxText();

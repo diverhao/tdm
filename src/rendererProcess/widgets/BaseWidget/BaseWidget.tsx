@@ -1703,7 +1703,8 @@ export abstract class BaseWidget {
      *  - the Canvas macros defined in the EmbeddedDisplay widget's TDL file
      * 
      * If this widget is an EmbeddedDisplay widget, its _macros is passed 
-     * down to all the widgets in its TDL file. This work is done in "read-embedded-display-tdl" event's request and reply
+     * down to all the widgets in its TDL file. This work is done by the "read-embedded-display-tdl"
+     * request and the "read-embedded-display-tdl-reply" event.
      */
     getMacros = () => {
         return this._macros;

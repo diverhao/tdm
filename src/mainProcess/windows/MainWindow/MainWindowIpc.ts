@@ -1,5 +1,5 @@
 import { Log } from "../../../common/Log";
-import { IpcEventArgType3 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToMainWin } from "../../../common/IpcEventArgType";
 import { MainWindowAgent } from "./MainWindowAgent";
 
 export class MainWindowIpc {
@@ -9,7 +9,7 @@ export class MainWindowIpc {
         this._mainWindowAgent = mainWindowAgent;
     }
 
-    sendFromMainProcess = <T extends keyof IpcEventArgType3>(channel: T, arg: IpcEventArgType3[T]): void => {
+    sendFromMainProcess = <T extends keyof IpcMainProcToMainWin>(channel: T, arg: IpcMainProcToMainWin[T]): void => {
         const mainWindowAgent = this.getMainWindowAgent();
         const ipcManagerOnMainProcesses = mainWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
 

@@ -1,4 +1,4 @@
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import * as fs from "fs";
 import path from "path";
 import { Log } from "../../../common/Log";
@@ -12,12 +12,12 @@ export class DisplayWindowFileBrowser {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    executeFileBrowserCommand = (message: IpcEventArgType["file-browser-command"]) => {
+    executeFileBrowserCommand = (message: IpcDispWinToMainProc["file-browser-command"]) => {
         if (!this.canExecuteFileBrowserCommand(message)) {
             return;
         }
 
-        const handlers: Record<IpcEventArgType["file-browser-command"]["command"], (message: IpcEventArgType["file-browser-command"]) => void> = {
+        const handlers: Record<IpcDispWinToMainProc["file-browser-command"]["command"], (message: IpcDispWinToMainProc["file-browser-command"]) => void> = {
             "change-item-name": this.executeChangeItemNameCommand,
             "create-tdl-file": this.executeCreateTdlFileCommand,
             "create-folder": this.executeCreateFolderCommand,
@@ -26,7 +26,7 @@ export class DisplayWindowFileBrowser {
         handlers[message["command"]](message);
     };
 
-    fetchThumbnail = async (message: IpcEventArgType["fetch-thumbnail"]) => {
+    fetchThumbnail = async (message: IpcDispWinToMainProc["fetch-thumbnail"]) => {
         const mainProcess = this.getMainProcess();
         if (mainProcess.getMainProcessMode() !== "desktop") {
             return;
@@ -67,7 +67,7 @@ export class DisplayWindowFileBrowser {
 
     };
 
-    private canExecuteFileBrowserCommand = (message: IpcEventArgType["file-browser-command"]): boolean => {
+    private canExecuteFileBrowserCommand = (message: IpcDispWinToMainProc["file-browser-command"]): boolean => {
         if (this.getMainProcess().getMainProcessMode() !== "web") {
             return true;
         }
@@ -80,7 +80,7 @@ export class DisplayWindowFileBrowser {
         return false;
     };
 
-    private getFileBrowserCommandPath = (message: IpcEventArgType["file-browser-command"]): string => {
+    private getFileBrowserCommandPath = (message: IpcDispWinToMainProc["file-browser-command"]): string => {
         if (typeof message["folder"] === "string") {
             return message["folder"];
         }
@@ -117,7 +117,7 @@ export class DisplayWindowFileBrowser {
         return false;
     };
 
-    private executeChangeItemNameCommand = (message: IpcEventArgType["file-browser-command"]) => {
+    private executeChangeItemNameCommand = (message: IpcDispWinToMainProc["file-browser-command"]) => {
         const folder = message["folder"];
         const oldName = message["oldName"];
         const newName = message["newName"];
@@ -145,7 +145,7 @@ export class DisplayWindowFileBrowser {
         }
     };
 
-    private executeCreateTdlFileCommand = (message: IpcEventArgType["file-browser-command"]) => {
+    private executeCreateTdlFileCommand = (message: IpcDispWinToMainProc["file-browser-command"]) => {
         const fullFileName = message["fullFileName"];
         if (fullFileName === undefined) {
             return;
@@ -161,7 +161,7 @@ export class DisplayWindowFileBrowser {
         }
     };
 
-    private executeCreateFolderCommand = (message: IpcEventArgType["file-browser-command"]) => {
+    private executeCreateFolderCommand = (message: IpcDispWinToMainProc["file-browser-command"]) => {
         const fullFolderName = message["fullFolderName"];
         if (fullFolderName === undefined) {
             return;
@@ -176,8 +176,8 @@ export class DisplayWindowFileBrowser {
         }
     };
 
-    private sendFileBrowserCommandResult = (message: IpcEventArgType["file-browser-command"], success: boolean) => {
-        this.getDisplayWindowAgent().sendFromMainProcess("file-browser-command", {
+    private sendFileBrowserCommandResult = (message: IpcDispWinToMainProc["file-browser-command"], success: boolean) => {
+        this.getDisplayWindowAgent().sendFromMainProcess("file-browser-command-reply", {
             ...message,
             success: success,
         });

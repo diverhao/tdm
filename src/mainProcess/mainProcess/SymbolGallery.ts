@@ -1,5 +1,5 @@
 import path from "path";
-import { IpcEventArgType } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../common/IpcEventArgType";
 import { scanSymbolGallery } from "../global/GlobalMethods";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import type { MainProcess } from "./MainProcess";
@@ -50,7 +50,7 @@ export class SymbolGallery {
         return this.getData();
     };
 
-    handleGetSymbolGallery = (options: IpcEventArgType["get-symbol-gallery"]) => {
+    handleGetSymbolGallery = (options: IpcDispWinToMainProc["get-symbol-gallery"]) => {
         const { page, update, displayWindowId, widgetKey } = options;
         const galleryData = this.getDataWithRefresh(update === true);
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
@@ -63,7 +63,7 @@ export class SymbolGallery {
                 pageImages = galleryData[pageName];
             }
 
-            displayWindowAgent.sendFromMainProcess("get-symbol-gallery", {
+            displayWindowAgent.sendFromMainProcess("get-symbol-gallery-reply", {
                 displayWindowId: displayWindowId,
                 widgetKey: widgetKey,
                 pageNames: pageNames,

@@ -1,7 +1,7 @@
 import { BrowserWindow, Menu, MenuItem, app } from "electron";
 import * as path from "path";
 import * as url from "url";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
 import { Log } from "../../../common/Log";
 import { type_tdl } from "../../../common/GlobalVariables";
@@ -197,7 +197,7 @@ export class DisplayWindowLifeCycleManager {
             if (fileBrowserDisplayWindowId !== "" && fileBrowserWidgetKey !== "") {
                 const fileBrowserDisplayWindowAgent = windowAgentsManager.getAgent(fileBrowserDisplayWindowId);
                 if (fileBrowserDisplayWindowAgent instanceof DisplayWindowAgent) {
-                    fileBrowserDisplayWindowAgent.sendFromMainProcess("fetch-thumbnail", {
+                    fileBrowserDisplayWindowAgent.sendFromMainProcess("fetch-thumbnail-reply", {
                         widgetKey: fileBrowserWidgetKey,
                         tdlFileName: tdlFileName,
                         image: displayWindowAgent.getThumbnail(),
@@ -548,7 +548,7 @@ export class DisplayWindowLifeCycleManager {
      *  - DataViewer utility window
      *  - modified display window
      */
-    handleWindowWillBeClosedUserSelect = async (data: IpcEventArgType["window-will-be-closed-user-select"]) => {
+    handleWindowWillBeClosedUserSelect = async (data: IpcDispWinToMainProc["window-will-be-closed-user-select"]) => {
         const {
             displayWindowId,
             widgetKey,

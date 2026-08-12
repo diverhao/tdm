@@ -1190,7 +1190,7 @@ export class Probe extends BaseWidget {
     };
 
     /**
-     * Handle the reply to the `"request-epics-dbd"` IPC message.
+     * Handle the `"request-epics-dbd-reply"` IPC message.
      *
      * Called once when the EPICS runtime becomes available. It initialises
      * the {@link DbdFiles} instance with the record-type and menu

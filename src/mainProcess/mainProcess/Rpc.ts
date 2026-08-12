@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import { IpcEventArgType } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../common/IpcEventArgType";
 import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import type { MainProcess } from "./MainProcess";
@@ -11,7 +11,7 @@ export class Rpc {
         this._mainProcess = mainProcess;
     }
 
-    executeCommand = (data: IpcEventArgType["execute-command"]) => {
+    executeCommand = (data: IpcDispWinToMainProc["execute-command"]) => {
         try {
             const command = data["command"];
             let commandArray = command.split(" ");
@@ -52,7 +52,7 @@ export class Rpc {
         }
     };
 
-    private showExecuteCommandError = (data: IpcEventArgType["execute-command"], error: unknown) => {
+    private showExecuteCommandError = (data: IpcDispWinToMainProc["execute-command"], error: unknown) => {
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.showError([`Failed to execute command "${data["command"]}"`], [`${error}`]);

@@ -11,7 +11,7 @@ import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } 
 import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
 import { defaultCaSnooperTdl, type_CaSnooper_tdl } from "../../../common/types/type_widget_tdl";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
 import { EpicsDate } from "../../../common/EpicsTime";
 
 export type type_CaProtoSearchData = {
@@ -953,7 +953,7 @@ export class CaSnooper extends BaseWidget {
         })
     }
 
-    handleNewData = (newData: IpcEventArgType2["ca-snooper-data"]["data"]) => {
+    handleNewData = (newData: IpcMainProcToDispWin["ca-snooper-data"]["data"]) => {
         this.getCaProtoSearchData().push(...newData);
         // buffer size
         if (this.getCaProtoSearchData().length > this.bufferSize) {

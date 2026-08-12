@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { Log } from "../../../common/Log";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
 export class DisplayWindowIpc {
@@ -15,7 +15,7 @@ export class DisplayWindowIpc {
 
     // ------------------------- IPC -------------------------
 
-    sendFromMainProcess = <T extends keyof IpcEventArgType2>(channel: T, arg: IpcEventArgType2[T]): void => {
+    sendFromMainProcess = <T extends keyof IpcMainProcToDispWin>(channel: T, arg: IpcMainProcToDispWin[T]): void => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const ipcManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getIpcManager();
 

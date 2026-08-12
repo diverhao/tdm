@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as os from "os";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
@@ -11,7 +11,7 @@ export class DisplayWindowTerminal {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    executeTerminalCommand = (data: IpcEventArgType["terminal-command"]) => {
+    executeTerminalCommand = (data: IpcDispWinToMainProc["terminal-command"]) => {
         if (data["command"] === "fs.readdir") {
             this.executeReadDirCommand(data);
             return;
@@ -30,7 +30,7 @@ export class DisplayWindowTerminal {
         this.sendTerminalCommandResult(data, this.getSynchronousCommandResult(data));
     };
 
-    private executeReadDirCommand = (data: IpcEventArgType["terminal-command"]) => {
+    private executeReadDirCommand = (data: IpcDispWinToMainProc["terminal-command"]) => {
         const dirName = data["args"][0];
         fs.readdir(dirName, {}, (error, result) => {
             if (error) {
@@ -40,7 +40,7 @@ export class DisplayWindowTerminal {
         });
     };
 
-    private executeStatCommand = (data: IpcEventArgType["terminal-command"]) => {
+    private executeStatCommand = (data: IpcDispWinToMainProc["terminal-command"]) => {
         const dirOrFileName = data["args"][0];
         fs.stat(dirOrFileName, {}, (error, result) => {
             if (error) {
@@ -50,7 +50,7 @@ export class DisplayWindowTerminal {
         });
     };
 
-    private executeIsDirectoryCommand = (data: IpcEventArgType["terminal-command"]) => {
+    private executeIsDirectoryCommand = (data: IpcDispWinToMainProc["terminal-command"]) => {
         const dirOrFileName = data["args"][0];
         fs.stat(dirOrFileName, {}, (error, stats) => {
             if (error) {
@@ -65,7 +65,7 @@ export class DisplayWindowTerminal {
         });
     };
 
-    private getSynchronousCommandResult = (data: IpcEventArgType["terminal-command"]): any[] => {
+    private getSynchronousCommandResult = (data: IpcDispWinToMainProc["terminal-command"]): any[] => {
         if (data["command"] === "os.homedir") {
             return [os.homedir()];
         }
@@ -75,7 +75,7 @@ export class DisplayWindowTerminal {
         return [];
     };
 
-    private sendTerminalCommandResult = (data: IpcEventArgType["terminal-command"], result: any[]) => {
+    private sendTerminalCommandResult = (data: IpcDispWinToMainProc["terminal-command"], result: any[]) => {
         this.getDisplayWindowAgent().sendFromMainProcess("terminal-command-result", {
             widgetKey: data["widgetKey"],
             ioId: data["ioId"],

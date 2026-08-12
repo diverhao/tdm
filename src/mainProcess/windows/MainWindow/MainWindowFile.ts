@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { dialog } from "electron";
 import { Environment } from "epics-tca";
 import path from "path";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcMainWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { fileDialogOptionsByType, type_fileType } from "../../../common/types/type_Files";
 import { Profiles } from "../../profile/Profiles";
@@ -212,7 +212,7 @@ export class MainWindowFile {
 
     // ------------------- event handlers ------------------------
 
-    openTdlFiles = async (data: IpcEventArgType["open-tdl-file"]) => {
+    openTdlFiles = async (data: IpcMainWinToMainProc["open-tdl-file"]) => {
         const { options } = data;
         let { tdl, tdlFileNames, windowId, mode, editable, macros, replaceMacros } = options;
         const mainProcess = this.getMainWindowAgent().getWindowAgentsManager().getMainProcess();
@@ -265,7 +265,7 @@ export class MainWindowFile {
         }
     };
 
-    openProfiles = async (options: IpcEventArgType["open-profiles"]) => {
+    openProfiles = async (options: IpcMainWinToMainProc["open-profiles"]) => {
         let { profilesFileName1 } = options;
         if (profilesFileName1 === undefined) {
             profilesFileName1 = "";
@@ -299,7 +299,7 @@ export class MainWindowFile {
         }
     };
 
-    saveProfiles = async (options: IpcEventArgType["save-profiles"]): Promise<boolean> => {
+    saveProfiles = async (options: IpcMainWinToMainProc["save-profiles"]): Promise<boolean> => {
         const mainWindowAgent = this.getMainWindowAgent();
         const mainProcess = mainWindowAgent.getWindowAgentsManager().getMainProcess();
         const mainProcessMode = mainProcess.getMainProcessMode();
@@ -347,7 +347,7 @@ export class MainWindowFile {
         return true;
     };
 
-    saveProfilesAs = async (options: IpcEventArgType["save-profiles-as"]): Promise<boolean> => {
+    saveProfilesAs = async (options: IpcMainWinToMainProc["save-profiles-as"]): Promise<boolean> => {
         const mainWindowAgent = this.getMainWindowAgent();
         const mainProcess = mainWindowAgent.getWindowAgentsManager().getMainProcess();
         const mainProcessMode = mainProcess.getMainProcessMode();

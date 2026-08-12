@@ -28,7 +28,7 @@ export class EdlFileConverterThread {
 
             const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(options["displayWindowId"]);
             if (displayWindowAgent instanceof DisplayWindowAgent) {
-                displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                displayWindowAgent.sendFromMainProcess("file-converter-command-reply", {
                     type: "all-file-conversion-finished",
                     status: "failed",
                     widgetKey: options["widgetKey"],
@@ -62,7 +62,7 @@ export class EdlFileConverterThread {
                     //     destFileName: destFileName,
                     //     status: "converting",
                     // }
-                    displayWindowAgent.sendFromMainProcess("file-converter-command", { ...message, widgetKey: options["widgetKey"] });
+                    displayWindowAgent.sendFromMainProcess("file-converter-command-reply", { ...message, widgetKey: options["widgetKey"] });
                 } else if (message["type"] === "one-file-conversion-finished") {
                     // finished one file
                     // send to renderer process
@@ -75,12 +75,12 @@ export class EdlFileConverterThread {
                     //     numWidgetsOrig: 100, // number of widgets in edl file
                     //     numWidgetsTdl: 100, // number of widgets in tdl file
                     // }
-                    displayWindowAgent.sendFromMainProcess("file-converter-command", { ...message, widgetKey: options["widgetKey"] });
+                    displayWindowAgent.sendFromMainProcess("file-converter-command-reply", { ...message, widgetKey: options["widgetKey"] });
                 } else if (message["type"] === "all-files-conversion-finished") {
                     // successfully finished
                     // same as when the thread successfully quits
                     this.stopThread("All files converted, quit file converter thread");
-                    displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                    displayWindowAgent.sendFromMainProcess("file-converter-command-reply", {
                         type: "all-file-conversion-finished",
                         status: "success",
                         widgetKey: options["widgetKey"],
@@ -99,7 +99,7 @@ export class EdlFileConverterThread {
                     this.stopThread("File converter window closed");
                     return;
                 }
-                displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                displayWindowAgent.sendFromMainProcess("file-converter-command-reply", {
                     type: "all-file-conversion-finished",
                     status: "failed",
                     widgetKey: options["widgetKey"],
@@ -119,7 +119,7 @@ export class EdlFileConverterThread {
                     // successfully finished
                     // same as receving "all-file-conversion-finished" message from thread
                     this.stopThread("All files converted, quit file converter thread");
-                    displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                    displayWindowAgent.sendFromMainProcess("file-converter-command-reply", {
                         type: "all-file-conversion-finished",
                         status: "success",
                         widgetKey: options["widgetKey"],
@@ -128,7 +128,7 @@ export class EdlFileConverterThread {
                 } else {
                     // externally terminated, code === 1, i.e. the Stop button is clicked
                     this.stopThread("User request to quit file converter thread");
-                    displayWindowAgent.sendFromMainProcess("file-converter-command", {
+                    displayWindowAgent.sendFromMainProcess("file-converter-command-reply", {
                         type: "all-file-conversion-finished",
                         status: "failed",
                         widgetKey: options["widgetKey"],

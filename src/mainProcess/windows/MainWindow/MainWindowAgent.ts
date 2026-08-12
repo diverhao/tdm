@@ -1,6 +1,6 @@
 import { WebContents, BrowserWindow } from "electron";
 import { WindowAgentsManager } from "../WindowAgentsManager";
-import { IpcEventArgType3 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToMainWin } from "../../../common/IpcEventArgType";
 import { MainWindowIpc } from "./MainWindowIpc";
 import { MainWindowFile } from "./MainWindowFile";
 import { MainWindowLifeCycleManager } from "./MainWindowLifeCycleManager";
@@ -122,18 +122,18 @@ export class MainWindowAgent {
         this.getMainWindowUtilities().showContextMenu(menu);
     };
 
-    showNotification = (info: IpcEventArgType3["dialog-show-message-box"]["info"]): void => {
+    showNotification = (info: IpcMainProcToMainWin["dialog-show-message-box"]["info"]): void => {
         this.getMainWindowUtilities().showNotification(info);
     };
 
-    showInputBox = (info: IpcEventArgType3["dialog-show-input-box"]["info"]): void => {
+    showInputBox = (info: IpcMainProcToMainWin["dialog-show-input-box"]["info"]): void => {
         this.getMainWindowUtilities().showInputBox(info);
     };
 
     showError = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToMainWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getMainWindowUtilities().showError(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -141,7 +141,7 @@ export class MainWindowAgent {
     showInfo = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToMainWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getMainWindowUtilities().showInfo(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -149,7 +149,7 @@ export class MainWindowAgent {
     showWarning = (
         humanReadableMessages: string[],
         rawMessages: string[] = [],
-        extraInfo: Omit<Partial<IpcEventArgType3["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
+        extraInfo: Omit<Partial<IpcMainProcToMainWin["dialog-show-message-box"]["info"]>, "messageType" | "humanReadableMessages" | "rawMessages"> = {},
     ): void => {
         this.getMainWindowUtilities().showWarning(humanReadableMessages, rawMessages, extraInfo);
     };
@@ -163,7 +163,7 @@ export class MainWindowAgent {
      * @param {any[]} args Data
      */
     // sendFromMainProcess(channel: string, ...args: any[]) {
-    sendFromMainProcess = <T extends keyof IpcEventArgType3>(channel: T, arg: IpcEventArgType3[T]): void => {
+    sendFromMainProcess = <T extends keyof IpcMainProcToMainWin>(channel: T, arg: IpcMainProcToMainWin[T]): void => {
         this.getMainWindowIpc().sendFromMainProcess(channel, arg);
     };
 

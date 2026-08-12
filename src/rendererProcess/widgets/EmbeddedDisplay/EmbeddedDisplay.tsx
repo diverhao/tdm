@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { IpcEventArgType2 } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
@@ -416,7 +416,7 @@ export class EmbeddedDisplay extends BaseWidget {
         this.clearChildWidgetKeys();
     }
 
-    loadDisplayFromTdl = (data: IpcEventArgType2["read-embedded-display-tdl"]) => {
+    loadDisplayFromTdl = (data: IpcMainProcToDispWin["read-embedded-display-tdl-reply"]) => {
         const { tdl, fullTdlFileName, macros, widgetWidth, widgetHeight, resize, tdlFileName } = data;
         const widgetKey = this.getWidgetKey();
 

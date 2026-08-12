@@ -10,7 +10,7 @@ import { websocketPvServerPort } from "../global/GlobalVariables";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { IpcEventArgType, type_args } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, type_args } from "../../common/IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
 import { WsOpenerServer } from "./WsOpenerServer";
@@ -539,7 +539,7 @@ export class MainProcess {
     }
 
 
-    getRuntimeInfo = async (data: IpcEventArgType["processes-info"]) => {
+    getRuntimeInfo = async (data: IpcDispWinToMainProc["processes-info"]) => {
         const processesInfo: {
             "Type": string;
             "Window ID": string;

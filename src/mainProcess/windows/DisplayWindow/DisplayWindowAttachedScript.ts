@@ -1,6 +1,6 @@
 import * as child_process from "child_process";
 import { Worker } from "worker_threads";
-import { IpcEventArgType } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
@@ -15,7 +15,7 @@ export class DisplayWindowAttachedScript {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    handleWindowAttachedScript = (data: IpcEventArgType["window-attached-script"]) => {
+    handleWindowAttachedScript = (data: IpcDispWinToMainProc["window-attached-script"]) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         if (data["action"] === "terminate") {
             Log.debug("Terminate script", data["script"], "for window", data["displayWindowId"]);
