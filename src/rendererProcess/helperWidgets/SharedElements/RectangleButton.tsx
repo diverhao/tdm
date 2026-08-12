@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 
 
 
@@ -22,7 +22,7 @@ export const ElementRectangleButton = (
         highlightBackgroundColor = ElementRectangleButtonHighlightBackgroundColor,
         defaultTextColor = ElementRectangleButtonDefaultTextColor,
         highlightTextColor = ElementRectangleButtonHighlightTextColor,
-        fontSize = GlobalVariables.defaultFontSize,
+        fontSize = defaultFontSize,
         paddingTop = 5,
         paddingBottom = 5,
         paddingLeft = 10,

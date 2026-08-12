@@ -1,7 +1,7 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { colorSumChange } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { BaseWidgetRules, type_rules_tdl } from "../BaseWidget/BaseWidgetRules";
 import { LEDSidebar } from "./LEDSidebar";
@@ -348,7 +348,7 @@ export class LED extends BaseWidget {
     calcOutlineColor = () => {
         const lineColor = rgbaStrToRgbaArray(this.getAllText()["lineColor"]);
         // same as color collapsible title
-        if (lineColor[0] + lineColor[1] + lineColor[2] > GlobalVariables.colorSumChange) {
+        if (lineColor[0] + lineColor[1] + lineColor[2] > colorSumChange) {
             return "rgba(30, 30, 30, 1)";
         } else {
             return "rgba(230,230,230,1)";

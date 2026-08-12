@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 
 export class ChannelNameHint {
     constructor() { }
@@ -20,8 +20,8 @@ export class ChannelNameHint {
                         padding: 3,
                         whiteSpace: "nowrap",
                         textOverflow: "ellipsis",
-                        fontFamily: GlobalVariables.defaultFontFamily,
-                        fontSize: GlobalVariables.defaultFontSize * 0.7,
+                        fontFamily: defaultFontFamily,
+                        fontSize: defaultFontSize * 0.7,
                         ...additionalStyle
                     }}
                 >

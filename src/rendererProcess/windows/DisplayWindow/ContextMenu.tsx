@@ -4,7 +4,7 @@ import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import ReactDOM from 'react-dom/client';
 import { createPortal } from "react-dom";
-import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 import { isDarkMode } from "../../../common/GlobalMethods";
 
 
@@ -71,7 +71,7 @@ export class ContextMenu {
                 // boxShadow: "0 18px 44px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.24)",
                 // backdropFilter: "blur(4px) saturate(110%)",
                 // WebkitBackdropFilter: "blur(4px) saturate(110%)",
-                // fontFamily: GlobalVariables.defaultFontFamily,
+                // fontFamily: defaultFontFamily,
                 fontSize: 13.5,
                 fontWeight: 500,
                 borderRadius: 10,
@@ -101,7 +101,7 @@ export class ContextMenu {
             hoverColor: "rgba(255, 255, 255, 1)",
             // backdropFilter: "blur(4px) saturate(110%)",
             // WebkitBackdropFilter: "blur(4px) saturate(110%)",
-            // fontFamily: GlobalVariables.defaultFontFamily,
+            // fontFamily: defaultFontFamily,
             fontSize: 13.5,
             fontWeight: 500,
             borderRadius: 10,

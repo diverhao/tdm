@@ -1,9 +1,9 @@
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { presetColors } from "../../../common/GlobalVariables";
 import { PresetColor } from "./PresetColor";
 
 export const PresetColors = ({ rgb, handleColorUpdate }: any) => {
-	const PresetColorList = GlobalVariables.presetColors;
+	const PresetColorList = presetColors;
 
 	const matchPresetColor = (newColor: number[]) => {
 		for (let ii in PresetColorList) {

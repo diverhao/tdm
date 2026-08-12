@@ -1,7 +1,7 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidgetRule } from "../../widgets/BaseWidget/BaseWidgetRule";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { SidebarLargeInput } from "../../widgets/BaseWidget/SidebarLargeInput";
 
 
@@ -138,8 +138,8 @@ export abstract class RuleComponent {
 
     _inputStyle: Record<string, any> = {
         width: "70%",
-        fontFamily: GlobalVariables.defaultFontFamily,
-        fontSize: GlobalVariables.defaultFontSize,
+        fontFamily: defaultFontFamily,
+        fontSize: defaultFontSize,
     };
     getInputStyle = () => {
         return this._inputStyle;

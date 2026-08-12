@@ -1,5 +1,5 @@
 import * as React from "react";
-import { calcSidebarWidth, GlobalVariables } from "../../../common/GlobalVariables";
+import { calcSidebarWidth, sidebarBorderWidth, defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";
@@ -550,15 +550,15 @@ export class CanvasSidebar {
         position: "fixed",
         // it is not a good practice to manaully assign a z-index to an element
         // but seems there is no other choices
-        // zIndex: GlobalVariables.CanvasSidebarZIndex,
+        // zIndex: CanvasSidebarZIndex,
         zIndex: 0,
         // box model
         top: 0,
         right: 0,
         margin: 0,
-        padding: GlobalVariables.sidebarBorderWidth,
+        padding: sidebarBorderWidth,
         borderWidth: 0,
-        // width: GlobalVariables.sidebarWidth,
+        // width: sidebarWidth,
         width: 100, // replace by calcSidebarWidth()
         height: "100%",
         overflowX: "hidden",
@@ -568,15 +568,15 @@ export class CanvasSidebar {
         backgroundColor: "rgba(255,255,255,1)",
         // separator
         borderStyle: "solid",
-        borderLeftWidth: GlobalVariables.sidebarBorderWidth,
+        borderLeftWidth: sidebarBorderWidth,
         borderColor: "red",
         boxSizing: "border-box",
     };
 
     private _inputStyle: Record<string, any> = {
         width: "70%",
-        fontFamily: GlobalVariables.defaultFontFamily,
-        fontSize: GlobalVariables.defaultFontSize,
+        fontFamily: defaultFontFamily,
+        fontSize: defaultFontSize,
     };
 
     private _formStyle: Record<string, any> = {

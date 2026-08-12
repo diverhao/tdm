@@ -1,4 +1,4 @@
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { Component, ReactNode } from "react";
 import * as React from "react";
 
@@ -66,10 +66,10 @@ const ErrorFallback = ({ style, widgetKey }: { style: Record<string, any>; widge
 				borderColor: "rgba(255, 0, 0, 1)",
 				// font
 				color: "rgba(255,0,0,1)",
-				fontFamily: GlobalVariables.defaultFontFamily,
-				fontSize: GlobalVariables.defaultFontSize,
-				fontStyle: GlobalVariables.defaultFontStyle,
-				fontWeight: GlobalVariables.defaultFontWeight,
+				fontFamily: defaultFontFamily,
+				fontSize: defaultFontSize,
+				fontStyle: defaultFontStyle,
+				fontWeight: defaultFontWeight,
 				// shows when the widget is selected
 				outlineStyle: "none",
 				outlineWidth: 1,

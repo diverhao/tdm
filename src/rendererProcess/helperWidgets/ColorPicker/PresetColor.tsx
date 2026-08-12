@@ -1,10 +1,10 @@
 import * as React from "react";
 import { rgb2hex } from "./Helper";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { presetColors } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 
 const PresetColorRaw = ({ setOveredColorName, selectedColorName, setSelectedColorName, colorName, handleColorUpdate }: any) => {
-    const PresetColorList = GlobalVariables.presetColors;
+    const PresetColorList = presetColors;
 
     const rgb: [number, number, number, number] = PresetColorList[colorName];
 

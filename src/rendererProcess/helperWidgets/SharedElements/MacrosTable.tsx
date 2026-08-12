@@ -1,5 +1,5 @@
 import * as React from "react"
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../Root/Root";
 import { type_macro_tdl, type_macros_tdl } from "../../../common/types/type_widget_tdl";
@@ -451,7 +451,7 @@ export const ElementMacroTd = ({ children, style }: any) => {
             style={{
                 padding: 0,
                 margin: 0,
-                height: GlobalVariables.defaultFontSize * 1.5,
+                height: defaultFontSize * 1.5,
                 ...style
             }}
         >

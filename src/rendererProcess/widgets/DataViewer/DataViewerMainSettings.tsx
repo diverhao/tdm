@@ -1,7 +1,7 @@
 import { DataViewer } from "./DataViewer";
 import { settingsIndexChoices } from "./DataViewerPlot"
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { DataViewerSidebar } from "./DataViewerSidebar";
 
@@ -36,10 +36,10 @@ export class DataViewerMainSettings {
                     boxSizing: "border-box",
                     flexDirection: "column",
                     border: "none",
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
+                    fontSize: defaultFontSize,
+                    fontFamily: defaultFontFamily,
+                    fontStyle: defaultFontStyle,
+                    fontWeight: defaultFontWeight,
                 }}
             >
                 <div

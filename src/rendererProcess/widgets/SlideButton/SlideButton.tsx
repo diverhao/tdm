@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { Channel_ACCESS_RIGHTS, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";

@@ -1,4 +1,4 @@
-import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
 // import { MouseEvent } from "react";
 import { getMouseEventClientX } from "../../../common/GlobalVariables";
@@ -106,7 +106,7 @@ export class PvTable extends BaseWidget {
         // assign the sidebar
         this._sidebar = new PvTableSidebar(this);
 
-        this.lineHeight = GlobalVariables.defaultFontSize * 1.5;
+        this.lineHeight = defaultFontSize * 1.5;
 
         window.addEventListener("mousedown", this.removeTableHeaderOptionsMenu)
         window.addEventListener("mousedown", this.removeTableLineOptionsMenu)
@@ -121,10 +121,10 @@ export class PvTable extends BaseWidget {
 
     initColumnWidths = () => {
         const result: number[] = [];
-        result.push(GlobalVariables.defaultFontSize * 10);
-        result.push(GlobalVariables.defaultFontSize * 10);
+        result.push(defaultFontSize * 10);
+        result.push(defaultFontSize * 10);
         for (let ii = 0; ii < this.getFieldlNames().length; ii++) {
-            result.push(GlobalVariables.defaultFontSize * 10);
+            result.push(defaultFontSize * 10);
         }
         return result;
     }
@@ -249,10 +249,10 @@ export class PvTable extends BaseWidget {
                 display: "inline-flex",
                 flexDirection: "column",
                 borderRadius: 5,
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontStyle: defaultFontStyle,
+                fontWeight: defaultFontWeight,
                 overflow: "hidden",
             }}
             >
@@ -311,10 +311,10 @@ export class PvTable extends BaseWidget {
                 display: "inline-flex",
                 flexDirection: "column",
                 borderRadius: 5,
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontStyle: defaultFontStyle,
+                fontWeight: defaultFontWeight,
                 overflow: "hidden",
             }}
             >
@@ -560,10 +560,10 @@ export class PvTable extends BaseWidget {
                                 // border: "solid 1px rgba(0,0,0,1)",
                                 border: "solid 1px rgba(255,0,0,1)",
                                 borderRadius: 0,
-                                fontSize: GlobalVariables.defaultFontSize,
-                                fontFamily: GlobalVariables.defaultFontFamily,
-                                fontStyle: GlobalVariables.defaultFontStyle,
-                                fontWeight: GlobalVariables.defaultFontWeight,
+                                fontSize: defaultFontSize,
+                                fontFamily: defaultFontFamily,
+                                fontStyle: defaultFontStyle,
+                                fontWeight: defaultFontWeight,
                                 // outline: "solid 1px rgba(255, 0, 0, 1)",
                                 userSelect: "auto",
                             }}
@@ -728,10 +728,10 @@ export class PvTable extends BaseWidget {
                             // border: "solid 1px rgba(0,0,0,1)",
                             border: "solid 1px rgba(255,0,0,1)",
                             borderRadius: 0,
-                            fontSize: GlobalVariables.defaultFontSize,
-                            fontFamily: GlobalVariables.defaultFontFamily,
-                            fontStyle: GlobalVariables.defaultFontStyle,
-                            fontWeight: GlobalVariables.defaultFontWeight,
+                            fontSize: defaultFontSize,
+                            fontFamily: defaultFontFamily,
+                            fontStyle: defaultFontStyle,
+                            fontWeight: defaultFontWeight,
                             // outline: "solid 1px rgba(255, 0, 0, 1)",
                         }}
                         onChange={(event) => {
@@ -988,10 +988,10 @@ export class PvTable extends BaseWidget {
                     // width: this.calcTableWidth(),
                     width: "100%",
                     height: "100%",
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontWeight: GlobalVariables.defaultFontWeight,
-                    fontStyle: GlobalVariables.defaultFontStyle,
+                    fontFamily: defaultFontFamily,
+                    fontSize: defaultFontSize,
+                    fontWeight: defaultFontWeight,
+                    fontStyle: defaultFontStyle,
                     display: 'inline-flex',
                     flexDirection: "column",
                     flexWrap: "nowrap",
@@ -1212,8 +1212,8 @@ export class PvTable extends BaseWidget {
                             boxSizing: "border-box",
                             width: "100%",
                             height: "100%",
-                            fontFamily: GlobalVariables.defaultFontFamily,
-                            fontSize: GlobalVariables.defaultFontSize,
+                            fontFamily: defaultFontFamily,
+                            fontSize: defaultFontSize,
                         }}
                         onMouseOver={() => {
                             if (elementRef.current !== null) {

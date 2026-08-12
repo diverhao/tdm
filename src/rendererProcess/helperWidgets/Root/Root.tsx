@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { type_widget } from "../../global/Widgets";
 import { g_setWidgets1 } from "../../global/GlobalVariables";
@@ -157,10 +157,10 @@ export class Root {
             <div
                 style={{
                     // default font
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
+                    fontSize: defaultFontSize,
+                    fontFamily: defaultFontFamily,
+                    fontStyle: defaultFontStyle,
+                    fontWeight: defaultFontWeight,
                 }}
             >
                 {widgets.map((widget: any) => {

@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import path from "path";
 import { Log } from "../../../common/Log";
-import { type_Canvas_tdl, type_tdl } from "../../../common/GlobalVariables";
+import { type_tdl } from "../../../common/GlobalVariables";
 import { WindowAgentsManager } from "../WindowAgentsManager";
 import type { type_options_createDisplayWindow } from "../WindowAgentsManager";
-import { type_utilityWindowType } from "../../../common/types/type_widget_tdl";
+import { defaultCanvasTdl, type_Canvas_tdl, type_utilityWindowType } from "../../../common/types/type_widget_tdl";
 
 // stores static methods for creating utility windows
 // does not have BrowserWindow, should not be compared to "class MainWindow" or "class DisplayWindow"
@@ -203,23 +203,11 @@ export class UtilityWindowFactory {
         backgroundColor: string = `rgba(232,232,232,1)`,
         extraStyle: Record<string, any> = {},
     ) => {
-        return {
-            Canvas: {
-                type: "Canvas",
-                widgetKey: "Canvas",
-                key: "Canvas",
-                style: UtilityWindowFactory.buildCanvasStyle(width, height, backgroundColor, extraStyle),
-                macros: [],
-                replaceMacros: false,
-                windowName: windowName,
-                script: "",
-                xGridSize: 1,
-                yGridSize: 1,
-                gridColor: "rgba(128,128,128,1)",
-                showGrid: true,
-                isUtilityWindow: true,
-            } as type_Canvas_tdl,
-        };
+        let canvas = structuredClone(defaultCanvasTdl);
+        canvas.windowName = windowName;
+        canvas.isUtilityWindow = true;
+        canvas.style = UtilityWindowFactory.buildCanvasStyle(width, height, backgroundColor, extraStyle);
+        return {Canvas: canvas};
     };
 
     private static buildProbeBlankTdl = () => {

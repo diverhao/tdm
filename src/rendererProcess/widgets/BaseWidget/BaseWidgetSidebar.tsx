@@ -1,6 +1,6 @@
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables, calcSidebarWidth } from "../../../common/GlobalVariables";
+import { calcSidebarWidth, sidebarBorderWidth, defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 import { FontsData } from "../../global/FontsData";
 
@@ -553,9 +553,9 @@ export abstract class BaseWidgetSidebar {
         top: 0,
         right: 0,
         margin: 0,
-        padding: GlobalVariables.sidebarBorderWidth,
+        padding: sidebarBorderWidth,
         borderWidth: 0,
-        // width: GlobalVariables.sidebarWidth,
+        // width: sidebarWidth,
         width: 100, // replace by calcSidebarWidth()
         height: "100%",
         overflowX: "hidden",
@@ -565,15 +565,15 @@ export abstract class BaseWidgetSidebar {
         backgroundColor: "rgba(255,255,255,1)",
         // separator
         borderStyle: "solid",
-        borderLeftWidth: GlobalVariables.sidebarBorderWidth,
+        borderLeftWidth: sidebarBorderWidth,
         borderColor: "red",
         boxSizing: "border-box",
     };
 
     _inputStyle: Record<string, any> = {
         width: "70%",
-        fontFamily: GlobalVariables.defaultFontFamily,
-        fontSize: GlobalVariables.defaultFontSize,
+        fontFamily: defaultFontFamily,
+        fontSize: defaultFontSize,
         outline: "none",
         border: "none",
         paddingLeft: 5,

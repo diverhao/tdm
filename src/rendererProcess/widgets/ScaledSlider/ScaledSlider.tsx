@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, defaultFontSize } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -218,7 +218,7 @@ export class ScaledSlider extends BaseWidget {
                     bottom: bottom === -1 ? "" : bottom,
                     backgroundColor: "white",
                     width: width,
-                    fontSize: GlobalVariables.defaultFontSize,
+                    fontSize: defaultFontSize,
                     border: "solid 1px black",
                     padding: 5,
                     borderRadius: 5,

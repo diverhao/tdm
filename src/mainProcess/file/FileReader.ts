@@ -12,6 +12,7 @@ import { StpConverter } from "./StpConverter";
 import xml2js from 'xml2js';
 import { type_tdl } from "../../common/GlobalVariables";
 import { type_dbd, type_dbd_field } from "../../common/types/type_dbd";
+import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
 
 export class FileReader {
     static fetchWithTimeout = async (url: string, timeout: number = 10) => {
@@ -65,8 +66,6 @@ export class FileReader {
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
-                // copy GetStarted.tdl
-                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
                 Log.debug("Created an empty file", filePath);
                 Log.debug("read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());
@@ -108,8 +107,6 @@ export class FileReader {
                 fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
                 fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/profiles_default.json"), filePath);
-                // copy GetStarted.tdl
-                fs.copyFileSync(path.join(__dirname, "../../common/resources/tdls/GetStarted.tdl"), path.join(path.dirname(filePath), "GetStarted.tdl"));
                 Log.debug("Created an empty file", filePath);
                 Log.debug("read this file");
                 fileContents = JSON.parse(fs.readFileSync(filePath).toString());
@@ -591,33 +588,7 @@ export class FileReader {
 
     static getBlankWhiteTdl = () => {
         const result: type_tdl = {
-            Canvas: {
-                type: "Canvas",
-                widgetKey: "Canvas",
-                key: "Canvas",
-                style: {
-                    position: "fixed",
-                    display: "inline-block",
-                    backgroundColor: "rgba(255, 255, 255, 1)",
-                    margin: 0,
-                    border: 0,
-                    padding: 0,
-                    left: 0,
-                    top: 0,
-                    width: 700,
-                    height: 600,
-                    overflow: "hidden",
-                },
-                macros: [],
-                replaceMacros: false,
-                windowName: "",
-                script: "",
-                xGridSize: 1,
-                yGridSize: 1,
-                gridColor: "rgba(128,128,128,0.15)",
-                showGrid: true,
-                isUtilityWindow: false,
-            },
+            Canvas: structuredClone(defaultCanvasTdl),
         };
 
         return result;

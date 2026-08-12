@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as GlobalMethods from "../../common/GlobalMethods";
-import { GlobalVariables } from "../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../common/GlobalVariables";
 import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMenu";
 import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
@@ -146,10 +146,10 @@ export class MainWindowStartupPage {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "flex-start",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
+            fontFamily: defaultFontFamily,
+            fontSize: defaultFontSize,
+            fontStyle: defaultFontStyle,
+            fontWeight: defaultFontWeight,
         } as React.CSSProperties;
 
         return (
@@ -244,12 +244,44 @@ export class MainWindowStartupPage {
             width: "100%",
             height: "100%",
             overflow: "visible",
+            pointerEvents: "none",
+            backgroundColor: "rgba(248, 251, 255, 1)",
+            backgroundImage: [
+                "radial-gradient(circle at 12% 18%, rgba(105, 181, 255, 0.20) 0%, rgba(105, 181, 255, 0) 34%)",
+                "radial-gradient(circle at 88% 16%, rgba(187, 148, 255, 0.16) 0%, rgba(187, 148, 255, 0) 32%)",
+                "radial-gradient(circle at 72% 86%, rgba(255, 176, 145, 0.15) 0%, rgba(255, 176, 145, 0) 36%)",
+                "linear-gradient(135deg, rgba(250, 253, 255, 1) 0%, rgba(246, 251, 250, 1) 52%, rgba(255, 250, 248, 1) 100%)",
+            ].join(", "),
+            backgroundSize: "125% 125%, 130% 130%, 125% 125%, 100% 100%",
+            backgroundPosition: "0% 0%, 100% 0%, 100% 100%, 0% 0%",
+            backgroundRepeat: "no-repeat",
+            animation: "tdm-startup-background-drift 2s ease-in-out infinite alternate",
         } as React.CSSProperties;
 
         return (
             <div
+                className="tdm-startup-background"
                 style={style}
             >
+                <style>{`
+                    @keyframes tdm-startup-background-drift {
+                        0% {
+                            background-position: 0% 0%, 100% 0%, 100% 100%, 0% 0%;
+                        }
+                        50% {
+                            background-position: 100% 30%, 0% 70%, 35% 0%, 0% 0%;
+                        }
+                        100% {
+                            background-position: 20% 100%, 78% 100%, 0% 42%, 0% 0%;
+                        }
+                    }
+
+                    @media (prefers-reduced-motion: reduce) {
+                        .tdm-startup-background {
+                            animation: none !important;
+                        }
+                    }
+                `}</style>
                 <this._ElementBackgroundContainer
                     top={20}
                     left={10}
@@ -294,7 +326,7 @@ export class MainWindowStartupPage {
             <div
                 style={style}
             >
-                <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="80px" height="80px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="80px" height="80px"></img>
             </div>
         );
     };

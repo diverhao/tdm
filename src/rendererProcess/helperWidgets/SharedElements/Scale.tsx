@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { calcTickPositions, calcTicks, refineTicks } from "../../global/PlotHelpers";
 
 export const Scale = ({ min, max, numIntervals, position, show, length, scale, color, compact, showTicks, showLabels, showAxis }:
@@ -104,7 +104,7 @@ export const ScaleLeft = ({ min, max, numIntervals, length, scale, color, compac
 
     const elementRef = React.useRef<HTMLDivElement>(null);
 
-    const fontSize = GlobalVariables.defaultFontSize;
+    const fontSize = defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = calcTickPositions(tickValues, min, max, length, { scale: scale }, "vertical");
     const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
@@ -164,7 +164,7 @@ export const ScaleRight = ({ min, max, numIntervals, length, scale, color, compa
 
     const elementRef = React.useRef<HTMLDivElement>(null);
 
-    const fontSize = GlobalVariables.defaultFontSize;
+    const fontSize = defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = calcTickPositions(tickValues, min, max, length, { scale: scale }, "vertical");
     const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "vertical");
@@ -223,7 +223,7 @@ export const ScaleTop = ({ min, max, numIntervals, length, scale, color, compact
 
     const elementRef = React.useRef<HTMLDivElement>(null);
 
-    const fontSize = GlobalVariables.defaultFontSize;
+    const fontSize = defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = calcTickPositions(tickValues, min, max, length, { scale: scale }, "horizontal");
     const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "horizontal");
@@ -283,7 +283,7 @@ export const ScaleBottom = ({ min, max, numIntervals, length, scale, color, comp
 
     const elementRef = React.useRef<HTMLDivElement>(null);
 
-    const fontSize = GlobalVariables.defaultFontSize;
+    const fontSize = defaultFontSize;
     const tickValues = calcTicks(min, max, numIntervals + 1, { scale: scale });
     const tickPositions = calcTickPositions(tickValues, min, max, length, { scale: scale }, "horizontal");
     const refinedTicks = refineTicks(tickValues, fontSize * 0.5, length, "horizontal");
@@ -585,5 +585,5 @@ const LabelTopBottom = ({ position, text, index, numTicks, compact, color }: { p
 }
 
 export const getScaleWidthHeight = () => {
-    return 2 + 10 + GlobalVariables.defaultFontSize + 10;
+    return 2 + 10 + defaultFontSize + 10;
 }

@@ -22,10 +22,10 @@ export class TextSymbolRule extends BaseWidgetRule {
                 // borderStyle: "solid",
                 // borderWidth: 0,
                 // borderColor: "rgba(255, 0, 0, 1)",
-                // fontFamily: GlobalVariables.defaultFontFamily,
-                // fontSize: GlobalVariables.defaultFontSize,
-                // fontStyle: GlobalVariables.defaultFontStyle,
-                // fontWeight: GlobalVariables.defaultFontWeight,
+                // fontFamily: defaultFontFamily,
+                // fontSize: defaultFontSize,
+                // fontStyle: defaultFontStyle,
+                // fontWeight: defaultFontWeight,
             },
             // the ElementBody style
             text: {

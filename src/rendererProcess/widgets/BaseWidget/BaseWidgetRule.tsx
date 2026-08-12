@@ -5,7 +5,7 @@ import { RuleComponent } from "../../helperWidgets/RuleComponents/RuleComponent"
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
 import { evaluate } from "mathjs";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { RuleAngle } from "../../helperWidgets/RuleComponents/RuleAngle";
 import { RuleEmbeddedDisplaySelectTabIndex } from "../../helperWidgets/RuleComponents/RuleEmbeddedDisplaySelectTabIndex";
 import { BaseWidget } from "./BaseWidget";
@@ -906,8 +906,8 @@ export abstract class BaseWidgetRule {
 
     _inputStyle: Record<string, any> = {
         width: "65%",
-        fontFamily: GlobalVariables.defaultFontFamily,
-        fontSize: GlobalVariables.defaultFontSize,
+        fontFamily: defaultFontFamily,
+        fontSize: defaultFontSize,
     };
 
     getFormStyle = () => {

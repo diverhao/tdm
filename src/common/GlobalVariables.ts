@@ -1,5 +1,7 @@
 import { type_log_levels } from "./Log";
-import { type_macros_tdl } from "./types/type_widget_tdl";
+import type { type_Canvas_tdl } from "./types/type_widget_tdl";
+
+// --------------------- Log ----------------------
 
 export let logLevel: type_log_levels = type_log_levels.debug;
 
@@ -8,21 +10,6 @@ export const setLogLevel = (newLogLevel: type_log_levels) => {
 }
 
 
-export type type_Canvas_tdl = Record<string, any> & {
-    type: "Canvas";
-    widgetKey: "Canvas";
-    // key: "Canvas";
-    style: Record<string, number | string>;
-    macros: type_macros_tdl;
-    // replaceMacros: boolean;
-    windowName: string;
-    script: string;
-    xGridSize: number;
-    yGridSize: number;
-    gridColor: string;
-    showGrid: boolean;
-    isUtilityWindow: boolean;
-};
 
 export type type_tdl = Record<string, any> & {
     Canvas: type_Canvas_tdl;
@@ -42,25 +29,24 @@ export type type_LocalChannel_data = {
 
 export let g_selectedWidgetsSizes: [number, number, number, number] = [100000, -100000, 100000, -100000];
 
-export class GlobalVariables {
-    static sidebarBorderWidth: number = 3;
+export const sidebarBorderWidth: number = 3;
 
-    // font, should sync with main window one in mainWindow/
-    static defaultFontSize: number = 14;
-    static defaultFontFamily: string = "TDM Default";
-    static defaultFontStyle: string = "normal";
-    static defaultFontWeight: string = "normal";
-    static defaultMonoFontFamily: string = "Courier Prime";
+// font, should sync with main window one in mainWindow/
+export const defaultFontSize: number = 14;
+export const defaultFontFamily: string = "TDM Default";
+export const defaultFontStyle: string = "normal";
+export const defaultFontWeight: string = "normal";
+export const defaultMonoFontFamily: string = "Courier Prime";
 
-    static presetColors: Record<string, [number, number, number, number]> = {};
-    static widgetMinHeight: number = 10;
-    static widgetMinWidth: number = 10;
-    static colorSumChange: number = 690;
-    static CanvasSidebarZIndex: number = 10;
-    // dynamic update for DataViewer plot lines and thumbnail
-    static DATAVIEWER_MAX_THUMBNAIL_DATA_RATE = 100000;
-    static DATAVIEWER_MAX_PLOT_DATA_RATE = 300000;
-}
+export const presetColors: Record<string, [number, number, number, number]> = {};
+export const widgetMinHeight: number = 10;
+export const widgetMinWidth: number = 10;
+export const colorSumChange: number = 690;
+export const CanvasSidebarZIndex: number = 10;
+
+// dynamic update for DataViewer plot lines and thumbnail
+export const DATAVIEWER_MAX_THUMBNAIL_DATA_RATE: number = 100000;
+export const DATAVIEWER_MAX_PLOT_DATA_RATE: number = 300000;
 /**
  * "window inner width" = "canvas width" + calcSidebarWidth() + "window scroll bar width"
  * 
@@ -252,7 +238,7 @@ export const liquidGlassStyleDark = {
     boxShadow: "0 18px 44px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.24)",
     backdropFilter: "blur(4px) saturate(110%)",
     WebkitBackdropFilter: "blur(4px) saturate(110%)",
-    fontFamily: GlobalVariables.defaultFontFamily,
+    fontFamily: defaultFontFamily,
     // fontSize: 13.5,
     // fontWeight: 500,
     // borderRadius: 10,
@@ -281,7 +267,7 @@ export const liquidGlassStyle = {
     // hoverColor: "rgba(255, 255, 255, 1)",
     backdropFilter: "blur(4px) saturate(110%)",
     WebkitBackdropFilter: "blur(4px) saturate(110%)",
-    fontFamily: GlobalVariables.defaultFontFamily,
+    fontFamily: defaultFontFamily,
     // fontSize: 13.5,
     // fontWeight: 500,
     // borderRadius: 10,

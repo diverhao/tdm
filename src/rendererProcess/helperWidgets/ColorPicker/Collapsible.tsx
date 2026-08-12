@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ColorPicker } from "./ColorPicker";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { colorSumChange } from "../../../common/GlobalVariables";
 
 export const Collapsible = ({ rgbColorStr, updateFromSidebar, title, eventName }: any) => {
     const rgbaStrToRgbaArray = (rgbaString: string) => {
@@ -154,8 +154,8 @@ const ElementColorBlock = ({presetColor}: any) => {
                 opacity: presetColor[3] / 100,
                 borderRadius: 2,
                 borderWidth: 1,
-                // borderStyle: ${(props) => (props.presetColor[0] + props.presetColor[1] + props.presetColor[2] > GlobalVariables.colorSumChange ? "solid" : "none")};
-                borderStyle: presetColor[0] + presetColor[1] + presetColor[2] > GlobalVariables.colorSumChange ? "solid" : "none",
+                // borderStyle: ${(props) => (props.presetColor[0] + props.presetColor[1] + props.presetColor[2] > colorSumChange ? "solid" : "none")};
+                borderStyle: presetColor[0] + presetColor[1] + presetColor[2] > colorSumChange ? "solid" : "none",
                 borderColor: "rgb(230, 230, 230)",
                 // background: ${(props) => `rgb(${props.presetColor[0]}, ${props.presetColor[1]}, ${props.presetColor[2]})`};
                 background: `rgb(${presetColor[0]}, ${presetColor[1]}, ${presetColor[2]})`,

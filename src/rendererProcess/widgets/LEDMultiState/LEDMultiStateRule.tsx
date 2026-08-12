@@ -20,10 +20,10 @@ export class LEDMultiStateRule extends BaseWidgetRule {
                 // transform: "rotate(0deg)",
                 // font
                 // color: "rgba(0,0,0,1)",
-                // fontFamily: GlobalVariables.defaultFontFamily,
-                // fontSize: GlobalVariables.defaultFontSize,
-                // fontStyle: GlobalVariables.defaultFontStyle,
-                // fontWeight: GlobalVariables.defaultFontWeight,
+                // fontFamily: defaultFontFamily,
+                // fontSize: defaultFontSize,
+                // fontStyle: defaultFontStyle,
+                // fontWeight: defaultFontWeight,
                 // border, it is different from the "alarmBorder" below
                 // borderStyle: "solid",
                 // borderWidth: 0,

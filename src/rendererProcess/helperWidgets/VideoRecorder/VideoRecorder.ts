@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowClient";
 import path from "path";
 import { g_widgets1,  } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { arrayBufferToBase64 } from "../../../common/GlobalMethods";
 import { EpicsDate } from "../../../common/EpicsTime";
@@ -82,10 +82,10 @@ export class VideoRecorder {
             recordingSignDiv.style["borderRadius"] = "50%";
             recordingSignDiv.style["border"] = "solid 3px white";
             recordingSignDiv.style["color"] = "white";
-            recordingSignDiv.style["fontFamily"] = GlobalVariables.defaultFontFamily;
-            recordingSignDiv.style["fontSize"] = `${GlobalVariables.defaultFontSize}px`;
-            recordingSignDiv.style["fontStyle"] = GlobalVariables.defaultFontStyle;
-            recordingSignDiv.style["fontWeight"] = GlobalVariables.defaultFontWeight;
+            recordingSignDiv.style["fontFamily"] = defaultFontFamily;
+            recordingSignDiv.style["fontSize"] = `${defaultFontSize}px`;
+            recordingSignDiv.style["fontStyle"] = defaultFontStyle;
+            recordingSignDiv.style["fontWeight"] = defaultFontWeight;
             recordingSignDiv.addEventListener("click", (_event: MouseEvent) => {
                 Log.info("stop recording");
                 this.stop();

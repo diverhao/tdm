@@ -11,7 +11,7 @@ import { rust } from "@codemirror/legacy-modes/mode/rust";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { xml } from "@codemirror/legacy-modes/mode/xml";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { Canvas } from "../../helperWidgets/Canvas/Canvas";
@@ -166,7 +166,7 @@ export class TextEditor extends BaseWidget {
                         EditorView.theme({
                             "&": {
                                 height: "100%",
-                                fontSize: `${GlobalVariables.defaultFontSize}px`,
+                                fontSize: `${defaultFontSize}px`,
                                 backgroundColor: "rgba(255, 255, 255, 1)",
                             },
                             ".cm-scroller": {
@@ -273,7 +273,7 @@ export class TextEditor extends BaseWidget {
                 <div style={{
                     paddingLeft: 30,
                     boxSizing: "border-box",
-                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    fontSize: defaultFontSize * 1,
                 }}>
                     <div>
                         {fileName === "" ? "[Empty file name]" : fileName}

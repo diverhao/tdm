@@ -1,7 +1,7 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { v4 as uuidv4 } from "uuid";
@@ -383,8 +383,8 @@ export class ChannelGraph extends BaseWidget {
                                         <td>
                                             <img
                                                 style={{
-                                                    width: GlobalVariables.defaultFontSize * 0.8,
-                                                    height: GlobalVariables.defaultFontSize * 0.8,
+                                                    width: defaultFontSize * 0.8,
+                                                    height: defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
                                                 src={`${getBasePath()}/webpack/resources/webpages/delete-symbol.svg`}
@@ -397,8 +397,8 @@ export class ChannelGraph extends BaseWidget {
                                             &nbsp;
                                             <img
                                                 style={{
-                                                    width: GlobalVariables.defaultFontSize * 1,
-                                                    height: GlobalVariables.defaultFontSize * 1,
+                                                    width: defaultFontSize * 1,
+                                                    height: defaultFontSize * 1,
                                                     cursor: "pointer",
                                                 }}
                                                 src={`${getBasePath()}/webpack/resources/webpages/modify-symbol.svg`}
@@ -417,8 +417,8 @@ export class ChannelGraph extends BaseWidget {
                                             &nbsp;
                                             <img
                                                 style={{
-                                                    width: GlobalVariables.defaultFontSize * 0.8,
-                                                    height: GlobalVariables.defaultFontSize * 0.8,
+                                                    width: defaultFontSize * 0.8,
+                                                    height: defaultFontSize * 0.8,
                                                     cursor: "pointer",
                                                 }}
                                                 src={`${getBasePath()}/webpack/resources/webpages/refresh-symbol.svg`}

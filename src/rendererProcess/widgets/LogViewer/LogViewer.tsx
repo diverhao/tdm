@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -36,7 +36,7 @@ export class LogViewer extends BaseWidget {
 
         // assign the sidebar
         // this._sidebar = new ProfilesViewerSidebar(this);
-        this._table = new Table([GlobalVariables.defaultFontSize * 5, GlobalVariables.defaultFontSize * 30, GlobalVariables.defaultFontSize * 40, GlobalVariables.defaultFontSize * 30, GlobalVariables.defaultFontSize * 10], this);
+        this._table = new Table([defaultFontSize * 5, defaultFontSize * 30, defaultFontSize * 40, defaultFontSize * 30, defaultFontSize * 10], this);
         this._ElementTableCell = this.getTable().getElementTableCell();
         this._ElementTableLine = this.getTable().getElementTableLine();
         this._ElementTableLineMemo = this.getTable().getElementTableLineMemo();
@@ -220,10 +220,10 @@ export class LogViewer extends BaseWidget {
             style={{
                 width: "100%",
                 height: "100%",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                fontStyle: GlobalVariables.defaultFontStyle,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontWeight: defaultFontWeight,
+                fontStyle: defaultFontStyle,
                 display: "inline-flex",
                 flexDirection: "column",
                 flexWrap: "nowrap",

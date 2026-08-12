@@ -18,7 +18,6 @@ import { v4 as uuidv4 } from "uuid";
 import { defaultEmbeddedDisplayTdl, type_EmbeddedDisplay_display_tdl, type_EmbeddedDisplay_tdl } from "../../../common/types/type_widget_tdl";
 import { Macros } from "../../../common/Macros";
 
-export const defaultTdlFileName = `../../../webpack/resources/tdls/blank-red.tdl`;
 
 export class EmbeddedDisplay extends BaseWidget {
 

@@ -2,59 +2,13 @@ import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { Log } from "../../../../common/Log";
 import { EdlConverter } from "../../EdlConverter";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
-
-export type type_Canvas_tdl = Record<string, any> & {
-    type: "Canvas";
-    widgetKey: "Canvas";
-    // key: "Canvas";
-    style: Record<string, number | string>;
-    macros: [string, string][];
-    // replaceMacros: boolean;
-    windowName: string;
-    script: string;
-    xGridSize: number;
-    yGridSize: number;
-    gridColor: string;
-    showGrid: boolean;
-    isUtilityWindow: boolean;
-};
+import { defaultCanvasTdl, type_Canvas_tdl } from "../../../../common/types/type_widget_tdl";
 
 export class CanvasHelper {
 
-    private static _defaultTdl: type_Canvas_tdl = {
-        type: "Canvas",
-        widgetKey: "Canvas",
-        key: "Canvas",
-        style: {
-            // basics
-            position: "fixed",
-            display: "inline-block",
-            // dimensions
-            left: 0,
-            top: 0,
-            height: 500,
-            width: 500,
-            backgroundColor: `rgba(255, 255, 255, 1)`,
-            // others
-            margin: 0,
-            border: 0,
-            padding: 0,
-            overflow: "hidden",
-        },
-        macros: [],
-        replaceMacros: false,
-        windowName: "",
-        script: "",
-        xGridSize: 1,
-        yGridSize: 1,
-        gridColor: "rgba(128,128,128,1)",
-        showGrid: true,
-        isUtilityWindow: false,
-    };
-
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (): type_Canvas_tdl => {
-        const result = structuredClone(this._defaultTdl);
+        const result = structuredClone(defaultCanvasTdl);
         return result;
     };
 
@@ -193,7 +147,7 @@ export class CanvasHelper {
                 } else if (propertyName === "macros") {
                     tdl["macros"] = BobPropertyConverter.convertBobMacros(propertyValue);
                 } else if (propertyName === "rules") {
-                    tdl["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
+                    (tdl as unknown as Record<string, any>)["rules"] = BobPropertyConverter.convertBobRules(propertyValue);
                 } else {
                     Log.info("Skip property", `"${propertyName}"`);
                 }

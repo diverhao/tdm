@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
-import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { liquidGlassStyle, liquidGlassStyleDark, defaultFontSize, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
@@ -248,10 +248,10 @@ export abstract class Prompt {
                 animation: "fadeIn 5s",
                 // color: "rgba(200, 200, 200, 1)",
                 padding: 10,
-                // fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
+                // fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontStyle: defaultFontStyle,
+                fontWeight: defaultFontWeight,
                 position: "fixed",
                 margin: 20,
                 // border: "solid 1px white",

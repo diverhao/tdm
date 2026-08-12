@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { g_flushWidgets } from "../Root/Root";
@@ -17,7 +17,7 @@ import { PvMonitor } from "../../widgets/PvMonitor/PvMonitor";
  */
 export class Table {
 
-    lineHeight = GlobalVariables.defaultFontSize * 1.5;
+    lineHeight = defaultFontSize * 1.5;
     columnWidths: number[] = [];
     resizeMouseX0: number = -1;
     resizingColumnIndex: number = -1;
@@ -35,7 +35,7 @@ export class Table {
         // max 200 columns
         if (this.columnWidths.length < 200) {
             for (let ii = 0; ii < 200 - this.columnWidths.length; ii++) {
-                this.columnWidths.push(GlobalVariables.defaultFontSize * 5);
+                this.columnWidths.push(defaultFontSize * 5);
             }
         }
         this._mainWidget = mainWidget;
@@ -200,11 +200,11 @@ export class Table {
         return (
             <div style={{
                 height: "100%",
-                // width: this.columnWidths[columnIndex] === undefined ? GlobalVariables.defaultFontSize * 5 : this.columnWidths[columnIndex],
+                // width: this.columnWidths[columnIndex] === undefined ? defaultFontSize * 5 : this.columnWidths[columnIndex],
                 maxWidth: this.columnWidths[columnIndex],
                 minWidth: this.columnWidths[columnIndex],
                 //todo: magic number, to be tuned
-                // minWidth: GlobalVariables.defaultFontSize * 5,
+                // minWidth: defaultFontSize * 5,
                 backgroundColor: "rgba(255,0,255,0)",
                 display: 'inline-flex',
                 flexDirection: "row",

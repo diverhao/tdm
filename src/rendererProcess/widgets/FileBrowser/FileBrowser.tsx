@@ -7,7 +7,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
 import { IpcEventArgType2, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { defaultFileBrowserTdl, type_FileBrowser_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
 
@@ -387,10 +387,10 @@ export class FileBrowser extends BaseWidget {
                             >
                                 Name &nbsp;
                                 {this.getSortingMethod() === type_sorting_method.name_ascending ?
-                                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                    <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                     :
                                     this.getSortingMethod() === type_sorting_method.name_decending ?
-                                        <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                        <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                         :
                                         null
                                 }
@@ -416,10 +416,10 @@ export class FileBrowser extends BaseWidget {
                                     >
                                         Date Modified &nbsp;
                                         {this.getSortingMethod() === type_sorting_method.time_ascending ?
-                                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                             :
                                             this.getSortingMethod() === type_sorting_method.time_decending ?
-                                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                                 :
                                                 null
                                         }
@@ -442,10 +442,10 @@ export class FileBrowser extends BaseWidget {
                                     >
                                         Size &nbsp;
                                         {this.getSortingMethod() === type_sorting_method.size_ascending ?
-                                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                            <img src={`${getBasePath()}/webpack/resources/webpages/arrowUp-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                             :
                                             this.getSortingMethod() === type_sorting_method.size_decending ?
-                                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: GlobalVariables.defaultFontSize * 0.6 }}></img>
+                                                <img src={`${getBasePath()}/webpack/resources/webpages/arrowDown-thin.svg`} style={{ width: defaultFontSize * 0.6 }}></img>
                                                 :
                                                 null
                                         }
@@ -703,7 +703,7 @@ export class FileBrowser extends BaseWidget {
                 ref={elementRef}
                 onMouseDown={onMouseDown}
                 style={{
-                    fontSize: GlobalVariables.defaultFontSize * 1,
+                    fontSize: defaultFontSize * 1,
                     cursor: this.getFolderPath() === "bookmarks-ABCD" ? "default" : "pointer",
                     marginRight: 10,
                     opacity: this.getFolderPath() === "bookmarks-ABCD" ? 0 : 1,
@@ -930,7 +930,7 @@ export class FileBrowser extends BaseWidget {
                             overflow: "hidden",
                         }}>
                             <img src={`${getBasePath()}/webpack/resources/webpages/folder-symbol.svg`}
-                                style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize, opacity: 1, }}
+                                style={{ width: defaultFontSize, height: defaultFontSize, opacity: 1, }}
                             >
                             </img>
                             &nbsp;
@@ -949,7 +949,7 @@ export class FileBrowser extends BaseWidget {
                                 overflow: "hidden",
                             }}>
                                 <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.png`}
-                                    style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
+                                    style={{ width: defaultFontSize, height: defaultFontSize }}
                                 >
                                 </img>
                                 &nbsp;
@@ -967,7 +967,7 @@ export class FileBrowser extends BaseWidget {
                                 overflow: "hidden",
                             }}>
                                 <img src={`${getBasePath()}/webpack/resources/webpages/document-symbol.svg`}
-                                    style={{ width: GlobalVariables.defaultFontSize, height: GlobalVariables.defaultFontSize }}
+                                    style={{ width: defaultFontSize, height: defaultFontSize }}
                                 >
                                 </img>
                                 &nbsp;
@@ -1056,8 +1056,8 @@ export class FileBrowser extends BaseWidget {
                             outline: "none",
                             border: "none",
                             padding: 0,
-                            fontSize: GlobalVariables.defaultFontSize,
-                            fontFamily: GlobalVariables.defaultFontFamily,
+                            fontSize: defaultFontSize,
+                            fontFamily: defaultFontFamily,
                             width: "100%",
                         }}
                         spellCheck={false}

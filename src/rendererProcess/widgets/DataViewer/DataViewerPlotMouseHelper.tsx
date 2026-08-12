@@ -2,6 +2,7 @@ import * as React from "react";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import type { DataViewerPlot } from "./DataViewerPlot";
 import { titleHeight, yAxisLabelWidth, yAxisTickWidth } from "./DataViewerPlot";
+import { mapPointToXy } from "../../global/PlotHelpers";
 
 /**
  * Helper class for mouse event handlers in DataViewerPlot.
@@ -44,7 +45,7 @@ export class DataViewerPlotMouseHelper {
         const yValMin = ticksInfo["yValMin"];
         const yValMax = ticksInfo["yValMax"];
 
-        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const [valXMid, valYMid] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
 
         const xAxis = plot.xAxis;
 
@@ -92,7 +93,7 @@ export class DataViewerPlotMouseHelper {
         const yValMin = ticksInfo["yValMin"];
         const yValMax = ticksInfo["yValMax"];
 
-        const [valXMid, valYMid] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const [valXMid, valYMid] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
 
         const direction = event.deltaY < 0 ? "zoom-in" : "zoom-out";
 
@@ -143,8 +144,8 @@ export class DataViewerPlotMouseHelper {
         const yValMin = ticksInfo["yValMin"];
         const yValMax = ticksInfo["yValMax"];
 
-        const valXY0 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
-        const valXY1 = GlobalMethods.mapPointToXy(dPointX, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const valXY0 = mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const valXY1 = mapPointToXy(dPointX, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
 
         const dt = valXY1[0] - valXY0[0];
 
@@ -176,8 +177,8 @@ export class DataViewerPlotMouseHelper {
         const yValMin = ticksInfo["yValMin"];
         const yValMax = ticksInfo["yValMax"];
 
-        const dxy0 = GlobalMethods.mapPointToXy(0, pointDy, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
-        const dxy1 = GlobalMethods.mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const dxy0 = mapPointToXy(0, pointDy, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
+        const dxy1 = mapPointToXy(0, 0, xValMin, xValMax, yValMin, yValMax, plot.getPlotWidth(), plot.getPlotHeight());
 
         const dy = dxy1[1] - dxy0[1];
         const yMinNew = yMin + dy;

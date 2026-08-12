@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -54,7 +54,7 @@ export class FileConverter extends BaseWidget {
         this.setReadWriteType("write");
 
         // columns: ms since epoch, channel name, ip, port
-        this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 28, GlobalVariables.defaultFontSize * 6, GlobalVariables.defaultFontSize * 8], this);
+        this._table = new Table([defaultFontSize * 4, defaultFontSize * 28, defaultFontSize * 28, defaultFontSize * 6, defaultFontSize * 8], this);
         this._ElementTableCell = this.getTable().getElementTableCell();
         this._ElementTableLine = this.getTable().getElementTableLine();
         this._ElementTableLineMemo = this.getTable().getElementTableLineMemo();
@@ -650,10 +650,10 @@ export class FileConverter extends BaseWidget {
             style={{
                 width: "100%",
                 height: "100%",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                fontStyle: GlobalVariables.defaultFontStyle,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontWeight: defaultFontWeight,
+                fontStyle: defaultFontStyle,
                 // display: this.bottomView === "raw-data" ? "inline-flex" : "none",
                 display: "inline-flex",
                 flexDirection: "column",

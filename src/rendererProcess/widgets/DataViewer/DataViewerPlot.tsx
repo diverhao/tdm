@@ -2,7 +2,7 @@ import { DataViewer } from "./DataViewer";
 import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientX, getMouseEventClientY, GlobalVariables, type_dbrData, type_pva_value } from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, type_dbrData, type_pva_value, defaultFontSize } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
@@ -17,7 +17,7 @@ import { DataViewerPlotDataHelper } from "./DataViewerPlotDataHelper";
 import { DataViewerPlotMouseHelper } from "./DataViewerPlotMouseHelper";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
-import { calcTickPositions, calcTicks } from "../../global/PlotHelpers";
+import { calcTickPositions, calcTicks, mapPointToXy, mapXYsToPointsWebGl } from "../../global/PlotHelpers";
 
 
 type type_xAxis = {
@@ -1047,7 +1047,7 @@ export class DataViewerPlot {
                         this.setCursorValue("")
                     }}
                 >
-                    <div style={{ fontSize: GlobalVariables.defaultFontSize * 1.5 }}>+</div>
+                    <div style={{ fontSize: defaultFontSize * 1.5 }}>+</div>
                 </div>
 
 
@@ -1250,7 +1250,7 @@ export class DataViewerPlot {
         }
         const ticksInfo = yAxis["ticksInfo"];
         let { xValMax, xValMin, yValMax, yValMin } = ticksInfo;
-        return GlobalMethods.mapXYsToPointsWebGl(xData, yData, xValMin, xValMax, yValMin, yValMax);
+        return mapXYsToPointsWebGl(xData, yData, xValMin, xValMax, yValMin, yValMax);
     };
 
     /**
@@ -1296,7 +1296,7 @@ export class DataViewerPlot {
         const yValMin = ticksInfo.yValMin;
         const yValMax = ticksInfo.yValMax;
 
-        const [valX, valY] = GlobalMethods.mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
+        const [valX, valY] = mapPointToXy(pointX, pointY, xValMin, xValMax, yValMin, yValMax, this.getPlotWidth(), this.getPlotHeight());
 
         const timeStr = EpicsDate.fromUnixTimeMs(valX).toString();
         const valYStr = valY.toPrecision(4).toString();

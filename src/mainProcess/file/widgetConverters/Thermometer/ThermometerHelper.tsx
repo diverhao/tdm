@@ -5,7 +5,7 @@ import * as GlobalMethods from "../../../../common/GlobalMethods";
 import { rgbaArrayToRgbaStr, rgbaStrToRgbaArray } from "../../../../common/GlobalMethods";
 import { EdlConverter } from "../../EdlConverter";
 import { v4 as uuidv4 } from "uuid";
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../../common/GlobalVariables";
 
 
 export type type_Thermometer_tdl = {
@@ -48,10 +48,10 @@ export class ThermometerHelper extends BaseWidgetHelper {
             borderStyle: "solid",
             borderWidth: 0,
             borderColor: "rgba(255, 0, 0, 1)",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
+            fontFamily: defaultFontFamily,
+            fontSize: defaultFontSize,
+            fontStyle: defaultFontStyle,
+            fontWeight: defaultFontWeight,
         },
         // the ElementBody style
         text: {

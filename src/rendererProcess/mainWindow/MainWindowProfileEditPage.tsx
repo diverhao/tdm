@@ -1,6 +1,6 @@
 import * as React from "react";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
-import { GlobalVariables } from "../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../common/GlobalVariables";
 
 import {
     ElementUpDownButtonOnSidebar,
@@ -64,10 +64,10 @@ export class MainWindowProfileEditPage {
             // flex extends over the whole screen
             display: "flex",
             flexFlow: "column",
-            fontFamily: GlobalVariables.defaultFontFamily,
-            fontSize: GlobalVariables.defaultFontSize,
-            fontStyle: GlobalVariables.defaultFontStyle,
-            fontWeight: GlobalVariables.defaultFontWeight,
+            fontFamily: defaultFontFamily,
+            fontSize: defaultFontSize,
+            fontStyle: defaultFontStyle,
+            fontWeight: defaultFontWeight,
             height: "100%",
             overflow: "hidden",
         } as React.CSSProperties;
@@ -2043,7 +2043,7 @@ export class MainWindowProfileEditPage {
             paddingLeft: "6px",
             outline: "none",
             fontSize: "13px",
-            fontFamily: GlobalVariables.defaultFontFamily,
+            fontFamily: defaultFontFamily,
         } as React.CSSProperties;
 
         const styleInput = {
@@ -2055,7 +2055,7 @@ export class MainWindowProfileEditPage {
             fontSize: "13px",
             background: "white",
             boxSizing: "border-box",
-            fontFamily: GlobalVariables.defaultFontFamily,
+            fontFamily: defaultFontFamily,
         } as React.CSSProperties;
 
         const styleDiv = {
@@ -2065,7 +2065,7 @@ export class MainWindowProfileEditPage {
             outline: "none",
             fontSize: "13px",
             boxSizing: "border-box",
-            fontFamily: GlobalVariables.defaultFontFamily,
+            fontFamily: defaultFontFamily,
         } as React.CSSProperties;
 
         if (isEditing) {

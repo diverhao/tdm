@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables, liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { liquidGlassStyle, liquidGlassStyleDark, defaultFontSize, defaultMonoFontFamily } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
 import { isDarkMode, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
@@ -164,8 +164,8 @@ export class SidebarLargeInput {
                                 paddingBottom: 3,
                                 paddingLeft: 3,
                                 paddingRight: 3,
-                                fontSize: GlobalVariables.defaultFontSize * 1.2,
-                                fontFamily: GlobalVariables.defaultMonoFontFamily,
+                                fontSize: defaultFontSize * 1.2,
+                                fontFamily: defaultMonoFontFamily,
                                 outline: "none",
                                 borderRadius: 0,
                                 border: "none",
@@ -325,8 +325,8 @@ export class SidebarLargeInput {
                                 paddingBottom: 3,
                                 paddingLeft: 3,
                                 paddingRight: 3,
-                                fontSize: GlobalVariables.defaultFontSize * 1.2,
-                                fontFamily: GlobalVariables.defaultMonoFontFamily,
+                                fontSize: defaultFontSize * 1.2,
+                                fontFamily: defaultMonoFontFamily,
                                 outline: "none",
                                 borderRadius: 0,
                                 border: "none",

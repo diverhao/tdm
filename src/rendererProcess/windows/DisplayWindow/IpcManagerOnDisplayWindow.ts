@@ -12,7 +12,7 @@ import { XYPlot } from "../../../rendererProcess/widgets/XYPlot/XYPlot";
 import { Terminal } from "../../../rendererProcess/widgets/Terminal/Terminal";
 import { Log } from "../../../common/Log";
 import { Media } from "../../../rendererProcess/widgets/Media/Media";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { presetColors as globalPresetColors } from "../../../common/GlobalVariables";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
 import { ProfilesViewer } from "../../../rendererProcess/widgets/ProfilesViewer/ProfilesViewer";
 import { CaSnooper } from "../../../rendererProcess/widgets/CaSnooper/CaSnooper";
@@ -673,7 +673,7 @@ export class IpcManagerOnDisplayWindow {
                         parseInt(rgb[3]) >= 0 &&
                         parseInt(rgb[3]) <= 100
                     ) {
-                        GlobalVariables.presetColors[colorName] = [parseInt(rgb[0]), parseInt(rgb[1]), parseInt(rgb[2]), parseInt(rgb[3])];
+                        globalPresetColors[colorName] = [parseInt(rgb[0]), parseInt(rgb[1]), parseInt(rgb[2]), parseInt(rgb[3])];
                     }
                 }
             }

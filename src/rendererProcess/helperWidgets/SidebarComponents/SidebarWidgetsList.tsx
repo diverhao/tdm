@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { GlobalVariables, calcScrollBarWidth } from "../../../common/GlobalVariables";
+import { calcScrollBarWidth, sidebarBorderWidth } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import * as GlobalMethods from "../../../common/GlobalMethods"
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
@@ -65,7 +65,7 @@ export class SidebarWidgetsList {
                         top: this.getStatus() === "expanded" ? 0 : "",
                         bottom: this.getStatus() === "expanded" ? "" : 0,
                         right: 0,
-                        width: calcSidebarWidth() - GlobalVariables.sidebarBorderWidth,
+                        width: calcSidebarWidth() - sidebarBorderWidth,
                         height: this.getStatus() === "expanded" ? "100%" : 55, // hard coded
                         backgroundColor: this.getStatus() === "expanded" ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0)",
                         // overflowY: "scroll",

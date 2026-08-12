@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
@@ -170,7 +170,7 @@ export class Casw extends BaseWidget {
         this.setReadWriteType("write");
 
         // columns: ms since epoch, channel name, ip, port
-        this._table = new Table([GlobalVariables.defaultFontSize * 4, GlobalVariables.defaultFontSize * 16, GlobalVariables.defaultFontSize * 20, GlobalVariables.defaultFontSize * 10], this);
+        this._table = new Table([defaultFontSize * 4, defaultFontSize * 16, defaultFontSize * 20, defaultFontSize * 10], this);
         this._ElementTableCell = this.getTable().getElementTableCell();
         this._ElementTableLine = this.getTable().getElementTableLine();
         this._ElementTableLineMemo = this.getTable().getElementTableLineMemo();
@@ -434,7 +434,7 @@ export class Casw extends BaseWidget {
                 }}>
                     <div style={{
                         display: "inline-flex",
-                        width: GlobalVariables.defaultFontSize * 10,
+                        width: defaultFontSize * 10,
                     }}>
                         Number of entries:
                     </div>
@@ -475,7 +475,7 @@ export class Casw extends BaseWidget {
                 }}>
                     <div style={{
                         display: "inline-flex",
-                        width: GlobalVariables.defaultFontSize * 10,
+                        width: defaultFontSize * 10,
                     }}>
                         Count last N seconds:
                     </div>
@@ -676,7 +676,7 @@ export class Casw extends BaseWidget {
                 }}>
                     <div style={{
                         display: "inline-flex",
-                        width: GlobalVariables.defaultFontSize * 10,
+                        width: defaultFontSize * 10,
                     }}>
                         IP:
                     </div>
@@ -716,7 +716,7 @@ export class Casw extends BaseWidget {
                 }}>
                     <div style={{
                         display: "inline-flex",
-                        width: GlobalVariables.defaultFontSize * 10,
+                        width: defaultFontSize * 10,
                     }}>
                         Port:
                     </div>
@@ -819,10 +819,10 @@ export class Casw extends BaseWidget {
             style={{
                 width: "100%",
                 height: "100%",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontWeight: GlobalVariables.defaultFontWeight,
-                fontStyle: GlobalVariables.defaultFontStyle,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontWeight: defaultFontWeight,
+                fontStyle: defaultFontStyle,
                 display: this.bottomView === "raw-data" ? "inline-flex" : "none",
                 flexDirection: "column",
                 flexWrap: "nowrap",

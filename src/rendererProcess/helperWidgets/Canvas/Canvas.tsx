@@ -1,40 +1,13 @@
 import * as React from "react";
 import { Log } from "../../../common/Log";
-import {
-    getMouseEventClientX,
-    getMouseEventClientY,
-    getScrollTop,
-    GlobalVariables,
-    calcSidebarWidth,
-    getWindowVerticalScrollBarWidth,
-} from "../../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, getScrollTop, calcSidebarWidth, getWindowVerticalScrollBarWidth } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { Macros } from "../../../common/Macros";
-import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
-
-/**
- * ! Note: this type is defined in 3 places: (1) here, (2) widgetConverters/CanvasHelper.ts, and (3) common/GlobalVariables
- * !       These 3 places must be synchronized
- */
-export type type_Canvas_tdl = Record<string, any> & {
-    type: "Canvas";
-    widgetKey: "Canvas";
-    // key: "Canvas";
-    style: Record<string, number | string>;
-    macros: type_macros_tdl;
-    // replaceMacros: boolean;
-    windowName: string;
-    script: string;
-    xGridSize: number;
-    yGridSize: number;
-    gridColor: string;
-    showGrid: boolean;
-    isUtilityWindow: boolean;
-};
+import { defaultCanvasTdl, type_Canvas_tdl } from "../../../common/types/type_widget_tdl";
 
 export class Canvas {
     private _type: string;
@@ -63,7 +36,7 @@ export class Canvas {
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
-        this._style = { ...Canvas._defaultTdl.style, ...widgetTdl.style };
+        this._style = { ...defaultCanvasTdl.style, ...widgetTdl.style };
         this._macros = new Macros(widgetTdl.macros);
         // this._replaceMacros = widgetTdl.replaceMacros;
         this._windowName = widgetTdl.windowName === undefined ? "" : widgetTdl.windowName;
@@ -271,40 +244,9 @@ export class Canvas {
 
     // --------------------- style and tdl -------------------------
 
-    private static _defaultTdl: type_Canvas_tdl = {
-        type: "Canvas",
-        widgetKey: "Canvas",
-        key: "Canvas",
-        style: {
-            // basics
-            position: "fixed",
-            display: "inline-block",
-            // dimensions
-            left: 0,
-            top: 0,
-            height: 500,
-            width: 500,
-            backgroundColor: `rgba(255, 255, 255, 1)`,
-            // others
-            margin: 0,
-            border: 0,
-            padding: 0,
-            overflow: "hidden",
-        },
-        macros: [],
-        replaceMacros: false,
-        windowName: "",
-        script: "",
-        xGridSize: 1,
-        yGridSize: 1,
-        gridColor: "rgba(128,128,128,0.15)",
-        showGrid: true,
-        isUtilityWindow: false,
-    };
-
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (): type_Canvas_tdl => {
-        const result = structuredClone(this._defaultTdl);
+        const result = structuredClone(defaultCanvasTdl);
         return result;
     };
 
@@ -313,9 +255,9 @@ export class Canvas {
             type: "Canvas",
             widgetKey: "Canvas",
             key: "Canvas",
-            style: structuredClone(this.getStyle()),
+            style: structuredClone(this.getStyle()) as type_Canvas_tdl["style"],
             macros: structuredClone(this.getMacros().getArr()),
-            // replaceMacros: this.getReplaceMacros(),
+            replaceMacros: false,
             windowName: this.getWindowName(),
             script: this.getScript(),
             xGridSize: this.getXGridSize(),

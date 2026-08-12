@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GlobalVariables } from "../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../common/GlobalVariables";
 import { MainWindowClient } from "../windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
@@ -399,10 +399,10 @@ export class MainWindowProfileRunPage {
                 display: "flex",
                 justifyContent: 'center',
                 width: "100%",
-                fontFamily: GlobalVariables.defaultFontFamily,
-                fontSize: GlobalVariables.defaultFontSize,
-                fontStyle: GlobalVariables.defaultFontStyle,
-                fontWeight: GlobalVariables.defaultFontWeight,
+                fontFamily: defaultFontFamily,
+                fontSize: defaultFontSize,
+                fontStyle: defaultFontStyle,
+                fontWeight: defaultFontWeight,
 
             }}>
                 <div
@@ -420,7 +420,7 @@ export class MainWindowProfileRunPage {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
-                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-macos.svg`} width="80px"></img>
+                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="80px"></img>
                     </div>
                     <div style={{
                         margin: 5,

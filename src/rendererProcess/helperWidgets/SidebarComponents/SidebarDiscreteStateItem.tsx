@@ -7,7 +7,7 @@ import * as GlobalMethods from "../../../common/GlobalMethods";
 import { Log } from "../../../common/Log";
 import { ElementButton } from "../SharedElements/MacrosTable";
 import { DiscreteStateWidget } from "../../global/Widgets";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 
 export class SidebarDiscreteStateItem {
     _items: SidebarDiscreteStateItems;
@@ -50,7 +50,7 @@ export class SidebarDiscreteStateItem {
                             display: "inline-flex",
                             justifyContent: "center",
                             alignItems: "center",
-                            fontSize: GlobalVariables.defaultFontSize * 0.5,
+                            fontSize: defaultFontSize * 0.5,
                         }}
                     >
                         <this.StyledButton
@@ -58,7 +58,7 @@ export class SidebarDiscreteStateItem {
                                 this.updateWidgetMoveUpItem(event);
                             }}
                             style={{
-                                fontSize: GlobalVariables.defaultFontSize * 1.25,
+                                fontSize: defaultFontSize * 1.25,
                             }}
                         >
                             &#8593;{" "}
@@ -68,7 +68,7 @@ export class SidebarDiscreteStateItem {
                                 this.updateWidgetMoveDownItem(event);
                             }}
                             style={{
-                                fontSize: GlobalVariables.defaultFontSize * 1.25,
+                                fontSize: defaultFontSize * 1.25,
                             }}
                         >
                             &#8595;{" "}

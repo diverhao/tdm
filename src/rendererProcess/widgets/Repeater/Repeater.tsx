@@ -232,7 +232,7 @@ export class Repeater extends BaseWidget {
 
                 const widgetTdl = structuredClone(templateWidgetTdl);
                 // create a new widget JSON
-                const newWidgetKey = widgetTdl.type + "_" + GlobalMethods.generateNewWidgetKey();
+                const newWidgetKey = GlobalMethods.generateWidgetKey(widgetTdl.type);
                 widgetTdl.key = newWidgetKey;
                 widgetTdl.widgetKey = newWidgetKey;
                 widgetTdl.style.top = this.getStyle()["top"] + dH * ii + margin;

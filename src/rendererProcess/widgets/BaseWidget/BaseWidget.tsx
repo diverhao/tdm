@@ -1,6 +1,6 @@
 import katex from "katex";
 import * as React from "react";
-import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, GlobalVariables } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
@@ -965,10 +965,10 @@ export abstract class BaseWidget {
                     borderColor: "rgba(255, 0, 0, 1)",
                     // font
                     color: "rgba(255,0,0,1)",
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
+                    fontFamily: defaultFontFamily,
+                    fontSize: defaultFontSize,
+                    fontStyle: defaultFontStyle,
+                    fontWeight: defaultFontWeight,
                     // shows when the widget is selected
                     outlineStyle: "none",
                     outlineWidth: 1,
@@ -1156,7 +1156,7 @@ export abstract class BaseWidget {
         result.style.outlineStyle = "none";
         // new key
         if (newKey) {
-            const widgetKey = this.getType() + "_" + GlobalMethods.generateNewWidgetKey();
+            const widgetKey = GlobalMethods.generateWidgetKey(this.getType());
             result.widgetKey = widgetKey;
             result.key = widgetKey;
         }

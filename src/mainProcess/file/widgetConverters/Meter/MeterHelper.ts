@@ -1,4 +1,4 @@
-import { GlobalVariables } from "../../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../../common/GlobalVariables";
 import { Log } from "../../../../common/Log";
 import { BobPropertyConverter } from "../../BobPropertyConverter";
 import { type_rules_tdl, BaseWidgetHelper } from "../BaseWidget/BaseWidgetHelper";
@@ -34,10 +34,10 @@ export class MeterHelper extends BaseWidgetHelper {
 			transform: "rotate(0deg)",
 			// font in the bottom channel value area
 			color: "rgba(0,0,0,1)",
-			fontFamily: GlobalVariables.defaultFontFamily,
-			fontSize: GlobalVariables.defaultFontSize,
-			fontStyle: GlobalVariables.defaultFontStyle,
-			fontWeight: GlobalVariables.defaultFontWeight,
+			fontFamily: defaultFontFamily,
+			fontSize: defaultFontSize,
+			fontStyle: defaultFontStyle,
+			fontWeight: defaultFontWeight,
 			// border, it is different from the "alarmBorder" below
 			borderStyle: "solid",
 			borderWidth: 0,

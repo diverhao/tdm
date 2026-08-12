@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonHighlightBackgroundColor } from "../SharedElements/RectangleButton";
 import { DisplayWindowClient } from "../../windows/DisplayWindow/DisplayWindowClient";
 
@@ -159,7 +159,7 @@ export class SymbolGallery {
                 >
                     <div
                         style={{
-                            fontSize: GlobalVariables.defaultFontSize * 2,
+                            fontSize: defaultFontSize * 2,
                             marginBottom: 10,
                             fontWeight: "600",
                         }}
@@ -169,7 +169,7 @@ export class SymbolGallery {
                     <div
                         style={{
                             opacity: 0.5,
-                            fontSize: GlobalVariables.defaultFontSize * 0.9,
+                            fontSize: defaultFontSize * 0.9,
                             width: "60%",
                             textAlign: "center",
                             lineHeight: "1.4",
@@ -198,8 +198,8 @@ export class SymbolGallery {
                     display: "flex",
                     flexDirection: "row",
                     marginTop: 10,
-                    maxHeight: GlobalVariables.defaultFontSize * 2,
-                    minHeight: GlobalVariables.defaultFontSize * 2,
+                    maxHeight: defaultFontSize * 2,
+                    minHeight: defaultFontSize * 2,
                     maxWidth: "90%",
                     overflowX: "auto",
                     overflowY: "hidden",

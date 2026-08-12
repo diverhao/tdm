@@ -2,7 +2,7 @@ import * as React from "react";
 import { DataViewerPlot, settingsIndexChoices } from "./DataViewerPlot";
 import { type_DataViewer_yAxis } from "../../../common/types/type_widget_tdl";
 import { DataViewer } from "./DataViewer";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
@@ -56,10 +56,10 @@ export class DataViewerTraceSetting {
                     boxSizing: "border-box",
                     flexDirection: "column",
                     border: "solid 1px rgba(0,0,0,1)",
-                    fontSize: GlobalVariables.defaultFontSize,
-                    fontFamily: GlobalVariables.defaultFontFamily,
-                    fontStyle: GlobalVariables.defaultFontStyle,
-                    fontWeight: GlobalVariables.defaultFontWeight,
+                    fontSize: defaultFontSize,
+                    fontFamily: defaultFontFamily,
+                    fontStyle: defaultFontStyle,
+                    fontWeight: defaultFontWeight,
                 }}
             >
                 <div

@@ -6,16 +6,7 @@ import { Canvas } from "../helperWidgets/Canvas/Canvas";
 import { g_flushWidgets } from "../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../helperWidgets/GroupSelection/GroupSelection2";
 import { MouseSelectionRegion } from "../helperWidgets/MouseSelectionRegion/MouseSelectionRegion";
-import {
-    Channel_DBR_TYPES,
-    GlobalVariables,
-    Channel_ACCESS_RIGHTS,
-    getMouseEventClientX,
-    getMouseEventClientY,
-    calcSidebarWidth,
-    getWindowVerticalScrollBarWidth,
-    type_dbrData,
-} from "../../common/GlobalVariables";
+import { Channel_DBR_TYPES, Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, calcSidebarWidth, getWindowVerticalScrollBarWidth, type_dbrData, widgetMinHeight, widgetMinWidth } from "../../common/GlobalVariables";
 import { g_widgets1 } from "./GlobalVariables";
 import { v4 as uuidv4 } from "uuid";
 import { ReadWriteIos } from "../channel/ReadWriteIos";
@@ -1371,8 +1362,8 @@ export class Widgets {
         // (1)
         const width = widget.getStyle().width;
         const height = widget.getStyle().height;
-        widget.getStyle().width = Math.max(width, GlobalVariables.widgetMinWidth, xGridSize);
-        widget.getStyle().height = Math.max(height, GlobalVariables.widgetMinHeight, yGridSize);
+        widget.getStyle().width = Math.max(width, widgetMinWidth, xGridSize);
+        widget.getStyle().height = Math.max(height, widgetMinHeight, yGridSize);
 
         // (2)
         widget.getStyle().left = Math.round(widget.getStyle().left / xGridSize) * xGridSize;
@@ -3291,7 +3282,7 @@ export class Widgets {
             }
             for (let widgetTdl of result) {
                 // (4)
-                const newWidgetKey = widgetTdl.type + "_" + GlobalMethods.generateNewWidgetKey();
+                const newWidgetKey = GlobalMethods.generateWidgetKey(widgetTdl.type);
                 widgetTdl.key = newWidgetKey;
                 widgetTdl.widgetKey = newWidgetKey;
                 // (5)

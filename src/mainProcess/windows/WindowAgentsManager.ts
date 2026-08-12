@@ -9,7 +9,7 @@ import { FileReader } from "../file/FileReader";
 import { Log } from "../../common/Log";
 import { spawn } from "child_process";
 import path from "path";
-import { type_macros_tdl } from "../../common/types/type_widget_tdl";
+import { defaultCanvasTdl, type_macros_tdl } from "../../common/types/type_widget_tdl";
 
 export type type_options_createDisplayWindow = {
     tdl: type_tdl;
@@ -497,19 +497,7 @@ export class WindowAgentsManager {
     createWebDisplayWindow = async (url: string, displayWindowId: string | undefined = undefined) => {
         try {
             const tdl: type_tdl = {
-                Canvas: {
-                    type: "Canvas",
-                    widgetKey: "Canvas",
-                    style: {},
-                    macros: [],
-                    windowName: "",
-                    script: "",
-                    xGridSize: 1,
-                    yGridSize: 1,
-                    gridColor: "rgba(128,128,128,1)",
-                    showGrid: true,
-                    isUtilityWindow: false,
-                },
+                Canvas: structuredClone(defaultCanvasTdl),
             };
 
             const options: type_options_createDisplayWindow = {

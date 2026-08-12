@@ -1,3 +1,4 @@
+import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
 import { DataViewerHelper } from "./widgetConverters/DataViewer/DataViewerHelper";
 
 
@@ -11,32 +12,11 @@ export class StpConverter {
         tdl: Record<string, any>,
     ) => {
         // add Canvas
-        tdl["Canvas"] = {
-            "type": "Canvas",
-            "widgetKey": "Canvas",
-            "key": "Canvas",
-            "style": {
-                "position": "absolute",
-                "display": "inline-block",
-                "left": 0,
-                "top": 0,
-                "height": 500,
-                "width": 800,
-                "backgroundColor": "rgba(255, 255, 255, 1)",
-                "margin": 0,
-                "border": 0,
-                "padding": 0,
-                "overflow": "hidden"
-            },
-            "macros": [],
-            "windowName": "TDM Data Viewer",
-            "script": "",
-            "xGridSize": 1,
-            "yGridSize": 1,
-            "gridColor": "rgba(128,128,128,1)",
-            "showGrid": true,
-            "isUtilityWindow": true
-        };
+        let canvas = structuredClone(defaultCanvasTdl);
+        canvas.windowName = "TDM Data Viewer";
+        canvas.isUtilityWindow = true;
+        canvas.style.position = "absolute";
+        tdl["Canvas"] = canvas;
 
         // add "Data Viewer" widget
         const widgetTdl = DataViewerHelper.convertStpToTdl(stpJSON, "Data Viewer");

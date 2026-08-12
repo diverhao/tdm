@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import { Log } from "./Log";
 
 // -------------------- color -----------------------
 
@@ -82,10 +81,99 @@ export const rgbaStrToRgbaArray = (rgbaString: string) => {
     }
 };
 
+/**
+ * Verify if a string represents a valid rgba color, i.e. "rgba(255, 255, 255 ,1)"
+ */
+export const isValidRgbaColor = (color: string): boolean => {
+    const rgbaRegex = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0?\.?\d+|1)\s*\)$/;
+
+    if (!rgbaRegex.test(color)) return false;
+
+    const match = color.match(rgbaRegex)!;
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+
+    // Check if RGB values are in valid range (0-255)
+    return r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255;
+}
+
+/**
+ * Return if the operating system is running in dark mode.
+ */
+export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+/**
+ * Predefined random colors
+ */
+const _RGBA_COLORS: string[] = [
+    "rgba(255, 0, 0, 1)",
+    "rgba(0, 200, 0, 1)",
+    "rgba(0, 0, 255, 1)",
+    "rgba(255, 165, 0, 1)",
+    "rgba(128, 0, 128, 1)",
+    "rgba(0, 206, 209, 1)",
+    "rgba(255, 20, 147, 1)",
+    "rgba(0, 128, 0, 1)",
+    "rgba(255, 215, 0, 1)",
+    "rgba(70, 130, 180, 1)",
+    "rgba(255, 69, 0, 1)",
+    "rgba(0, 255, 127, 1)",
+    "rgba(138, 43, 226, 1)",
+    "rgba(255, 140, 0, 1)",
+    "rgba(30, 144, 255, 1)",
+    "rgba(220, 20, 60, 1)",
+    "rgba(0, 191, 255, 1)",
+    "rgba(50, 205, 50, 1)",
+    "rgba(255, 105, 180, 1)",
+    "rgba(100, 149, 237, 1)",
+    "rgba(255, 99, 71, 1)",
+    "rgba(0, 250, 154, 1)",
+    "rgba(173, 255, 47, 1)",
+    "rgba(255, 0, 255, 1)",
+    "rgba(64, 224, 208, 1)",
+    "rgba(255, 215, 180, 1)",
+    "rgba(0, 128, 128, 1)",
+    "rgba(210, 105, 30, 1)",
+    "rgba(147, 112, 219, 1)",
+    "rgba(255, 160, 122, 1)",
+    "rgba(0, 139, 139, 1)",
+    "rgba(255, 228, 0, 1)",
+    "rgba(127, 255, 0, 1)",
+    "rgba(186, 85, 211, 1)",
+    "rgba(255, 127, 80, 1)",
+    "rgba(32, 178, 170, 1)",
+    "rgba(240, 128, 128, 1)",
+    "rgba(0, 206, 64, 1)",
+    "rgba(255, 182, 193, 1)",
+    "rgba(65, 105, 225, 1)",
+    "rgba(255, 83, 13, 1)",
+    "rgba(0, 168, 107, 1)",
+    "rgba(205, 92, 92, 1)",
+    "rgba(72, 209, 204, 1)",
+    "rgba(255, 218, 185, 1)",
+    "rgba(0, 100, 148, 1)",
+    "rgba(218, 165, 32, 1)",
+    "rgba(152, 251, 152, 1)",
+    "rgba(255, 36, 0, 1)",
+    "rgba(0, 71, 171, 1)",
+];
+
+/**
+ * Return a pre-defined color according to the index
+ * 
+ * There are 50 candidate colors. If the provided index is larger than 50, it returns
+ * the modular value.
+ */
+export const generateRgbaColor = (index: number): string => {
+    return _RGBA_COLORS[index % _RGBA_COLORS.length];
+};
+
+
 // --------------------- angle ----------------------
 
 /**
- * Find angle value from a string like "...(-37.8 deg)..." to an integer -38
+ * Find the angle value from a string like "...(-37.8 deg)...", return the integer, like -38
  * 
  * Fallback to 0 if there is anything wrong
  */
@@ -105,6 +193,8 @@ export const parseCSSAngle = (str: string): number => {
 
 /**
  * Replace the angle in "...rotate(-38.6 deg)..."
+ * 
+ * Return the updated angle string
  */
 export const replaceCSSAngle = (angle: number, str: string): string => {
     const index1 = str.indexOf("rotate") + 6;
@@ -120,9 +210,9 @@ export const replaceCSSAngle = (angle: number, str: string): string => {
 // ----------------- map, object operations -------------------
 
 /**
- * Insert a new entry to a particular index in map
+ * Insert a new entry to an index in map
  */
-export const insertToMapAtIndex = (map: Map<string, any>, index: number, newKey: string, newValue: any) => {
+export const insertToMapAtIndex = (map: Map<string, any>, index: number, newKey: string, newValue: any): void => {
     const keys = [...map.keys()];
     const values = [...map.values()];
     map.clear();
@@ -139,7 +229,7 @@ export const insertToMapAtIndex = (map: Map<string, any>, index: number, newKey:
 /**
  * Delete a map entry at the index
  * 
- * Return the deleted key-value
+ * Return the deleted [key, value]
  */
 export const deleteFromMapAtIndex = (map: Map<string, any>, index: number): [string, any] => {
     const keys = [...map.keys()];
@@ -242,94 +332,12 @@ export const deepMerge = (target: any, source: any, clone: boolean = true): any 
 };
 
 
-// -------------------- color -------------------------
+// -------------------- widget key, URI, and others -------------------------
 
-/**
- * Verify if a string represents a valid rgba color, i.e. "rgba(255, 255, 255 ,1)"
- */
-export const isValidRgbaColor = (color: string): boolean => {
-    const rgbaRegex = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0?\.?\d+|1)\s*\)$/;
-
-    if (!rgbaRegex.test(color)) return false;
-
-    const match = color.match(rgbaRegex)!;
-    const r = parseInt(match[1]);
-    const g = parseInt(match[2]);
-    const b = parseInt(match[3]);
-
-    // Check if RGB values are in valid range (0-255)
-    return r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255;
-}
-
-/**
- * Return if the operating system is running in dark mode.
- */
-export const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-
-
-
-const _RGBA_COLORS: string[] = [
-    "rgba(255, 0, 0, 1)",
-    "rgba(0, 200, 0, 1)",
-    "rgba(0, 0, 255, 1)",
-    "rgba(255, 165, 0, 1)",
-    "rgba(128, 0, 128, 1)",
-    "rgba(0, 206, 209, 1)",
-    "rgba(255, 20, 147, 1)",
-    "rgba(0, 128, 0, 1)",
-    "rgba(255, 215, 0, 1)",
-    "rgba(70, 130, 180, 1)",
-    "rgba(255, 69, 0, 1)",
-    "rgba(0, 255, 127, 1)",
-    "rgba(138, 43, 226, 1)",
-    "rgba(255, 140, 0, 1)",
-    "rgba(30, 144, 255, 1)",
-    "rgba(220, 20, 60, 1)",
-    "rgba(0, 191, 255, 1)",
-    "rgba(50, 205, 50, 1)",
-    "rgba(255, 105, 180, 1)",
-    "rgba(100, 149, 237, 1)",
-    "rgba(255, 99, 71, 1)",
-    "rgba(0, 250, 154, 1)",
-    "rgba(173, 255, 47, 1)",
-    "rgba(255, 0, 255, 1)",
-    "rgba(64, 224, 208, 1)",
-    "rgba(255, 215, 180, 1)",
-    "rgba(0, 128, 128, 1)",
-    "rgba(210, 105, 30, 1)",
-    "rgba(147, 112, 219, 1)",
-    "rgba(255, 160, 122, 1)",
-    "rgba(0, 139, 139, 1)",
-    "rgba(255, 228, 0, 1)",
-    "rgba(127, 255, 0, 1)",
-    "rgba(186, 85, 211, 1)",
-    "rgba(255, 127, 80, 1)",
-    "rgba(32, 178, 170, 1)",
-    "rgba(240, 128, 128, 1)",
-    "rgba(0, 206, 64, 1)",
-    "rgba(255, 182, 193, 1)",
-    "rgba(65, 105, 225, 1)",
-    "rgba(255, 83, 13, 1)",
-    "rgba(0, 168, 107, 1)",
-    "rgba(205, 92, 92, 1)",
-    "rgba(72, 209, 204, 1)",
-    "rgba(255, 218, 185, 1)",
-    "rgba(0, 100, 148, 1)",
-    "rgba(218, 165, 32, 1)",
-    "rgba(152, 251, 152, 1)",
-    "rgba(255, 36, 0, 1)",
-    "rgba(0, 71, 171, 1)",
-];
-
-export const generateRgbaColor = (index: number): string => {
-    return _RGBA_COLORS[index % _RGBA_COLORS.length];
-};
 
 export const generateWidgetKey = (type: string) => {
     return `${type}_${uuidv4()}`
 }
-
 
 /**
  * Check if a string is a data URI (e.g., data:image/png;base64,...)
@@ -345,81 +353,6 @@ export const isRemotePath = (path: string) => {
     } else {
         return false;
     }
-};
-
-export const mapXYsToPointsWebGl = (xData: number[], yData: number[], xMin: number, xMax: number, yMin: number, yMax: number,) => {
-
-    const len = Math.min(xData.length, yData.length);
-    const result = new Float32Array(len * 3);
-
-    for (let ii = 0; ii < len; ii++) {
-        const x = xData[ii];
-        const y = yData[ii];
-        let pointX = -1 + (2 / (xMax - xMin)) * (x - xMin);
-        let pointY = -1 + (2 / (yMax - yMin)) * (y - yMin);
-        if (isNaN(pointX) || isNaN(pointY)) {
-            pointX = 0;
-            pointY = 0;
-        }
-
-        result[3 * ii] = pointX;
-        result[3 * ii + 1] = pointY;
-        result[3 * ii + 2] = 0;
-    }
-    return result;
-
-}
-
-export const mapPointToXy = (
-    pointX: number,
-    pointY: number,
-    xMin: number,
-    xMax: number,
-    yMin: number,
-    yMax: number,
-    width: number,
-    height: number,
-): [number, number] => {
-    const x = xMin + pointX / width * (xMax - xMin);
-    const y = yMax - pointY / height * (yMax - yMin);
-
-    if (isNaN(x) || isNaN(y)) {
-        return [0, 0];
-    }
-    return [x, y];
-}
-
-export const calcWebGlShadeColor = (rgbaColor: string) => {
-    // "rgba(255, 0, 0, 1)" --> "1.0, 0.0, 0.0, 1.0"
-    const color1 = rgbaColor.replace("rgba", "").replace("rgb", "").replace("(", "").replace(")", "");
-    const colorStrs = color1.split(",");
-
-    let result: string = "";
-    if (colorStrs.length !== 4) {
-        return "0.0, 0.0, 0.0, 1.0";
-    }
-
-    for (let ii = 0; ii < colorStrs.length; ii++) {
-        const colorStr = colorStrs[ii];
-        const colorNum = parseFloat(colorStr);
-        if (isNaN(colorNum)) {
-            return "0.0, 0.0, 0.0, 1.0";
-        }
-        if (ii < 3) {
-            result = result + `${colorNum / 255}` + ", ";
-        } else {
-            result = result + `${colorNum}`;
-        }
-    }
-    return result;
-}
-
-
-
-
-
-export const generateNewWidgetKey = (): string => {
-    return uuidv4();
 };
 
 export function arrayBufferToBase64(buffer: ArrayBuffer) {

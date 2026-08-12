@@ -4,7 +4,7 @@ import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { SidebarComponent } from "./SidebarComponent";
 import { CanvasSidebar } from "../Canvas/CanvasSidebar";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 
 /**
  * Represents the X component in sidebar. <br>
@@ -240,8 +240,8 @@ export class SidebarCanvasScript {
 
     _inputStyle: Record<string, any> = {
         width: "70%",
-        fontFamily: GlobalVariables.defaultFontFamily,
-        fontSize: GlobalVariables.defaultFontSize,
+        fontFamily: defaultFontFamily,
+        fontSize: defaultFontSize,
     };
 
     _formStyle: Record<string, any> = {

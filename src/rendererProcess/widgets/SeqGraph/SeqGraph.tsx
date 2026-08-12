@@ -1,7 +1,7 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
-import { GlobalVariables } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { v4 as uuidv4 } from "uuid";
@@ -746,8 +746,8 @@ export class SeqGraph extends BaseWidget {
                                         paddingBottom: 1,
                                         paddingLeft: 3,
                                         paddingRight: 3,
-                                        fontFamily: GlobalVariables.defaultFontFamily,
-                                        fontSize: GlobalVariables.defaultFontSize,
+                                        fontFamily: defaultFontFamily,
+                                        fontSize: defaultFontSize,
                                         outline: "none",
                                         border: "solid 1px rgba(150, 150, 150, 1)",
                                         borderRadius: 0,
@@ -776,7 +776,7 @@ export class SeqGraph extends BaseWidget {
                             style={{
                                 padding: 10,
                                 fontFamily: "Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace",
-                                fontSize: GlobalVariables.defaultFontSize,
+                                fontSize: defaultFontSize,
                                 height: "100%",
                                 lineHeight: 1.5,
                                 outline: "none",
