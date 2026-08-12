@@ -67,6 +67,7 @@ import { type_tdl } from "../../common/GlobalVariables";
 import { Table } from "../widgets/Table/Table";
 import { ErrorBox } from "../widgets/ErrorBox/ErrorBox";
 import { EpicsDate } from "../../common/EpicsTime";
+import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.
@@ -830,13 +831,23 @@ export class Widgets {
             }
         } catch (e) {
             Log.error(e);
-            // intercept the widget with ErrorBox widget
-            const errorBoxTdl = ErrorBox.generateDefaultTdl();
-            errorBoxTdl["originalTdl"] = structuredClone(widgetTdl);
-            widgetKey = errorBoxTdl.widgetKey;
-            widgetType = errorBoxTdl.type;
-            widget = new ErrorBox(errorBoxTdl);
-            widgetTdl = errorBoxTdl;
+            if (widgetKey.includes("Canvas")) {
+                // Canvas
+                // do not crash the display, instead, use the default Canvas
+                // we may lose some information, but this is still better than crashing
+                widgetTdl = structuredClone(defaultCanvasTdl);
+                widget = new Canvas(widgetTdl);
+                widget.inputTdlVerifyResult = `${e}`;
+            } else {
+                // regular widget
+                // intercept the widget with ErrorBox widget
+                const errorBoxTdl = ErrorBox.generateDefaultTdl();
+                errorBoxTdl["originalTdl"] = structuredClone(widgetTdl);
+                widgetKey = errorBoxTdl.widgetKey;
+                widgetType = errorBoxTdl.type;
+                widget = new ErrorBox(errorBoxTdl);
+                widgetTdl = errorBoxTdl;
+            }
         }
 
         // these are speical widgets

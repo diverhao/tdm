@@ -7,7 +7,7 @@ import { g_flushWidgets } from "../Root/Root";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";
 import { rendererWindowStatus } from "../../global/Widgets";
 import { Macros } from "../../../common/Macros";
-import { defaultCanvasTdl, type_Canvas_tdl } from "../../../common/types/type_widget_tdl";
+import { defaultCanvasTdl, type_Canvas_tdl, verifyWidgetTdl } from "../../../common/types/type_widget_tdl";
 
 export class Canvas {
     private _type: string;
@@ -32,7 +32,22 @@ export class Canvas {
     private _showGrid: boolean;
     private _isUtilityWindow: boolean;
 
+    // verifyWidgetTdl(widgetTdl) is success
+    inputTdlVerifyResult: string = "";
+
     constructor(widgetTdl: Record<string, any>) {
+        // throws if there is any error
+        const normalizedTdl: type_Canvas_tdl = {
+            ...structuredClone(defaultCanvasTdl),
+            ...widgetTdl,
+            style: {
+                ...defaultCanvasTdl.style,
+                ...widgetTdl.style,
+            },
+        };
+
+        verifyWidgetTdl(normalizedTdl);
+
         this._type = widgetTdl.type;
         this._widgetKey = widgetTdl.widgetKey;
 
@@ -230,6 +245,23 @@ export class Canvas {
     };
 
     private _BodyElement = () => {
+        React.useEffect(() => {
+            if (this.inputTdlVerifyResult !== "") {
+                // show an error prompt
+                const prompt = g_widgets1.getRoot().getDisplayWindowClient().getPrompt();
+                prompt.createElement("dialog-message-box", {
+                    // command?: string,
+                    messageType: "error", // | "warning" | "info", // symbol
+                    humanReadableMessages: [
+                        "The Canvas definition in this TDL file is invalid.",
+                        "TDM has loaded the default Canvas instead.",
+                        "Check and correct the Canvas in the TDL file.",
+                    ], rawMessages: [this.inputTdlVerifyResult], // computer generated messages
+                    // buttons?: type_DialogMessageBoxButton[],
+                    // attachment?: any,
+                });
+            }
+        }, []);
         const mainProcesMode = g_widgets1?.getRoot().getDisplayWindowClient().getMainProcessMode();
         return <div style={{
             ...this._style,
