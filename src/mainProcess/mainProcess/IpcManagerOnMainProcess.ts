@@ -247,7 +247,6 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("save-profiles", this.handleSaveProfiles);
         this.ipcMain.on("save-profiles-as", this.handleSaveProfilesAs);
         this.ipcMain.on("profile-selected", this.handleProfileSelected);
-        this.ipcMain.on("update-profiles", this.handleUpdateProfiles);
 
         // ------------------------- window agents ------------------------
         this.ipcMain.on("bring-up-main-window", this.handleBringUpMainWindow);
@@ -257,7 +256,6 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("close-window", this.handleCloseWindow);
 
         // ------------------------- window lifecycle ------------------------
-        this.ipcMain.on("main-window-will-be-closed", this.handleMainWindowWillBeClosed);
         this.ipcMain.on("set-window-title", this.handleSetWindowTitle);
         this.ipcMain.on("window-will-be-closed-user-select", this.handleWindowWillBeClosedUserSelect);
         this.ipcMain.on("new-tdl-rendered", this.handleNewTdlRendered);
@@ -318,7 +316,6 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("take-screenshot", this.handleTakeScreenShot);
         this.ipcMain.on("print-display-window", this.handlePrintDisplayWindow);
         this.ipcMain.on("register-log-viewer", this.handleRegisterLogViewer);
-        this.ipcMain.on("unregister-log-viewer", this.handleUnregisterLogViewer);
 
         // ------------------------- actions ------------------------
         this.ipcMain.on("open-webpage", this.handleOpenWebpage);
@@ -524,33 +521,6 @@ export class IpcManagerOnMainProcess {
         mainProcess.initializeFromProfile(selectedProfileName, args);
     };
 
-    /**
-     * The main window asks for to update the profiles content from main process.
-     * The main process will provide the up-to-date profiles content.
-     */
-    handleUpdateProfiles = (event: WebSocket | string, options: IpcEventArgType["update-profiles"]) => {
-        const { windowId } = options;
-
-        const windowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(windowId);
-
-        if (windowAgent instanceof MainWindowAgent) {
-            const profiles = this.getMainProcess().getWindowAgentsManager().getMainProcess().getProfiles();
-            const profilesJson = profiles.getProfiles();
-            const profilesFullFileName = profiles.getFilePath();
-
-            windowAgent.sendFromMainProcess(
-                "update-profiles",
-                {
-                    windowId: windowId,
-                    profilesJson: profilesJson,
-                    profilesFullFileName: profilesFullFileName
-                }
-            );
-        } else {
-            Log.error("update-profiles can only be request by main window");
-        }
-    };
-
     // ------------------------- window agents ------------------------
 
     /**
@@ -642,15 +612,6 @@ export class IpcManagerOnMainProcess {
         const displayWindowAgent = windowAgentsManager.getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.getDisplayWindowLifeCycleManager().handleWindowWillBeClosedUserSelect(data);
-        }
-    };
-
-    handleMainWindowWillBeClosed = (event: WebSocket | string, data: IpcEventArgType["main-window-will-be-closed"]) => {
-        const mainWindowAgent = this.getMainProcess().getWindowAgentsManager().getMainWindowAgent();
-        if (mainWindowAgent instanceof MainWindowAgent) {
-            mainWindowAgent.getMainWindowLifeCycleManager().handleWindowWillBeClosed(data);
-        } else {
-            Log.error(`No main window agent. Cancel closing main window ${data["mainWindowId"]}.`);
         }
     };
 
@@ -1297,18 +1258,6 @@ export class IpcManagerOnMainProcess {
         }
     }
 
-    // ------------------------- ssh ------------------------
-
-    handleCancelSshConnection = (event: WebSocket | string, data: IpcEventArgType["cancel-ssh-connection"]) => {
-        const sshMainProcess = this.getMainProcess(); //.getMainProcesses().getProcess(data["sshMainProcessId"]);
-        if (sshMainProcess instanceof MainProcess) {
-            // simply quit
-            sshMainProcess.quit();
-        } else {
-            Log.error("Cannot find main process", data["sshMainProcessId"]);
-        }
-
-    }
 
     // ------------------------- display window utilities ------------------------
 
@@ -1388,10 +1337,6 @@ export class IpcManagerOnMainProcess {
     handleRegisterLogViewer = (event: WebSocket | string, options: IpcEventArgType["register-log-viewer"]) => {
         // logs.registerLogViewer(info);
     }
-    handleUnregisterLogViewer = (event: WebSocket | string, options: IpcEventArgType["unregister-log-viewer"]) => {
-        // logs.unregisterLogViewer(info);
-    }
-
 
     // ------------------------- getters and setters ------------------------
 

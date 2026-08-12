@@ -181,19 +181,6 @@ export type IpcEventArgType = {
         modified?: " [Modified]" | ""
     },
 
-    "window-will-be-closed": {
-        displayWindowId: string;
-        widgetKey: string;
-        closeImmediately: boolean;
-        tdlFileName?: string;
-        tdl?: type_tdl;
-        // try to save the contents if we are closing a TextEditor utility window
-        textEditorFileName?: string;
-        textEditorContents?: string;
-        dataViewerData?: Record<string, Record<string, number[] | string[]>>;
-        saveConfirmation?: "Save" | "Don't Save" | "Cancel",
-    },
-
     "window-will-be-closed-user-select": {
         displayWindowId: string;
         widgetKey: string;
@@ -201,11 +188,6 @@ export type IpcEventArgType = {
         fileName: string;
         fileContent: string;
         dataType: type_fileType;
-    },
-
-    "main-window-will-be-closed": {
-        mainWindowId: string,
-        close: boolean,
     },
 
     "open-default-display-windows": {
@@ -444,15 +426,6 @@ export type IpcEventArgType = {
         command: string,
     },
 
-    "ssh-password-prompt-result": {
-        password: string,
-        sshMainProcessId: string,
-    },
-
-    "cancel-ssh-connection": {
-        sshMainProcessId: string,
-    },
-
     "terminal-command": {
         displayWindowId: string,
         // bounce back
@@ -483,11 +456,7 @@ export type IpcEventArgType = {
     "register-log-viewer": {
 
     }
-
-    "unregister-log-viewer": {
-
-    }
-
+    
     "file-converter-command": {
         command: "start",
         src: string,
@@ -536,10 +505,6 @@ export type IpcEventArgType = {
         widgetHeight: number,
         resize: "none" | "crop" | "fit",
     },
-
-    "update-profiles": {
-        windowId: string
-    }
 
     "open-text-file": {
         displayWindowId: string,
@@ -667,13 +632,6 @@ export type IpcEventArgType2 = {
         widgetKey: string;
         menus: Record<string, any>,
         recordTypes: Record<string, any>,
-    },
-
-    "ssh-file-contents": {
-        displayWindowId: string,
-        widgetKey: string,
-        fullFileName: string,
-        fileContents: string,
     },
 
     "show-about-tdm": {
@@ -824,12 +782,6 @@ export type IpcEventArgType2 = {
         eventName: string,
         data: any,
     },
-
-    "update-profiles": {
-        windowId: string,
-        profilesJson: Record<string, any>,
-        profilesFullFileName: string,
-    }
 }
 
 /**
@@ -870,9 +822,10 @@ export type IpcEventArgType3 = {
         args: type_args
     },
 
+    // no prompt on main window, placeholder
     "show-prompt": {
         data: {
-            type: "ssh-password-input" | "ssh-connection-waiting",
+            type: "",
         } & Record<string, any>
     },
 
@@ -887,23 +840,8 @@ export type IpcEventArgType3 = {
         info: type_DialogInputBox,
     },
 
-    "window-will-be-closed": {
-
-    },
-
     "log-file-name": {
         logFileName: string
-    },
-
-    "update-profiles": {
-        windowId: string,
-        profilesJson: Record<string, any>,
-        profilesFullFileName: string,
-    },
-
-    "bounce-back": {
-        eventName: string,
-        data: any,
     },
 
 }

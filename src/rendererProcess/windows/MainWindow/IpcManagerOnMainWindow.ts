@@ -210,9 +210,7 @@ export class IpcManagerOnMainWindow {
         this.ipcRenderer.on("show-about-tdm", this.handleShowAboutTdm)
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
-        this.ipcRenderer.on("window-will-be-closed", this.handleWindowWillBeClosed);
         this.ipcRenderer.on("log-file-name", this.handleLogFileName);
-        this.ipcRenderer.on("bounce-back", this.handleBounceBack);
     };
 
 
@@ -433,14 +431,6 @@ export class IpcManagerOnMainWindow {
         this.getMainWindowClient().getPrompt().createElement("about-tdm", info);
     }
 
-    handleWindowWillBeClosed = (event: undefined, option: {}) => {
-        const mainWindowId = this.getMainWindowClient().getWindowId();
-        this.sendFromRendererProcess("main-window-will-be-closed", {
-            mainWindowId: mainWindowId,
-            close: true,
-        });
-    };
-
     /**
      * The log file that is being actively used, it is determined by the 
      * log file property in profiles (not profile) and the accessibility of this file
@@ -454,12 +444,6 @@ export class IpcManagerOnMainWindow {
         if (this.getMainWindowClient().getState() === mainWindowState.start) {
             this.getMainWindowClient().getStartupPage()?.forceUpdate();
         }
-    }
-
-
-    handleBounceBack = (event: undefined, message: IpcEventArgType3["bounce-back"]) => {
-        const { eventName, data } = message;
-        this.sendFromRendererProcess(eventName as any, data);
     }
 
     getWebSocketClient = () => {

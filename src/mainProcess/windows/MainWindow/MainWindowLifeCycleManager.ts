@@ -222,28 +222,6 @@ export class MainWindowLifeCycleManager {
         // do nothing
     };
 
-    handleWindowWillBeClosed = (data: IpcEventArgType["main-window-will-be-closed"]) => {
-        const mainProcess = this.getMainWindowAgent().getWindowAgentsManager().getMainProcess();
-        const mainProcessMode = mainProcess.getMainProcessMode();
-        const mainWindowId = data["mainWindowId"];
-
-        if (data["close"] !== true) {
-            Log.error(`Cannot close main window ${mainWindowId}: close flag is false.`);
-            return;
-        }
-
-        if (mainProcessMode === "desktop") {
-            const browserWindow = this.getBrowserWindow();
-            if (browserWindow !== undefined) {
-                browserWindow.webContents.close();
-            } else {
-                Log.error(`Cannot close main window ${mainWindowId} in desktop mode: browserWindow is undefined.`);
-            }
-        } else {
-            Log.error(`Cannot close main window ${mainWindowId}: unsupported main process mode ${mainProcessMode}.`);
-        }
-    };
-
     show = () => {
         const browserWindow = this.getBrowserWindow();
         if (browserWindow === undefined) {
