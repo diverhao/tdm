@@ -1,7 +1,8 @@
 import katex from "katex";
 import * as React from "react";
-import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/EpicsTcaLib";
+import { g_widgets1, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";
 import * as GlobalMethods from "../../../common/GlobalMethods";

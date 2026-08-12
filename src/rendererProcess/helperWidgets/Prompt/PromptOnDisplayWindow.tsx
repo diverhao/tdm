@@ -1,10 +1,9 @@
 import * as React from "react";
 import { DisplayWindowClient } from "../../../rendererProcess/windows/DisplayWindow/DisplayWindowClient";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, liquidGlassStyle, liquidGlassStyleDark } from "../../global/GlobalVariables";
 import path from "path";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 import { rgbaStrToRgbaArray } from "../../../common/GlobalMethods";
 
 export class PromptOnDisplayWindow extends Prompt {

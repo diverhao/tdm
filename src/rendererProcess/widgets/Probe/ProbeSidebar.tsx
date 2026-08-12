@@ -4,8 +4,7 @@ import { Probe } from "./Probe";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class ProbeSidebar extends BaseWidgetSidebar {
     constructor(probe: Probe) {

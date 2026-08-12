@@ -4,8 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class BinaryImageSidebar extends BaseWidgetSidebar {
 

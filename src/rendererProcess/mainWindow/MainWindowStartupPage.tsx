@@ -6,7 +6,7 @@ import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
 import { generateDefaultProfile, generateDefaultSshProfile } from "../../common/ProfileCategoryGenerators";
-import { getBasePath } from "../global/GlobalVariables";
+import { getBasePath, mainWindowBackgroundStyle } from "../global/GlobalVariables";
 
 
 export class MainWindowStartupPage {
@@ -245,17 +245,7 @@ export class MainWindowStartupPage {
             height: "100%",
             overflow: "visible",
             pointerEvents: "none",
-            backgroundColor: "rgba(248, 251, 255, 1)",
-            backgroundImage: [
-                "radial-gradient(circle at 12% 18%, rgba(105, 181, 255, 0.20) 0%, rgba(105, 181, 255, 0) 34%)",
-                "radial-gradient(circle at 88% 16%, rgba(187, 148, 255, 0.16) 0%, rgba(187, 148, 255, 0) 32%)",
-                "radial-gradient(circle at 72% 86%, rgba(255, 176, 145, 0.15) 0%, rgba(255, 176, 145, 0) 36%)",
-                "linear-gradient(135deg, rgba(250, 253, 255, 1) 0%, rgba(246, 251, 250, 1) 52%, rgba(255, 250, 248, 1) 100%)",
-            ].join(", "),
-            backgroundSize: "125% 125%, 130% 130%, 125% 125%, 100% 100%",
-            backgroundPosition: "0% 0%, 100% 0%, 100% 100%, 0% 0%",
-            backgroundRepeat: "no-repeat",
-            animation: "tdm-startup-background-drift 2s ease-in-out infinite alternate",
+            ...mainWindowBackgroundStyle
         } as React.CSSProperties;
 
         return (

@@ -8,8 +8,7 @@ import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class EmbeddedDisplaySidebar extends BaseWidgetSidebar {
 

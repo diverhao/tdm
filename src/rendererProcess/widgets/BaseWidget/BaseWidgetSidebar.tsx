@@ -1,6 +1,6 @@
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth, sidebarBorderWidth, defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
+import { g_widgets1, sidebarBorderWidth, calcSidebarWidth } from "../../global/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 import { FontsData } from "../../global/FontsData";
 

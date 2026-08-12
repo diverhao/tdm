@@ -7,8 +7,7 @@ import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 
 export class BooleanButtonSidebar extends BaseWidgetSidebar {

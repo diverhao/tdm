@@ -6,7 +6,8 @@ import { Canvas } from "../helperWidgets/Canvas/Canvas";
 import { g_flushWidgets } from "../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../helperWidgets/GroupSelection/GroupSelection2";
 import { MouseSelectionRegion } from "../helperWidgets/MouseSelectionRegion/MouseSelectionRegion";
-import { Channel_DBR_TYPES, Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, calcSidebarWidth, getWindowVerticalScrollBarWidth, type_dbrData, widgetMinHeight, widgetMinWidth } from "../../common/GlobalVariables";
+import { getMouseEventClientX, getMouseEventClientY, calcSidebarWidth, getWindowVerticalScrollBarWidth } from "./GlobalVariables";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPES, type_dbrData } from "../../common/EpicsTcaLib";
 import { g_widgets1 } from "./GlobalVariables";
 import { v4 as uuidv4 } from "uuid";
 import { ReadWriteIos } from "../channel/ReadWriteIos";
@@ -67,7 +68,7 @@ import { type_tdl } from "../../common/GlobalVariables";
 import { Table } from "../widgets/Table/Table";
 import { ErrorBox } from "../widgets/ErrorBox/ErrorBox";
 import { EpicsDate } from "../../common/EpicsTime";
-import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
+import { defaultCanvasTdl, widgetMinHeight, widgetMinWidth } from "../../common/types/type_widget_tdl";
 
 /**
  * Widget object types union: 3 special types + BaseWidget.

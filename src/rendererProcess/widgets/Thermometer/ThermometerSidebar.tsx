@@ -7,8 +7,7 @@ import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCh
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class ThermometerSidebar extends BaseWidgetSidebar {
     _sidebarProgressBarBackgroundColor;

@@ -2,7 +2,7 @@ import * as React from "react";
 import { MainWindowClient } from "../../windows/MainWindow/MainWindowClient";
 import { Prompt } from "./Prompt"
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
-import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
+import { liquidGlassStyle, liquidGlassStyleDark } from "../../global/GlobalVariables";
 
 export class PromptOnMainWindow extends Prompt {
 

@@ -3,8 +3,7 @@ import { PvTable } from "./PvTable";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarPvTableProperties } from "../../helperWidgets/SidebarComponents/SidebarPvTableProperties";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class PvTableSidebar extends BaseWidgetSidebar {
     // dedicated for PvTable

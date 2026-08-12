@@ -4,8 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class RectangleSidebar extends BaseWidgetSidebar {
     _sidebarPolylineFill;

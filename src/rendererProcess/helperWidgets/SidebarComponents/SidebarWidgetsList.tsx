@@ -1,13 +1,11 @@
 import * as React from "react";
 import { BaseWidgetSidebar } from "../../widgets/BaseWidget/BaseWidgetSidebar";
-import { calcScrollBarWidth, sidebarBorderWidth } from "../../../common/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import * as GlobalMethods from "../../../common/GlobalMethods"
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { GroupSelectionSidebar2 } from "../GroupSelection/GroupSelectionSidebar2";
 import { type_widget } from "../../global/Widgets";
-import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, getBasePath, sidebarBorderWidth, calcScrollBarWidth, calcSidebarWidth } from "../../global/GlobalVariables";
 
 /**
  * A list of widgets on sidebar

@@ -1,13 +1,11 @@
-import { Channel_DBR_TYPES, type_dbrData } from "../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPES, type_dbrData, type_pva_value } from "../../common/EpicsTcaLib";
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPES } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { type_LocalChannel_data } from "../../common/GlobalVariables";
-import { Channel_ACCESS_RIGHTS } from "../../common/GlobalVariables";
 import { Log } from "../../common/Log";
-import { type_pva_value } from "../../common/GlobalVariables";
 import { EpicsDate } from "../../common/EpicsTime";
 
 export enum ChannelSeverity {

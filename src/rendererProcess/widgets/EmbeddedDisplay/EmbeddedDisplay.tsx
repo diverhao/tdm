@@ -456,11 +456,12 @@ export class EmbeddedDisplay extends BaseWidget {
                 const newWidgetKey = oldWidgetKey.split("_")[0] + "_" + uuidv4();
                 widgetTdl["widgetKey"] = newWidgetKey;
                 widgetTdl["key"] = newWidgetKey;
-                widgetTdl["style"]["top"] = widgetTdl["style"]["top"] * scalingFactor + embeddedDisplayWidgetTop;
-                widgetTdl["style"]["left"] = widgetTdl["style"]["left"] * scalingFactor + embeddedDisplayWidgetLeft;
-                widgetTdl["style"]["width"] = widgetTdl["style"]["width"] * scalingFactor;
-                widgetTdl["style"]["height"] = widgetTdl["style"]["height"] * scalingFactor;
-                widgetTdl["style"]["fontSize"] = widgetTdl["style"]["fontSize"] * scalingFactor;
+                const widgetStyle = widgetTdl["style"] as Record<string, any>;
+                widgetStyle["top"] = widgetStyle["top"] * scalingFactor + embeddedDisplayWidgetTop;
+                widgetStyle["left"] = widgetStyle["left"] * scalingFactor + embeddedDisplayWidgetLeft;
+                widgetStyle["width"] = widgetStyle["width"] * scalingFactor;
+                widgetStyle["height"] = widgetStyle["height"] * scalingFactor;
+                widgetStyle["fontSize"] = widgetStyle["fontSize"] * scalingFactor;
                 const widget = g_widgets1.createWidget(widgetTdl, false);
                 if (widget instanceof BaseWidget) {
                     widget.setMacros(allMacros);

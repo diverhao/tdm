@@ -1,6 +1,7 @@
 import * as os from "os";
 import { type_pva_status, type_pva_value } from "epics-tca";
-import { type_dbrData, Channel_DBR_TYPES, type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { Channel_DBR_TYPES, type_dbrData } from "../../../common/EpicsTcaLib";
 import { Log } from "../../../common/Log";
 import { CaChannelAgent, DisplayOperations } from "../../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";

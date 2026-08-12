@@ -15,6 +15,8 @@ export type type_utilityWindowType =
 export type type_MainProcessMode = "desktop" | "web";
 
 // ======================== Widget Style Schema ========================
+export const widgetMinHeight: number = 10;
+export const widgetMinWidth: number = 10;
 
 export const type_style_tdl_schema = {
     position: "string",
@@ -4764,6 +4766,71 @@ export const defaultTalhkTdl: type_Talhk_tdl = {
     rules: [],
 };
 
+// ======================== Complete TDL ========================
+
+export type type_regular_widget_tdl =
+    | type_ActionButton_tdl
+    | type_Arc_tdl
+    | type_BinaryImage_tdl
+    | type_BooleanButton_tdl
+    | type_ByteMonitor_tdl
+    | type_CaSnooper_tdl
+    | type_Calculator_tdl
+    | type_Casw_tdl
+    | type_ChannelGraph_tdl
+    | type_CheckBox_tdl
+    | type_ChoiceButton_tdl
+    | type_ComboBox_tdl
+    | type_DataViewer_tdl
+    | type_EmbeddedDisplay_tdl
+    | type_ErrorBox_tdl
+    | type_FileBrowser_tdl
+    | type_FileConverter_tdl
+    | type_Group_tdl
+    | type_Image_tdl
+    | type_LED_tdl
+    | type_LEDMultiState_tdl
+    | type_Label_tdl
+    | type_LogViewer_tdl
+    | type_Media_tdl
+    | type_Meter_tdl
+    | type_Polyline_tdl
+    | type_Probe_tdl
+    | type_ProfilesViewer_tdl
+    | type_PvMonitor_tdl
+    | type_PvTable_tdl
+    | type_RadioButton_tdl
+    | type_Rectangle_tdl
+    | type_Repeater_tdl
+    | type_ScaledSlider_tdl
+    | type_SeqGraph_tdl
+    | type_SlideButton_tdl
+    | type_Spinner_tdl
+    | type_Symbol_tdl
+    | type_Table_tdl
+    | type_Talhk_tdl
+    | type_Tank_tdl
+    | type_TdlViewer_tdl
+    | type_Terminal_tdl
+    | type_TextEditor_tdl
+    | type_TextEntry_tdl
+    | type_TextSymbol_tdl
+    | type_TextUpdate_tdl
+    | type_Thermometer_tdl
+    | type_ThumbWheel_tdl
+    | type_XYPlot_tdl;
+
+export type type_widget_tdl = type_Canvas_tdl | type_regular_widget_tdl;
+
+/**
+ * A complete display definition. The Canvas entry is required; every other
+ * string-keyed entry must be a recognized regular widget TDL.
+ */
+export type type_tdl = {
+    Canvas: type_Canvas_tdl;
+    [widgetKey: string]: type_widget_tdl;
+};
+
 export const type_widget_tdl_schema_registry = {
     ActionButton: type_ActionButton_tdl_schema,
     Arc: type_Arc_tdl_schema,
@@ -4842,5 +4909,56 @@ export function verifyWidgetTdl(tdl: any): void {
         throw new Error(
             `TDL verification failed for ${widgetLabel || "widget"} at "${typeCheckError.path}": expected ${typeCheckError.expected}, got ${typeCheckError.received} (${typeCheckError.valuePreview}).`
         );
+    }
+}
+
+/**
+ * Throw an error if the value is not a complete TDL object. A valid TDL has
+ * exactly one Canvas entry and zero or more registered regular widgets. Each
+ * object's map key must agree with its internal key and widgetKey fields.
+ */
+export function verifyTdl(tdl: unknown): asserts tdl is type_tdl {
+    if (typeof tdl !== "object" || tdl === null || Array.isArray(tdl)) {
+        throw new Error("TDL verification failed at the root: expected an object.");
+    }
+
+    const tdlRecord = tdl as Record<string, unknown>;
+    if (!Object.prototype.hasOwnProperty.call(tdlRecord, "Canvas")) {
+        throw new Error('TDL verification failed: missing required "Canvas" entry.');
+    }
+
+    for (const [entryKey, widgetTdl] of Object.entries(tdlRecord)) {
+        if (typeof widgetTdl !== "object" || widgetTdl === null || Array.isArray(widgetTdl)) {
+            throw new Error(
+                `TDL verification failed at ${JSON.stringify(entryKey)}: expected a widget TDL object.`
+            );
+        }
+
+        const widgetTdlRecord = widgetTdl as Record<string, unknown>;
+        const widgetType = widgetTdlRecord.type;
+
+        if (entryKey === "Canvas" && widgetType !== "Canvas") {
+            throw new Error(
+                `TDL verification failed at "Canvas": expected widget type "Canvas", got ${JSON.stringify(widgetType)}.`
+            );
+        }
+        if (entryKey !== "Canvas" && widgetType === "Canvas") {
+            throw new Error(
+                `TDL verification failed at ${JSON.stringify(entryKey)}: a Canvas TDL is only allowed under the "Canvas" key.`
+            );
+        }
+
+        verifyWidgetTdl(widgetTdl);
+
+        if (widgetTdlRecord.widgetKey !== entryKey) {
+            throw new Error(
+                `TDL verification failed at ${JSON.stringify(entryKey)}.widgetKey: expected ${JSON.stringify(entryKey)}, got ${JSON.stringify(widgetTdlRecord.widgetKey)}.`
+            );
+        }
+        if (widgetTdlRecord.key !== entryKey) {
+            throw new Error(
+                `TDL verification failed at ${JSON.stringify(entryKey)}.key: expected ${JSON.stringify(entryKey)}, got ${JSON.stringify(widgetTdlRecord.key)}.`
+            );
+        }
     }
 }

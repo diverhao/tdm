@@ -4,7 +4,7 @@ import { colorbarWidth, Image, toolbarHeight, xAxisLabelHeight, xAxisTickHeight,
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Scale } from "../../helperWidgets/SharedElements/Scale";
 import { DataTexture, Mesh, MeshBasicMaterial, NearestFilter, OrthographicCamera, PlaneGeometry, RGBAFormat, Scene, SRGBColorSpace, UnsignedByteType, Vector3, WebGLRenderer } from "three";
-import { NDArray_ColorMode } from "../../../common/GlobalVariables";
+import { NDArray_ColorMode } from "../../../common/EpicsTcaLib";
 import { Log } from "../../../common/Log";
 import { colorMapFunctions, grayColorMap } from "./ImageColorMapData";
 import { ImageConfigPage } from "./ImageConfigPage";

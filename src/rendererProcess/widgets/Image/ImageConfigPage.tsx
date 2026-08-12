@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { ImagePlot } from "./ImagePlot";
 import { toolbarHeight } from "./Image";
-import { NDArray_ColorMode } from "../../../common/GlobalVariables";
+import { NDArray_ColorMode } from "../../../common/EpicsTcaLib";
 import { g_widgets1, getBasePath } from "../../global/GlobalVariables";
 import { colorMapFunctions, colorMapArrays, grayColorMapArray } from "./ImageColorMapData";
 

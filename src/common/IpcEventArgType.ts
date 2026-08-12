@@ -2,8 +2,7 @@
  * This file can be imported by both main and renderer process.
  */
 
-import { type_pva_value } from "./GlobalVariables";
-import { Channel_DBR_TYPES, type_dbrData } from "./GlobalVariables";
+import { Channel_DBR_TYPES, type_dbrData, type_pva_value } from "./EpicsTcaLib";
 import { type_LocalChannel_data } from "./GlobalVariables";
 import { type_tdl } from "./GlobalVariables";
 import { type_fileType } from "./types/type_Files";

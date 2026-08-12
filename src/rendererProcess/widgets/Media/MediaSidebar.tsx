@@ -5,8 +5,7 @@ import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCh
 import { SidebarPictureOpacity } from "../../helperWidgets/SidebarComponents/SidebarPictureOpacity";
 import { SidebarMediaOpenFile } from "../../helperWidgets/SidebarComponents/SidebarMediaOpenFile";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class MediaSidebar extends BaseWidgetSidebar {
     _sidebarPictureStretchToFit;

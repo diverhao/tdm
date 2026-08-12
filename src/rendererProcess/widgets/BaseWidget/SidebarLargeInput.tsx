@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { liquidGlassStyle, liquidGlassStyleDark, defaultFontSize, defaultMonoFontFamily } from "../../../common/GlobalVariables";
+import { g_widgets1, liquidGlassStyle, liquidGlassStyleDark } from "../../global/GlobalVariables";
+import { defaultFontSize, defaultMonoFontFamily } from "../../../common/GlobalVariables";
 import { BaseWidget } from "./BaseWidget";
 import { BaseWidgetSidebar } from "./BaseWidgetSidebar";
 import { isDarkMode, rgbaStrToRgbaArray } from "../../../common/GlobalMethods";

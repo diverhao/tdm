@@ -1,6 +1,5 @@
-import { getMouseEventClientX, getMouseEventClientY } from "../../../common/GlobalVariables";
+import { g_widgets1, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
 import { Table } from "../../widgets/Table/Table";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { CaSnooper } from "../../widgets/CaSnooper/CaSnooper";

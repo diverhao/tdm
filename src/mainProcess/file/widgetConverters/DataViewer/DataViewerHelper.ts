@@ -370,7 +370,7 @@ export class DataViewerHelper extends BaseWidgetHelper {
                     const currentFolder = path.dirname(fullTdlFileName);
                     const childTdlData = await FileReader.readTdlFile(fileName, undefined, currentFolder);
                     if (childTdlData !== undefined) {
-                        const dataViewerWidgetTdl = Object.values(childTdlData["tdl"])[1];
+                        const dataViewerWidgetTdl = Object.values(childTdlData["tdl"])[1] as type_DataViewer_tdl;
                         tdl["yAxes"] = dataViewerWidgetTdl["yAxes"];
                         tdl["channelNames"] = dataViewerWidgetTdl["channelNames"];
                     }

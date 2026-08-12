@@ -1,7 +1,8 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { Channel_ACCESS_RIGHTS, getMouseEventClientX, getMouseEventClientY, defaultFontSize } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { defaultFontSize } from "../../../common/GlobalVariables";
+import { Channel_ACCESS_RIGHTS } from "../../../common/EpicsTcaLib";
+import { g_widgets1, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ScaledSliderSidebar } from "./ScaledSliderSidebar";

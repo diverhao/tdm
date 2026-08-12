@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Log } from "../../../common/Log";
-import { getMouseEventClientX, getMouseEventClientY, getScrollTop, calcSidebarWidth, getWindowVerticalScrollBarWidth } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getMouseEventClientX, getMouseEventClientY, getScrollTop, calcSidebarWidth, getWindowVerticalScrollBarWidth } from "../../global/GlobalVariables";
 import { CanvasSidebar } from "./CanvasSidebar";
 import { g_flushWidgets } from "../Root/Root";
 import { rgbaArrayToRgbaStr } from "../../../common/GlobalMethods";

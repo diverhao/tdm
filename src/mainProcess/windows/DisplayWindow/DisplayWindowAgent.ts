@@ -1,6 +1,7 @@
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
 import { CaChannelAgent } from "../../channel/CaChannelAgent";
-import { type_dbrData, Channel_DBR_TYPES, type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { Channel_DBR_TYPES, type_dbrData } from "../../../common/EpicsTcaLib";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";

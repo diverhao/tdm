@@ -1,12 +1,11 @@
 import ReactDOM from "react-dom/client";
 import * as React from "react";
-import { liquidGlassStyle, liquidGlassStyleDark, defaultFontSize, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import { ElementRectangleButton } from "../SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { type_DialogInputBox, type_DialogMessageBox, type_DialogMessageBoxButton } from "../../../common/IpcEventArgType";
-import { TdmLogo } from "../../global/Images";
 import { PromptInputBoxHandlers } from "./PromptInputBoxHandlers";
-import { isDarkMode } from "../../../common/GlobalMethods";
+import { getBasePath, liquidGlassStyle, liquidGlassStyleDark } from "../../global/GlobalVariables";
 
 export type type_InputBox = {
     title: string,
@@ -75,6 +74,19 @@ export abstract class Prompt {
         document.body.appendChild(newElement);
     }
 
+    _ElementTdmLogo = ({ width, height }: { width: number, height: number }) => {
+        return (
+            <img style={{
+                width: width,
+                height: height,
+                filter: "brightness(0) invert(1)",
+            }}
+                src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`}
+            >
+            </img>
+        )
+    }
+
     _ElementInputBox = ({ info }: { info: type_InputBox }) => {
         const { title, defaultContent, text } = info;
 
@@ -84,7 +96,7 @@ export abstract class Prompt {
         return (<this._ElementBackground>
             {/* header */}
             <div>
-                <TdmLogo width={50} height={50}></TdmLogo>
+                <this._ElementTdmLogo width={50} height={50}></this._ElementTdmLogo>
             </div>
             {/* human readable info */}
             <div style={{
@@ -321,7 +333,7 @@ export abstract class Prompt {
                 display: "inline-flex",
                 justifyContent: "center",
             }}>
-                <TdmLogo width={50} height={50}></TdmLogo>
+                <this._ElementTdmLogo width={50} height={50}></this._ElementTdmLogo>
             </div>
             <h2>TDM</h2>
             <div style={{
@@ -427,7 +439,7 @@ export abstract class Prompt {
         return (<this._ElementBackground>
             {/* header */}
             <div>
-                <TdmLogo width={50} height={50}></TdmLogo>
+                <this._ElementTdmLogo width={50} height={50}></this._ElementTdmLogo>
             </div>
             <div style={{
                 fontSize: 30,
@@ -539,7 +551,7 @@ export abstract class Prompt {
         return (<this._ElementBackground>
             {/* header */}
             <div>
-                <TdmLogo width={50} height={50}></TdmLogo>
+                <this._ElementTdmLogo width={50} height={50}></this._ElementTdmLogo>
             </div>
             {/* human readable info */}
             <div style={{

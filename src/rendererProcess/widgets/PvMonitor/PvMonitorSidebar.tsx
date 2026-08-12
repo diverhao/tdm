@@ -3,8 +3,7 @@ import { PvMonitor } from "./PvMonitor";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class PvMonitorSidebar extends BaseWidgetSidebar {
     private _sidebarPvMonitorMaxLineNum;

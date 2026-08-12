@@ -1,8 +1,7 @@
-import { getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
 // import { MouseEvent } from "react";
-import { getMouseEventClientX } from "../../../common/GlobalVariables";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { PvTableSidebar } from "./PvTableSidebar";

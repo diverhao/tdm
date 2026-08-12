@@ -1,10 +1,10 @@
 import * as React from "react";
-import { calcSidebarWidth, sidebarBorderWidth, defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { Collapsible } from "../ColorPicker/Collapsible";
 import { Canvas } from "./Canvas";
 import { SidebarCanvasScript } from "../SidebarComponents/SidebarCanvasScript";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, sidebarBorderWidth, calcSidebarWidth } from "../../global/GlobalVariables";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { g_flushWidgets } from "../Root/Root";
 import { ElementMacrosTable } from "../SharedElements/MacrosTable";

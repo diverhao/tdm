@@ -2,8 +2,7 @@ import * as React from "react";
 import { ErrorBox } from "./ErrorBox";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import {Log} from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class ErrorBoxSidebar extends BaseWidgetSidebar {
 

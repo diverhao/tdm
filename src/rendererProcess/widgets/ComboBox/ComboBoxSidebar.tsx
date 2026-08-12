@@ -3,8 +3,7 @@ import { ComboBox } from "./ComboBox";
 import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/SidebarStringInput";
 

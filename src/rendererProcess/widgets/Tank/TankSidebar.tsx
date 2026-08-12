@@ -6,8 +6,7 @@ import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 // import { SidebarScaledSliderShowScale } from "../../helperWidgets/SidebarComponents/SidebarScaledSliderShowScale";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 

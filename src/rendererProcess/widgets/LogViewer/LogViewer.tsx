@@ -1,7 +1,7 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { getMouseEventClientY, defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
+import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight } from "../../../common/GlobalVariables";
 import * as React from "react";
-import { g_widgets1 } from "../../global/GlobalVariables";
+import { g_widgets1, getMouseEventClientY } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";

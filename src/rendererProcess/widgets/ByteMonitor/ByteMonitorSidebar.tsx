@@ -8,8 +8,7 @@ import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarByteMonitorBitValueColors } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitValueColors";
 import { SidebarByteMonitorBitNamesTable } from "../../helperWidgets/SidebarComponents/SidebarByteMonitorBitNamesTable";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 import { SidebarStringChoices } from "../../helperWidgets/SidebarComponents/SidebarStringChoices";
 
 export class ByteMonitorSidebar extends BaseWidgetSidebar {

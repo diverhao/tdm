@@ -5,8 +5,7 @@ import { SidebarStringInput } from "../../helperWidgets/SidebarComponents/Sideba
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { SidebarPolylinePointsTable } from "../../helperWidgets/SidebarComponents/SidebarPolylinePointsTable";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 
 export class PolylineSidebar extends BaseWidgetSidebar {
     _sidebarPolylineSmootherize;

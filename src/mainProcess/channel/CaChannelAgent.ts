@@ -1,6 +1,5 @@
 import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
-import { type_pva_value } from "../../common/GlobalVariables";
-import { type_dbrData } from "../../common/GlobalVariables";
+import { type_dbrData, type_pva_value } from "../../common/EpicsTcaLib";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { Log } from "../../common/Log";

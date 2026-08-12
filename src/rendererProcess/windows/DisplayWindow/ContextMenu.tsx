@@ -1,10 +1,9 @@
 import * as React from "react";
 import { DisplayWindowClient } from "./DisplayWindowClient";
-import { g_widgets1 } from "../../../rendererProcess/global/GlobalVariables";
+import { g_widgets1, liquidGlassStyle, liquidGlassStyleDark } from "../../../rendererProcess/global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import ReactDOM from 'react-dom/client';
 import { createPortal } from "react-dom";
-import { liquidGlassStyle, liquidGlassStyleDark } from "../../../common/GlobalVariables";
 import { isDarkMode } from "../../../common/GlobalMethods";
 
 

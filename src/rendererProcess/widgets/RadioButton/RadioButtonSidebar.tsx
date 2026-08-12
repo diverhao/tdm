@@ -4,8 +4,7 @@ import { BaseWidgetSidebar } from "../BaseWidget/BaseWidgetSidebar";
 import { SidebarNumberInput } from "../../helperWidgets/SidebarComponents/SidebarNumberInput";
 import { SidebarCheckBox } from "../../helperWidgets/SidebarComponents/SidebarCheckBox";
 import { Log } from "../../../common/Log";
-import { g_widgets1 } from "../../global/GlobalVariables";
-import { calcSidebarWidth } from "../../../common/GlobalVariables";
+import { g_widgets1, calcSidebarWidth } from "../../global/GlobalVariables";
 import { SidebarDiscreteStateItems } from "../../helperWidgets/SidebarComponents/SidebarDiscreteStateItems";
 import { SidebarColor } from "../../helperWidgets/SidebarComponents/SidebarColor";
 
