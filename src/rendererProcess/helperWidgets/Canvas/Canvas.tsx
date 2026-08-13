@@ -17,8 +17,6 @@ export class Canvas {
     // internal macros
     private _macros: Macros;
 
-    // if the duplicated internal macros should be replaced by external macros
-    // private _replaceMacros: boolean;
     private _windowName: string = "";
     private _script: string = "";
 
@@ -26,9 +24,11 @@ export class Canvas {
 
     private _xGridSize: number;
     private _yGridSize: number;
-
     private _gridColor: string;
     private _showGrid: boolean;
+
+    private _widgetEdgeSnapSize: number;
+
     private _isUtilityWindow: boolean;
 
     // verifyWidgetTdl(widgetTdl) is success
@@ -52,11 +52,12 @@ export class Canvas {
 
         this._style = { ...defaultCanvasTdl.style, ...widgetTdl.style };
         this._macros = new Macros(widgetTdl.macros);
-        // this._replaceMacros = widgetTdl.replaceMacros;
         this._windowName = widgetTdl.windowName === undefined ? "" : widgetTdl.windowName;
 
-        this._xGridSize = widgetTdl["xGridSize"] === undefined ? 1 : widgetTdl["xGridSize"];
-        this._yGridSize = widgetTdl["yGridSize"] === undefined ? 1 : widgetTdl["yGridSize"];
+        this._xGridSize = normalizedTdl["xGridSize"];
+        this._yGridSize = normalizedTdl["yGridSize"];
+
+        this._widgetEdgeSnapSize = normalizedTdl["widgetEdgeSnapSize"];
 
         this._script = widgetTdl.script === undefined ? "" : widgetTdl.script;
 
@@ -264,7 +265,7 @@ export class Canvas {
         const mainProcesMode = g_widgets1?.getRoot().getDisplayWindowClient().getMainProcessMode();
         return <div style={{
             ...this._style,
-            backgroundImage: this.getShowGrid() === true && g_widgets1.isEditing() && this.getXGridSize() > 2.5 && this.getYGridSize() > 2.5 ? `repeating-linear-gradient(${this.getGridColor()} 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, ${this.getGridColor()} 0 1px, transparent 1px 100%)` : "",
+            backgroundImage: this.gridLineImage(),
             backgroundSize: `${this.getXGridSize()}px ${this.getYGridSize()}px`,
             outline: mainProcesMode === "web" ? "1px solid black" : "none",
         }}
@@ -274,6 +275,28 @@ export class Canvas {
     };
 
     // --------------------- style and tdl -------------------------
+
+    // grid line background
+    gridLineImage = (): string => {
+        if (!this.getShowGrid() || !g_widgets1.isEditing()) {
+            return "";
+        }
+
+        const gridLines: string[] = [];
+        const gridColor = this.getGridColor();
+
+        // xGridSize is the horizontal spacing, so it produces vertical lines.
+        if (this.getXGridSize() > 2.5) {
+            gridLines.push(`repeating-linear-gradient(90deg, ${gridColor} 0 1px, transparent 1px 100%)`);
+        }
+
+        // yGridSize is the vertical spacing, so it produces horizontal lines.
+        if (this.getYGridSize() > 2.5) {
+            gridLines.push(`repeating-linear-gradient(${gridColor} 0 1px, transparent 1px 100%)`);
+        }
+
+        return gridLines.join(", ");
+    };
 
     // not getDefaultTdl(), always generate a new key
     static generateDefaultTdl = (): type_Canvas_tdl => {
@@ -288,13 +311,13 @@ export class Canvas {
             key: "Canvas",
             style: structuredClone(this.getStyle()) as type_Canvas_tdl["style"],
             macros: structuredClone(this.getMacros().getArr()),
-            replaceMacros: false,
             windowName: this.getWindowName(),
             script: this.getScript(),
             xGridSize: this.getXGridSize(),
             yGridSize: this.getYGridSize(),
             gridColor: this.getGridColor(),
             showGrid: this.getShowGrid(),
+            widgetEdgeSnapSize: this.getWidgetEdgeSnapSize(),
             isUtilityWindow: this.isUtilityWindow(),
         };
         return result;
@@ -325,6 +348,14 @@ export class Canvas {
     getMacros = (): Macros => {
         return this._macros;
     };
+
+    getWidgetEdgeSnapSize = () => {
+        return this._widgetEdgeSnapSize;
+    }
+
+    setWidgetEdgeSnapSize = (newSize: number) => {
+        return this._widgetEdgeSnapSize = newSize;
+    }
 
     isUtilityWindow = () => {
         return this._isUtilityWindow;

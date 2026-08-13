@@ -298,9 +298,11 @@ export class DisplayWindowLifeCycleManager {
             minHeight: 100,
             modal: modal,
             parent: parent,
-            frame: true,
             show: !this.isHiddenWindow(),
             icon: path.join(__dirname, `../../../common/resources/webpages/${iconFile}`),
+            frame: true,
+            // titleBarStyle: 'hidden',
+            // titleBarOverlay: true,
             webPreferences: {
                 preload: path.join(__dirname, "preload.js"),
                 nodeIntegration: true,

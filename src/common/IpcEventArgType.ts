@@ -332,7 +332,8 @@ const ipcMacrosSchema: type_IpcValueSchema<type_macros_tdl> = ipcArray(
 
 const ipcTdlSchema: type_IpcValueSchema<type_tdl> = ipcCustom<type_tdl>("valid TDL", (value) => {
     try {
-        verifyTdl(value);
+        // do not verify TDL here, let the Widget do it
+        // verifyTdl(value);
         return true;
     } catch(e) {
         Log.error(e);

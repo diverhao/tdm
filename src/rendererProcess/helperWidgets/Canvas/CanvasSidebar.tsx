@@ -51,6 +51,7 @@ export class CanvasSidebar {
         // const [macros, setMacros] = React.useState<[string, string][]>(this._mainWidget.getMacros());
         const [xGridSize, setXGridSize] = React.useState<number>(this._mainWidget.getXGridSize())
         const [yGridSize, setYGridSize] = React.useState<number>(this._mainWidget.getYGridSize())
+        const [widgetEdgeSnapSize, setWidgetEdgeSnapSize] = React.useState<number>(this._mainWidget.getWidgetEdgeSnapSize())
 
         const [showGrid, setShowGrid] = React.useState<boolean>(this._mainWidget.getShowGrid())
 
@@ -412,6 +413,63 @@ export class CanvasSidebar {
                                 setShowGrid((prevVal: boolean) => {
                                     return !prevVal;
                                 });
+                            }}
+                        />
+                    </form>
+                </div>
+
+                <this._HorizontalLine />
+                <div
+                    style={{
+                        marginTop: 2,
+                        marginBottom: 2,
+                    }}
+                >
+                    <b>Snap to widget edge</b>
+                </div>
+
+                {/* widget edge snap */}
+                <div
+                    style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        marginTop: 2,
+                        marginBottom: 2,
+                    }}
+                >
+                    <form
+                        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+                            event.preventDefault()
+                            this._mainWidget.setWidgetEdgeSnapSize(widgetEdgeSnapSize);
+                            const history = g_widgets1.getRoot().getDisplayWindowClient().getActionHistory();
+                            history.registerAction();
+                            g_widgets1.addToForceUpdateWidgets(this.getWidgetKey());
+                            g_widgets1.addToForceUpdateWidgets("GroupSelection2");
+
+                            g_flushWidgets();
+
+                        }}
+                        style={this._formStyle}
+                    >
+                        <div>Distance:</div>
+                        <input
+                            style={this._inputStyle}
+                            type="text"
+                            name="widgetEdgeSnapSize"
+                            value={widgetEdgeSnapSize}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                const value = parseInt(event.target.value);
+                                if (!isNaN(value)) {
+                                    setWidgetEdgeSnapSize(parseInt(event.target.value));
+                                } else {
+                                    Log.error("Y Grid Size is not a number, cannot change it");
+                                }
+                            }}
+                            onBlur={(event) => {
+                                if (this._mainWidget.getYGridSize() !== yGridSize) {
+                                    setWidgetEdgeSnapSize(this._mainWidget.getWidgetEdgeSnapSize());
+                                }
                             }}
                         />
                     </form>

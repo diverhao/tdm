@@ -4,7 +4,7 @@ import { MainWindowClient } from "../windows/MainWindow/MainWindowClient";
 import { ElementRectangleButton } from "../helperWidgets/SharedElements/RectangleButton";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import path from "path";
-import { getBasePath } from "../global/GlobalVariables";
+import { getBasePath, mainWindowBackgroundStyle } from "../global/GlobalVariables";
 
 export class MainWindowProfileRunPage {
     private _profiles: Record<string, any>;
@@ -392,12 +392,14 @@ export class MainWindowProfileRunPage {
             <div style={{
                 display: "flex",
                 justifyContent: 'center',
+                alignItems: "flex-start",
                 width: "100%",
+                height: "100%",
                 fontFamily: defaultFontFamily,
                 fontSize: defaultFontSize,
                 fontStyle: defaultFontStyle,
                 fontWeight: defaultFontWeight,
-
+                ...mainWindowBackgroundStyle
             }}>
                 <div
                     style={{
@@ -414,7 +416,7 @@ export class MainWindowProfileRunPage {
                         justifyContent: "center",
                         alignItems: "center",
                     }}>
-                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="80px"></img>
+                        <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="60px"></img>
                     </div>
                     <div style={{
                         margin: 5,

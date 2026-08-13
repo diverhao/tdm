@@ -5,7 +5,7 @@ import { ElementDropDownMenu } from "../helperWidgets/SharedElements/DropDownMen
 import { Log } from "../../common/Log";
 import { SidebarLargeInput } from "../widgets/BaseWidget/SidebarLargeInput";
 import { MainWindowClient, mainWindowState } from "../windows/MainWindow/MainWindowClient";
-import { generateDefaultProfile, generateDefaultSshProfile } from "../../common/ProfileCategoryGenerators";
+import { generateDefaultProfile } from "../../common/ProfileCategoryGenerators";
 import { getBasePath, mainWindowBackgroundStyle } from "../global/GlobalVariables";
 
 
@@ -99,37 +99,6 @@ export class MainWindowStartupPage {
         this.saveProfile();
         this.forceUpdate();
     };
-
-    /**
-     * Create a ssh profile, save the profiles, and update the display.
-     * 
-     * the ssh profile contains special entries.
-     */
-    private createSshProfile = () => {
-        let name = "";
-        const profiles = this.getMainWindowClient().getProfiles();
-        let newName = `${name}-1`;
-        let propertyValue = generateDefaultSshProfile();
-
-
-        if (name === "") {
-            newName = "Untitled-1";
-        }
-
-        if (profiles[name] !== undefined) {
-            propertyValue = structuredClone(profiles[name]);
-        }
-
-        while (Object.keys(profiles).includes(newName)) {
-            newName = `${newName}-1`;
-        }
-
-        const newIndex = Object.keys(profiles).length;
-        GlobalMethods.insertToObjectAtIndex(profiles, newIndex, newName, propertyValue);
-        this.saveProfile();
-        this.forceUpdate();
-    };
-
 
     // ------------------------ elements --------------------------------
 
@@ -316,7 +285,7 @@ export class MainWindowStartupPage {
             <div
                 style={style}
             >
-                <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="80px" height="80px"></img>
+                <img src={`${getBasePath()}/webpack/resources/webpages/icon-linux.svg`} width="60px" height="60px"></img>
             </div>
         );
     };
@@ -505,14 +474,6 @@ export class MainWindowStartupPage {
             (mainProcessMode === "desktop") ?
                 <this._ElementProfileWrapper>
                     <this._ElementProfileBlock profileName={"+"}></this._ElementProfileBlock>
-                    <ElementDropDownMenu
-                        callbacks={{
-                            "Add SSH Profile ": () => {
-                                this.createSshProfile();
-                            },
-                        }}
-                    >
-                    </ElementDropDownMenu >
                 </this._ElementProfileWrapper>
                 : null
         )

@@ -87,20 +87,19 @@ export const type_Canvas_tdl_schema = {
     key: "string",
     style: type_Canvas_style_tdl_schema,
     macros: type_macros_tdl_schema,
-    replaceMacros: "boolean",
     windowName: "string",
     script: "string",
     xGridSize: "number",
     yGridSize: "number",
     gridColor: "string",
+    widgetEdgeSnapSize: "number",
     showGrid: "boolean",
     isUtilityWindow: "boolean",
 } as const satisfies TypeSchema;
 
 export type type_Canvas_style_tdl = Mutable<InferType<typeof type_Canvas_style_tdl_schema>>;
-export type type_Canvas_tdl = Omit<Mutable<InferType<typeof type_Canvas_tdl_schema>>, "macros" | "replaceMacros"> & {
+export type type_Canvas_tdl = Omit<Mutable<InferType<typeof type_Canvas_tdl_schema>>, "macros"> & {
     macros: type_macros_tdl;
-    replaceMacros?: boolean;
 };
 
 export const defaultCanvasTdl: type_Canvas_tdl = {
@@ -121,12 +120,12 @@ export const defaultCanvasTdl: type_Canvas_tdl = {
         overflow: "hidden",
     },
     macros: [],
-    replaceMacros: false,
     windowName: "",
     script: "",
     xGridSize: 1,
     yGridSize: 1,
     gridColor: "rgba(128,128,128,0.15)",
+    widgetEdgeSnapSize: 1,
     showGrid: true,
     isUtilityWindow: false,
 };

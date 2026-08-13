@@ -14,7 +14,7 @@ import { ElementRectangleButton } from "../helperWidgets/SharedElements/Rectangl
 import { Log } from "../../common/Log";
 import * as GlobalMethods from "../../common/GlobalMethods"
 import { generateArchiveCategory_SNS} from "../../common/ProfileCategoryGenerators";
-import { getBasePath } from "../global/GlobalVariables";
+import { getBasePath, mainWindowBackgroundStyle } from "../global/GlobalVariables";
 
 /**
  * Represents the profile editor. This editor edits one profile.  <br>
@@ -70,6 +70,7 @@ export class MainWindowProfileEditPage {
             fontWeight: defaultFontWeight,
             height: "100%",
             overflow: "hidden",
+            ...mainWindowBackgroundStyle
         } as React.CSSProperties;
 
         // save the original profile name, in case we want to disgard the changes

@@ -6,7 +6,7 @@ import { g_flushWidgets } from "../Root/Root";
 import { BaseWidget } from "../../widgets/BaseWidget/BaseWidget";
 import { type_widget } from "../../global/Widgets";
 import { Group } from "../../widgets/Group/Group";
-import {Log} from "../../../common/Log";
+import { Log } from "../../../common/Log";
 import { Canvas } from "../Canvas/Canvas";
 
 /**
@@ -48,7 +48,11 @@ export class GroupSelection2 {
     public _widthShown: number = -10000;
     public _heightShown: number = -10000;
 
-    // grid move
+    // snap to nearest widget edge
+    private _snapTop: number = 0;
+    private _snapLeft: number = 0;
+    private _snapRight: number = 0;
+    private _snapBottom: number = 0;
 
     // the "implicit" group top and left when we use the grid move
     _leftImplicitShown = 0;
@@ -123,12 +127,13 @@ export class GroupSelection2 {
     // (2) add this widget to  forceUpdate
     // (3) flush
     move = (dx: number, dy: number, flush: boolean) => {
-        Log.debug("Group moved by", dx, dy)
+        Log.info("Group moved by", dx, dy)
         // (1)
         if (dx === 0 && dy === 0) {
             return;
         }
 
+        // snap to grid line or closest widget
         let dx1 = dx;
         let dy1 = dy;
         try {
@@ -136,20 +141,61 @@ export class GroupSelection2 {
             if (canvas instanceof Canvas) {
                 const xGridSize = canvas.getXGridSize();
                 const yGridSize = canvas.getYGridSize();
-                if (xGridSize !== undefined && yGridSize !== undefined && xGridSize > 1.5 && yGridSize > 1.5) {
-                    // grid move
-                    this.calcSizes2();
+                this.calcSizes2();
+                if (!(xGridSize !== undefined && xGridSize > 1.5) || !(yGridSize !== undefined && yGridSize > 1.5)) {
+                    this.calcSnapLines();
+                }
+                if (xGridSize !== undefined && xGridSize > 1.5) {
+                    // snap to grid
+                    // disable X snap
+                    this._snapLeft = 0;
+                    this._snapRight = 0;
 
                     this._moveTotalX = this._moveTotalX + dx;
                     dx1 = - (this._leftImplicitShown) + Math.round((this._leftImplicitShown + this._moveTotalX) / xGridSize) * xGridSize;
                     if (dx1 !== 0) {
                         this._moveTotalX = this._moveTotalX - dx1;
                     }
+                } else {
+                    // snap to nearest widget edge
+                    // Preserve unapplied mouse movement while the widget is snapped.
+                    this._moveTotalX += dx;
+
+                    if (this._snapLeft !== 0) {
+                        dx1 = this._snapLeft - this._leftImplicitShown;
+                    } else if (this._snapRight !== 0) {
+                        dx1 = this._snapRight - this._widthShown - this._leftImplicitShown;
+                    }
+                    else {
+                        dx1 = this._moveTotalX;
+                    }
+
+                    this._moveTotalX -= dx1;
+                }
+                if (yGridSize !== undefined && yGridSize > 1.5) {
+                    // snap to grid
+                    // disable Y snap
+                    this._snapTop = 0;
+                    this._snapBottom = 0;
                     this._moveTotalY = this._moveTotalY + dy;
                     dy1 = - (this._topImplicitShown) + Math.round((this._topImplicitShown + this._moveTotalY) / yGridSize) * yGridSize;
                     if (dy1 !== 0) {
                         this._moveTotalY = this._moveTotalY - dy1;
                     }
+                } else {
+                    // snap to nearest widget edge
+                    // Preserve unapplied mouse movement while the widget is snapped.
+                    this._moveTotalY += dy;
+
+                    if (this._snapTop !== 0) {
+                        dy1 = this._snapTop - this._topImplicitShown;
+                    } else if (this._snapBottom !== 0) {
+                        dy1 = this._snapBottom - this._heightShown - this._topImplicitShown;
+                    } else {
+                        dy1 = this._moveTotalY;
+                    }
+
+                    this._moveTotalY -= dy1;
                 }
             }
         } catch (e) {
@@ -166,6 +212,68 @@ export class GroupSelection2 {
             g_flushWidgets();
         }
     };
+
+
+    calcSnapLines = () => {
+        this._snapLeft = 0;
+        this._snapRight = 0;
+        this._snapBottom = 0;
+        this._snapTop = 0;
+
+        if (!g_widgets1.isEditing()) {
+            return;
+        }
+
+        if (this.getWidgets().size === 0) {
+            return;
+        }
+
+        // not moved
+        if (this.getStyle()["left"] === 0 && this.getStyle()["top"] === 0) {
+            return;
+        }
+
+        let distance = 0;
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (canvas instanceof Canvas) {
+            distance = canvas.getWidgetEdgeSnapSize();
+        }
+        // do not snap
+        if (distance < 2 || distance > 50) {
+            return;
+        }
+
+        for (const widget of g_widgets1.getWidgets().values()) {
+            if (widget instanceof BaseWidget) {
+                const widgetLeft = widget.getAllStyle()["left"];
+                const widgetTop = widget.getAllStyle()["top"];
+                const widgetRight = widget.getAllStyle()["left"] + widget.getAllStyle()["width"];
+                const widgetBottom = widget.getAllStyle()["top"] + widget.getAllStyle()["height"];
+                if (Math.abs(this._leftImplicitShown + this._moveTotalX - widgetLeft) < distance) {
+                    this._snapLeft = widgetLeft;
+                }
+
+                if (Math.abs(this._leftImplicitShown + this._moveTotalX + this._widthShown - widgetRight) < distance) {
+                    this._snapRight = widgetRight;
+                }
+
+                if (Math.abs(this._topImplicitShown + this._moveTotalY - widgetTop) < distance) {
+                    this._snapTop = widgetTop;
+                }
+                if (Math.abs(this._topImplicitShown + this._moveTotalY + this._heightShown - widgetBottom) < distance) {
+                    this._snapBottom = widgetBottom;
+                }
+            }
+        }
+
+        // one line for each direction
+        if (this._snapLeft !== 0) {
+            this._snapRight = 0;
+        }
+        if (this._snapTop !== 0) {
+            this._snapBottom = 0;
+        }
+    }
 
     /**
      * Calculate the size 
@@ -312,6 +420,12 @@ export class GroupSelection2 {
 
         this._moveTotalX = 0;
         this._moveTotalY = 0;
+
+        this._snapTop = 0;
+        this._snapBottom = 0;
+        this._snapLeft = 0
+        this._snapRight = 0;
+
         // (4)
         if (flush) {
             g_flushWidgets();
@@ -568,6 +682,67 @@ export class GroupSelection2 {
 
     // --------------------- elements --------------------------
 
+    private _ElementSnapLines = () => {
+
+        let width = 0;
+        let height = 0;
+        const canvas = g_widgets1.getWidget("Canvas");
+        if (canvas instanceof Canvas) {
+            width = canvas.getStyle()["width"];
+            height = canvas.getStyle()["height"];
+            if (canvas.getWidgetEdgeSnapSize() < 2.5) {
+                return null;
+            }
+        }
+
+        return (
+            <>
+                <div style={{
+                    display: this._snapLeft === 0 ? "none" : "",
+                    left: this._snapLeft - 1,
+                    top: 0,
+                    height: height,
+                    width: 0,
+                    position: "absolute",
+                    borderLeft: this._snapLeft === 0 ? "" : "1px dashed red",
+                }}>
+                </div>
+                <div style={{
+                    display: this._snapRight === 0 ? "none" : "",
+                    left: this._snapRight,
+                    top: 0,
+                    height: height,
+                    width: 0,
+                    position: "absolute",
+                    borderLeft: this._snapRight === 0 ? "" : "1px dashed red",
+                }}>
+                </div>
+                <div style={{
+                    display: this._snapTop === 0 ? "none" : "",
+                    left: 0,
+                    top: this._snapTop - 1,
+                    height: 0,
+                    width: width,
+                    position: "absolute",
+                    borderTop: this._snapTop === 0 ? "" : "1px dashed red",
+                }}>
+                </div>
+
+                <div style={{
+                    display: this._snapBottom === 0 ? "none" : "",
+                    left: 0,
+                    top: this._snapBottom,
+                    height: 0,
+                    width: width,
+                    position: "absolute",
+                    borderTop: this._snapBottom === 0 ? "" : "1px dashed red",
+                }}>
+
+                </div>
+            </>
+        )
+    }
+
     private _ElementRaw = () => {
         React.useEffect(() => {
             g_widgets1.removeFromForceUpdateWidgets(this.getWidgetKey());
@@ -580,6 +755,7 @@ export class GroupSelection2 {
                         return widget.getElement();
                     })}
                 </div>
+                <this._ElementSnapLines></this._ElementSnapLines>
                 {this.showSidebar() ? this.getSidebarElement() : null}
             </>
         );

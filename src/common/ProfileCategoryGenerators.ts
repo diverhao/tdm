@@ -1,4 +1,7 @@
 
+/**
+ * The profiles.json has a 
+ */
 export const generateForAllProfilesProfile = (): Record<string, any> => {
     return (
         {
@@ -239,43 +242,6 @@ export const generateDefaultProfile = (): Record<string, any> => {
             "Header Foreground": { value: ["255", "255", "255", "100"], DESCRIPTION: "color" },
             "Active Text": { value: ["255", "255", "0", "100"], DESCRIPTION: "color" },
             Grid: { value: ["128", "128", "128", "100"], DESCRIPTION: "color" },
-        },
-    };
-};
-
-// all atomic data must be string type, e.g. "localhost", "42"
-export const generateDefaultSshProfile = () => {
-    return {
-        "About": {
-            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "This is an SSH profile, it will load profiles on remote ssh.",
-        },
-        ...generateDefaultSshCategory(),
-    };
-};
-export const generateDefaultSshCategory = () => {
-    return {
-        "SSH Configuration": {
-            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Configurations for SSH connection. Do not change this category name",
-            "Host Name/IP Address": {
-                value: "1.2.3.4",
-                DESCRIPTION: "Host name or IP address of the ssh host, cannot be empty."
-            },
-            "Port": {
-                value: "22",
-                DESCRIPTION: "SSH port, its value is usually 22",
-            },
-            "User Name": {
-                value: "username",
-                DESCRIPTION: "User name to login the SSH host",
-            },
-            "TDM Command": {
-                value: "tdm",
-                DESCRIPTION: "The command to be executed upon ssh login, usually tdm binary"
-            },
-            "Private Key File": {
-                value: "/path/to/private/key",
-                DESCRIPTION: "Private key to login",
-            }
         },
     };
 };
