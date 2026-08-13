@@ -137,6 +137,9 @@ export class GroupSelection2 {
         let dx1 = dx;
         let dy1 = dy;
         try {
+            if (g_widgets1.getWidgets().size > 1000) {
+                throw new Error("Too many widgets, do not snap to anything");
+            }
             const canvas = g_widgets1.getWidget2("Canvas");
             if (canvas instanceof Canvas) {
                 const xGridSize = canvas.getXGridSize();
@@ -199,7 +202,7 @@ export class GroupSelection2 {
                 }
             }
         } catch (e) {
-            Log.error(e);
+            // Log.error(e);
         }
 
         this.getStyle().left = this.getStyle().left + dx1;

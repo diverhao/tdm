@@ -61,10 +61,12 @@ export class DisplayWindowLifeCycleManager {
         if (this.getLastHeartBeat() === 0) {
             return;
         }
+
+        // manage the WebSocket connection on client side
         if (Date.now() - this.getLastHeartBeat() > 30 * 1000) {
             // destroy
-            Log.error("Lost heart beat from client, destroy local resource");
-            this.getDisplayWindowAgent().handleWindowClosed();
+            // Log.error("Lost heart beat from client, destroy local resource");
+            // this.getDisplayWindowAgent().handleWindowClosed();
         }
     }, 1000)
 

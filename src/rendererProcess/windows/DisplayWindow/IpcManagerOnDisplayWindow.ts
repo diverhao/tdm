@@ -43,6 +43,8 @@ export class IpcManagerOnDisplayWindow {
     ipcServerPort: number = -1;
     private _websocketClient: undefined | WebSocket = undefined;
     eventListeners: Record<string, (data: any) => any> = {};
+    private _lastPong: number = Date.now();
+    private _lastPing: number = Date.now();
 
 
     constructor(displayWindowClient: DisplayWindowClient, ipcServerPort: number) {
@@ -51,29 +53,42 @@ export class IpcManagerOnDisplayWindow {
 
         setInterval(() => {
             this.checkIpcConnection();
-        }, 10000)
+        }, 10000);
     }
 
     /**
      * Check if the websocket-based IPC connection is alive. If not, reconnect.
      */
     checkIpcConnection = () => {
+        this._lastPing = Date.now();
         const websocketClient = this.getWebSocketClient();
-        if (websocketClient === undefined) {
+        if (websocketClient === undefined || websocketClient.readyState === WebSocket.CLOSED) {
             this.connectIpcServer(true);
-        } else if (websocketClient.readyState === WebSocket.CLOSED) {
-            Log.error("websocket IPC is closed, re-connect")
-            this.connectIpcServer(true);
+            return;
         }
-        // else: it is good, do nothing
+
+        // CONNECTING or CLOSING may get stuck
+        // check last pong, there has been 30 seconds without any communication
+        // close the connection and reconnect
+        if (this._lastPing - this._lastPong > 30 * 1000) {
+            websocketClient.close();
+            this.connectIpcServer(true);
+            return;
+        }
+
+        // CONNECTING or CLOSING, give it more time
+        if (websocketClient.readyState !== WebSocket.OPEN) {
+            return;
+        }
 
         // ping-poing
-
         this.sendFromRendererProcess("ping", {
             displayWindowId: this.getDisplayWindowClient().getWindowId(),
             id: "0",
             time: performance.now(),
         })
+
+
     }
 
     connectIpcServer = (reconnect: boolean = false) => {
@@ -97,10 +112,15 @@ export class IpcManagerOnDisplayWindow {
         const mainProcessMode = this.getDisplayWindowClient().getMainProcessMode();
 
         const client = new WebSocket(serverAddress);
+        this.setWebSocketClient(client);
 
         client.onopen = () => {
             Log.info("Successfully connected to ipc server", this.getDisplayWindowClient().getWindowId(), this.ipcServerPort);
-            this.setWebSocketClient(client);
+
+            // reset ping and pong
+            const now = Date.now();
+            this._lastPing = now;
+            this._lastPong = now;
 
             if (reconnect === true) {
                 // remove prompt
@@ -122,6 +142,11 @@ export class IpcManagerOnDisplayWindow {
 
         client.onclose = (ev: CloseEvent) => {
             Log.error("IPC websocket connection closed", ev, ev.code, ev.reason);
+
+            if (this.getWebSocketClient() !== client) {
+                return;
+            }
+
             // show a message on the display window
             this.handleDialogShowMessageBox({
                 info: {
@@ -172,7 +197,6 @@ export class IpcManagerOnDisplayWindow {
             try {
                 verifyIpcMainProcToDispWinEvent(eventName, data);
             } catch (e) {
-                console.log("=================================", eventName, data)
                 Log.error(e);
                 return;
             }
@@ -195,16 +219,19 @@ export class IpcManagerOnDisplayWindow {
         const processId = this.getDisplayWindowClient().getProcessId();
         if (processId !== "") {
             const wsClient = this.getWebSocketClient();
-            if (wsClient !== undefined) {
-                wsClient.send(
-                    JSON.stringify({
-                        processId: processId,
-                        windowId: this.getDisplayWindowClient().getWindowId(),
-                        eventName: channelName,
-                        data: [data], // Wrap in array to match your existing format
-                    })
-                );
+            if (wsClient?.readyState !== WebSocket.OPEN) {
+                Log.warn("Cannot send IPC message: WebSocket is not open", channelName);
+                return;
             }
+
+            wsClient.send(
+                JSON.stringify({
+                    processId: processId,
+                    windowId: this.getDisplayWindowClient().getWindowId(),
+                    eventName: channelName,
+                    data: [data], // Wrap in array to match your existing format
+                })
+            );
         } else {
             Log.error("This display window does not have a process Id yet.");
         }
@@ -1358,6 +1385,7 @@ export class IpcManagerOnDisplayWindow {
     }
 
     handlePong = (data: IpcMainProcToDispWin["pong"]) => {
+        this._lastPong = Date.now();
         Log.info("Round trip time for ping-pong initiated by this Display Window:", performance.now() - data["time"], "ms");
     }
 
