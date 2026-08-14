@@ -95,7 +95,6 @@ export class DisplayWindowLifeCycleManager {
 
     createBrowserWindow = async (options: any = {}, webRootRequest: boolean = false) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
-
         // the Promises must created as early as possible to prevent race condition
         // ideally the workflow is
         //  (1) electron API create BrowserWindow

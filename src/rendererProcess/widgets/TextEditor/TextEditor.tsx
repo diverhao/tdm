@@ -114,7 +114,7 @@ export class TextEditor extends BaseWidget {
 
 
     _ElementAreaRaw = (): React.JSX.Element => {
-        const [fileContent, setFileContent] = React.useState(this.getText()["fileName"]);
+        const [fileContent, setFileContent] = React.useState(this.getText()["fileContent"]);
         this.setFileContent = setFileContent;
         this.getFileContent = () => { return fileContent };
 

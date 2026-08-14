@@ -234,7 +234,6 @@ export class Probe extends BaseWidget {
                                 setChannelNameHintData([]);
 
                                 const orig = this.getChannelNames()[0];
-                                console.log("orig", orig, channelName)
                                 if (orig !== channelName) {
                                     if (orig === undefined) {
                                         setChannelName(orig);
@@ -782,7 +781,6 @@ export class Probe extends BaseWidget {
      * React component for 
      */
     _ElementTableLineField = ({ index, property, value, defaultValue, isLink, isMenu, channelName, fieldMenu }: any) => {
-        console.log(channelName, value)
         const valueElementRef = React.useRef<HTMLInputElement>(null);
         const nameElementRef = React.useRef<HTMLDivElement>(null);
         // always a string

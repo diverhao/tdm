@@ -160,7 +160,6 @@ export class WindowAgentsManager {
      */
     createDisplayWindow = async (options: type_options_createDisplayWindow): Promise<undefined | DisplayWindowAgent> => {
         let { tdl, mode, editable, tdlFileName, macros, replaceMacros, hide, windowId } = options;
-
         const mainProcessMode = this.getMainProcess().getMainProcessMode();
 
         // web, desktop, or ssh-server mode

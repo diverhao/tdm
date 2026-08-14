@@ -909,6 +909,7 @@ export class IpcManagerOnDisplayWindow {
             id: "0",
             time: performance.now(),
         })
+
         this.getDisplayWindowClient().getDisplayWindowFile().updateTdl(
             options["newTdl"],
             options["tdlFileName"],
