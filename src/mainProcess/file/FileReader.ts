@@ -11,8 +11,9 @@ import { MessagePort } from "worker_threads";
 import { StpConverter } from "./StpConverter";
 import xml2js from 'xml2js';
 import { type_tdl } from "../../common/GlobalVariables";
-import { type_dbd, type_dbd_field } from "../../common/types/type_dbd";
+import { type_dbd_field, type_dbd_menus, type_dbd_records, verifyDbdMenu, verifyDbdMenus, verifyDbdRecord, verifyDbdRecords } from "../../common/types/type_dbd";
 import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
+import { DbdFiles } from "../../common/DbdFiles";
 
 export class FileReader {
     static fetchWithTimeout = async (url: string, timeout: number = 10) => {
@@ -354,7 +355,7 @@ export class FileReader {
                 const edlJSON = EdlConverter.convertEdltoJSON(edlContentsLines, 0);
                 Log.debug("------------->", JSON.stringify(edlJSON, null, 4));
                 EdlConverter.parseEdl(edlJSON, tdl, false, fullTdlFileName, convertEdlSuffix);
-                Log.debug("------------>>",JSON.stringify(tdl, null, 4));
+                Log.debug("------------>>", JSON.stringify(tdl, null, 4));
             } else {
                 // ignore website certificate error
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -683,7 +684,7 @@ export class FileReader {
                     }
                 } else {
                     // field
-                    const resultField: type_dbd_field = {TYPE: "", NAME: ""};
+                    const resultField: type_dbd_field = { TYPE: "", NAME: "" };
                     const header = field.match(regFieldHead);
                     const body = field.match(regFieldBody);
                     // parse header
@@ -839,5 +840,51 @@ export class FileReader {
         }
         return result;
     };
+
+
+    /**
+     * Loads the bundled EPICS Base record-type and menu definitions.
+     *
+     * The method scans the DBD resource directory, parses `*Record.dbd` and
+     * `menu*.dbd` files, validates every definition and the aggregated maps,
+     * and returns a `DbdFiles` instance containing entries keyed by name.
+     *
+     * @throws If a bundled definition does not match its runtime schema.
+     * @returns The validated record-type and menu definitions.
+     */
+    static readAllDbdFiles = () => {
+        let recordTypes: type_dbd_records = {};
+        let menus: type_dbd_menus = {};
+
+        // this folder contains *Record.dbd, dbCommon.dbd, and menu*.dbd from EPICS base 7.0.4.1
+        const dbdDir = path.join(__dirname, "../../common/resources/dbd/");
+        const fileNames = fs.readdirSync(dbdDir);
+        for (let fileNameRaw of fileNames) {
+            const fileName = path.join(dbdDir, fileNameRaw);
+            if (fileName.endsWith(".dbd")) {
+                // only read *Record.dbd and menu*.dbd
+                if (fileName.includes("Record") || path.basename(fileName).startsWith("menu")) {
+                    const result = FileReader.readRecordTypeDbdFile(fileName);
+                    for (let menu of result["menus"]) {
+                        const name = menu["name"];
+                        // just in case there is anything wrong
+                        verifyDbdMenu(menu);
+                        menus[name] = menu;
+                    }
+                    for (let recordType of result["recordTypes"]) {
+                        const name = recordType["name"];
+                        // just in case there is anything wrong
+                        verifyDbdRecord(recordType);
+                        recordTypes[name] = recordType;
+                    }
+                }
+            }
+        }
+        // just in case there is anything wrong
+        verifyDbdMenus(menus);
+        verifyDbdRecords(recordTypes);
+        return new DbdFiles(recordTypes, menus);
+    };
+
 
 }

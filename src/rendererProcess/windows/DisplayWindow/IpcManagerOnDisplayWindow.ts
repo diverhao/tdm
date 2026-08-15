@@ -27,7 +27,7 @@ import { Probe } from "../../../rendererProcess/widgets/Probe/Probe";
 import { FileBrowser } from "../../../rendererProcess/widgets/FileBrowser/FileBrowser";
 import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
-import { IpcDispWinToMainProc, IpcMainProcToDispWin, isIpcDispWinToMainProcEventName, isIpcMainProcToDispWinEventName, isIpcMainWinToMainProcEventName, verifyIpcMainProcToDispWinEvent } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, IpcMainProcToDispWin, isIpcDispWinToMainProcEventName, isIpcMainProcToDispWinEventName, isIpcMainWinToMainProcEventName, verifyIpcMainProcToDispWinEvent } from "../../../common/types/IpcEventArgType";
 import { Table } from "../../widgets/Table/Table";
 
 

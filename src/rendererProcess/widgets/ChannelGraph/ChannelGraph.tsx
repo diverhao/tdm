@@ -9,12 +9,12 @@ import { DataSet } from "vis-data";
 import { Network } from "vis-network/standalone";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
 import { ChannelSeverity, menuScan, TcaChannel } from "../../channel/TcaChannel";
-import { DbdFiles } from "../../channel/DbdFiles";
 import { Log } from "../../../common/Log";
 import { defaultChannelGraphTdl, type_ChannelGraph_tdl } from "../../../common/types/type_widget_tdl";
-import { type_dbd, type_dbd_menus } from "../../../common/types/type_dbd";
+import { type_dbd_menus, type_dbd_records } from "../../../common/types/type_dbd";
 import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
+import { DbdFiles } from "../../../common/DbdFiles";
 
 enum type_nodeStatus {
     expaneded,
@@ -1203,7 +1203,7 @@ export class ChannelGraph extends BaseWidget {
 
     processDbd = (result: {
         menus: type_dbd_menus,
-        recordTypes: type_dbd,
+        recordTypes: type_dbd_records,
     }) => {
         this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
 

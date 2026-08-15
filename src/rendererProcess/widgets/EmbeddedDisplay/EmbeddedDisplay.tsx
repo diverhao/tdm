@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { GroupSelection2 } from "../../helperWidgets/GroupSelection/GroupSelection2";

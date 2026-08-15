@@ -1,4 +1,4 @@
-import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/types/IpcEventArgType";
 import * as fs from "fs";
 import { dialog } from "electron";
 import path from "path";

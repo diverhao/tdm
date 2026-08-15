@@ -1,5 +1,5 @@
 import { Log } from "../Log";
-import { FieldType, PrimitiveFieldType, TypeSchema } from "./type_schema";
+import { FieldType, PrimitiveFieldType, TypeSchema, typeSchemaAdditionalProperties } from "./type_schema";
 
 export type type_TypeCheckError = {
     expected: string;
@@ -243,8 +243,8 @@ function getSingleTypeError(value: unknown, expectedType: FieldType, fieldPath: 
 
 /**
  * Validates an object against a type schema, including nested objects, unions,
- * arrays, tuples, and dictionaries. Fields not declared by the schema are
- * ignored.
+ * arrays, tuples, and dictionaries. Undeclared fields are ignored unless the
+ * schema defines `typeSchemaAdditionalProperties`.
  *
  * @param obj The value to validate. The root value must be a plain object.
  * @param schema The schema that defines the required field types.
@@ -287,6 +287,20 @@ export function getTypeCheckError(obj: unknown, schema: TypeSchema, _path: strin
         const error = getSingleTypeError(value, expectedType, fieldPath);
         if (error !== undefined) {
             return error;
+        }
+    }
+
+    const additionalPropertiesType = schema[typeSchemaAdditionalProperties];
+    if (additionalPropertiesType !== undefined) {
+        for (const [key, value] of Object.entries(record)) {
+            if (Object.prototype.hasOwnProperty.call(schema, key)) {
+                continue;
+            }
+            const fieldPath = _path ? `${_path}.${key}` : key;
+            const error = getSingleTypeError(value, additionalPropertiesType, fieldPath);
+            if (error !== undefined) {
+                return error;
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { dialog } from "electron";
-import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/types/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import type { DisplayWindowAgent } from "./DisplayWindowAgent";
 

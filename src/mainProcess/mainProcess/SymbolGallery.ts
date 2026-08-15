@@ -1,5 +1,5 @@
 import path from "path";
-import { IpcDispWinToMainProc } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../common/types/IpcEventArgType";
 import { scanSymbolGallery } from "../global/GlobalMethods";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import type { MainProcess } from "./MainProcess";

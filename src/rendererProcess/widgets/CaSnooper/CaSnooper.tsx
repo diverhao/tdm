@@ -11,7 +11,7 @@ import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor } 
 import { Log } from "../../../common/Log";
 import { DataViewer } from "../DataViewer/DataViewer";
 import { defaultCaSnooperTdl, type_CaSnooper_tdl } from "../../../common/types/type_widget_tdl";
-import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import { EpicsDate } from "../../../common/EpicsTime";
 
 export type type_CaProtoSearchData = {

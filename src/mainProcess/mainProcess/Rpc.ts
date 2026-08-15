@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import { IpcDispWinToMainProc } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../common/types/IpcEventArgType";
 import { Log } from "../../common/Log";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import type { MainProcess } from "./MainProcess";

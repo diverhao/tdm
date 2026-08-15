@@ -1,6 +1,6 @@
 import { BrowserWindow, Menu } from "electron";
 import pidusage from "pidusage";
-import { IpcMainProcToMainWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToMainWin } from "../../../common/types/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { generateAboutInfo } from "../../global/GlobalMethods";
 import { MainWindowAgent } from "./MainWindowAgent";

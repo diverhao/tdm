@@ -1,4 +1,4 @@
-import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/types/IpcEventArgType";
 import * as fs from "fs";
 import path from "path";
 import { Log } from "../../../common/Log";

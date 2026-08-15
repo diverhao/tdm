@@ -4,7 +4,7 @@ import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent"
 import path from "path";
 import { Log } from "../../common/Log";
 import { MainWindowAgent } from "../windows/MainWindow/MainWindowAgent";
-import { IpcDispWinToMainProc, IpcMainWinToMainProc, isIpcDispWinToMainProcEventName, isIpcMainWinToMainProcEventName, verifyIpcDispWinToMainProcEvent, verifyIpcMainWinToMainProcEvent } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, IpcMainWinToMainProc, isIpcDispWinToMainProcEventName, isIpcMainWinToMainProcEventName, verifyIpcDispWinToMainProcEvent, verifyIpcMainWinToMainProcEvent } from "../../common/types/IpcEventArgType";
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
 

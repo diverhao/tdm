@@ -1,9 +1,15 @@
-import { type_dbd, type_dbd_field, type_dbd_menus, type_dbd_record } from "../../common/types/type_dbd";
+import { type_dbd_field, type_dbd_menus, type_dbd_record, type_dbd_records } from "./types/type_dbd";
 
+/**
+ * Representation of all DBD files in EPICS base. Actually it contains only all
+ * the record types and menus definitions.
+ * 
+ * 
+ */
 export class DbdFiles {
-    private _recordTypes: type_dbd = {};
+    private _recordTypes: type_dbd_records = {};
     private _menus: type_dbd_menus = {};
-    constructor(recordTypes: type_dbd, menus: type_dbd_menus) {
+    constructor(recordTypes: type_dbd_records, menus: type_dbd_menus) {
         this._recordTypes = recordTypes;
         this._menus = menus;
     }
@@ -168,7 +174,7 @@ export class DbdFiles {
         return this._menus;
     };
 
-    setRecordTypes = (newTypes: type_dbd) => {
+    setRecordTypes = (newTypes: type_dbd_records) => {
         this._recordTypes = newTypes;
     };
     setMenus = (newMenus: type_dbd_menus) => {

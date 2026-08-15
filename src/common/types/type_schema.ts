@@ -29,6 +29,8 @@
 //   { tuple: [...] }       — fixed-length tuple of primitive types
 //   { arrayOfTuple: [...] }— array of tuples
 //   { literalUnion: [...] }— string literal union (e.g. "Linear" | "Log10")
+//   [typeSchemaAdditionalProperties]: field
+//                            — type of object properties not explicitly listed
 // ============================================================================
 
 // --- Primitive type tags ---
@@ -40,6 +42,9 @@ export type PrimitiveFieldType =
     | "string[]"
     | "number[]"
     | "boolean[]";
+
+/** Schema key that declares the type of otherwise undeclared object fields. */
+export const typeSchemaAdditionalProperties: unique symbol = Symbol("typeSchemaAdditionalProperties");
 
 // --- Compound descriptors ---
 export type ArrayOfSchema = { arrayOf: FieldType };
@@ -62,7 +67,9 @@ export type FieldType =
     | DictionaryOfSchema;           // Record<string, T>
 
 // --- A schema = field name → field descriptor ---
-export interface TypeSchema extends Record<string, FieldType> {}
+export interface TypeSchema extends Record<string, FieldType> {
+    readonly [typeSchemaAdditionalProperties]?: FieldType;
+}
 
 // --- Compile-time type inference from a schema ---
 
@@ -86,16 +93,31 @@ type MapSingle<T> =
     T extends LiteralUnionSchema ? T["literalUnion"][number] :
     T extends ArrayOfSchema ? MapField<T["arrayOf"]>[] :
     T extends DictionaryOfSchema ? Record<string, InferType<T["dictionaryOf"]>> :
-    T extends TypeSchema ? { [K in keyof T]: MapField<T[K]> } :
+    T extends TypeSchema ? InferType<T> :
     never;
 
 type MapField<T extends FieldType> =
     T extends PrimitiveFieldType[] ? MapSingle<T[number]> :
     MapSingle<T>;
 
-export type InferType<S extends TypeSchema> = {
-    [K in keyof S]: MapField<S[K]>;
-};
+type InferObjectType<S extends TypeSchema> = {
+    [K in Exclude<keyof S, typeof typeSchemaAdditionalProperties>]: MapField<S[K]>;
+} & (
+    S extends { readonly [typeSchemaAdditionalProperties]: infer AdditionalType extends FieldType }
+    ? Record<string, MapField<AdditionalType>>
+    : {}
+);
+
+/**
+ * Infers the value represented by an object schema. A root-level
+ * `{ dictionaryOf: schema }` is inferred directly as `Record<string, T>`.
+ */
+export type InferType<S extends TypeSchema> =
+    S extends { readonly dictionaryOf: infer ItemSchema extends TypeSchema }
+    ? Exclude<Extract<keyof S, string>, "dictionaryOf"> extends never
+    ? Record<string, InferType<ItemSchema>>
+    : InferObjectType<S>
+    : InferObjectType<S>;
 
 export type Mutable<T> = {
     -readonly [K in keyof T]: T[K] extends object ? Mutable<T[K]> : T[K];

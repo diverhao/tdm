@@ -6,7 +6,7 @@ import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Promises, type_pva_status, type_pva_value } from "epics-tca";
-import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import { DisplayWindowAttachedScript } from "./DisplayWindowAttachedScript";
 import { DisplayWindowChannel } from "./DisplayWindowChannel";
 import { DisplayWindowChannelsManager } from "./DisplayWindowChannelsManager";

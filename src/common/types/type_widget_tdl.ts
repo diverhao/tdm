@@ -3,7 +3,7 @@ import { defaultFontSize, defaultFontFamily, defaultFontStyle, defaultFontWeight
 import { TypeSchema, InferType, Mutable } from "./type_schema";
 
 // Re-export schema infra so existing consumers don't break
-export { TypeSchema, FieldType, PrimitiveFieldType, ArrayOfSchema, ArrayOfUnionSchema, TupleSchema, ArrayOfTupleSchema, LiteralUnionSchema, DictionaryOfSchema, InferType, Mutable } from "./type_schema";
+export { TypeSchema, FieldType, PrimitiveFieldType, ArrayOfSchema, ArrayOfUnionSchema, TupleSchema, ArrayOfTupleSchema, LiteralUnionSchema, DictionaryOfSchema, InferType, Mutable, typeSchemaAdditionalProperties } from "./type_schema";
 
 export type type_utilityWindowType =
     "Probe" | "PvTable" | "DataViewer" | "ProfilesViewer" | "LogViewer" | "TdlViewer" | "TextEditor" |

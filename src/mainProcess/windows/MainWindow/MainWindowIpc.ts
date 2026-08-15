@@ -1,5 +1,5 @@
 import { Log } from "../../../common/Log";
-import { IpcMainProcToMainWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToMainWin } from "../../../common/types/IpcEventArgType";
 import { MainWindowAgent } from "./MainWindowAgent";
 
 export class MainWindowIpc {

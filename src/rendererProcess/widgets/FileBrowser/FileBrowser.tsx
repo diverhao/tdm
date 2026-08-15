@@ -6,7 +6,7 @@ import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary"
 import path from "path";
 import { ElementRectangleButton } from "../Talhk/client/RectangleButton";
-import { IpcMainProcToDispWin, type_folder_content, type_single_file_folder } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin, type_folder_content, type_single_file_folder } from "../../../common/types/IpcEventArgType";
 import { defaultFontSize, defaultFontFamily } from "../../../common/GlobalVariables";
 import { defaultFileBrowserTdl, type_FileBrowser_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";

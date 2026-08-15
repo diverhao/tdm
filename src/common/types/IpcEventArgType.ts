@@ -3,11 +3,11 @@
  */
 
 import { type_pva_status } from "epics-tca";
-import { Channel_DBR_TYPES, type_dbrData, type_pva_value } from "./EpicsTcaLib";
-import { type_LocalChannel_data } from "./GlobalVariables";
-import { type_tdl } from "./GlobalVariables";
-import { type_macros_tdl, verifyTdl } from "./types/type_widget_tdl";
-import { Log } from "./Log";
+import { Channel_DBR_TYPES, type_dbrData, type_pva_value } from "../EpicsTcaLib";
+import { type_LocalChannel_data } from "../GlobalVariables";
+import { type_tdl } from "../GlobalVariables";
+import { Log } from "../Log";
+import { type_macros_tdl, verifyTdl } from "./type_widget_tdl";
 
 /**
  * Input argument types for command line.

@@ -4,7 +4,7 @@ import { defaultWebServerPort } from "../global/GlobalVariables";
 import { Log } from "../../common/Log";
 import { type_log_levels } from "../../common/Log";
 import { generateAboutInfo } from "../global/GlobalMethods";
-import { type_input_args } from "../../common/IpcEventArgType";
+import { type_input_args } from "../../common/types/IpcEventArgType";
 import { type_macros_tdl } from "../../common/types/type_widget_tdl";
 
 

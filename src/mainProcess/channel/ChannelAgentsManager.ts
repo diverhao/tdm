@@ -4,8 +4,9 @@ import { CaChannelAgent } from "./CaChannelAgent";
 import { Profile } from "../profile/Profile";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { LocalChannelAgent } from "./LocalChannelAgent";
-import { DbdFiles } from "../file/DbdFiles";
 import { Log } from "../../common/Log";
+import { DbdFiles } from "../../common/DbdFiles";
+import { FileReader } from "../file/FileReader";
 
 //todo: singleton class
 
@@ -29,7 +30,7 @@ export class ChannelAgentsManager {
         // this._mainProcessId = mainProcess.getProcessId();
 
         // all dbd files are read and parsed
-        this._dbdFiles = new DbdFiles();
+        this._dbdFiles = FileReader.readAllDbdFiles();
     }
 
     // updateProfileAndReInitContext = async (newProfile: Profile) => {

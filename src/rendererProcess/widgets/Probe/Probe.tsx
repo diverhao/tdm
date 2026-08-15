@@ -6,15 +6,15 @@ import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { ProbeSidebar } from "./ProbeSidebar";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { DbdFiles } from "../../channel/DbdFiles";
 import { TcaChannel } from "../../channel/TcaChannel";
 import { ElementRectangleButton, ElementRectangleButtonDefaultBackgroundColor, ElementRectangleButtonDefaultTextColor } from "../../helperWidgets/SharedElements/RectangleButton";
 import { Log } from "../../../common/Log";
 import { ElementJsonViewer } from "../../helperWidgets/SharedElements/JsonViewer";
 import { mergePvaTypeAndData } from "./PvaHelper";
 import { type_Probe_tdl, defaultProbeTdl } from "../../../common/types/type_widget_tdl";
-import { type_dbd, type_dbd_menus } from "../../../common/types/type_dbd";
+import { type_dbd_menus, type_dbd_records } from "../../../common/types/type_dbd";
 import { Table } from "../../helperWidgets/Table/Table";
+import { DbdFiles } from "../../../common/DbdFiles";
 
 export class Probe extends BaseWidget {
 
@@ -1204,7 +1204,7 @@ export class Probe extends BaseWidget {
      */
     processDbd = (result: {
         menus: type_dbd_menus,
-        recordTypes: type_dbd,
+        recordTypes: type_dbd_records,
     }) => {
         this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
 

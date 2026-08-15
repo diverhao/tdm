@@ -1,6 +1,6 @@
 import { WebContents, BrowserWindow } from "electron";
 import { WindowAgentsManager } from "../WindowAgentsManager";
-import { IpcMainProcToMainWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToMainWin } from "../../../common/types/IpcEventArgType";
 import { MainWindowIpc } from "./MainWindowIpc";
 import { MainWindowFile } from "./MainWindowFile";
 import { MainWindowLifeCycleManager } from "./MainWindowLifeCycleManager";

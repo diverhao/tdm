@@ -7,7 +7,7 @@ import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { Table } from "../../helperWidgets/Table/Table";
 import { ElementRectangleButton } from "../../helperWidgets/SharedElements/RectangleButton";
-import { type_logData } from "../../../common/IpcEventArgType";
+import { type_logData } from "../../../common/types/IpcEventArgType";
 import { defaultLogViewerTdl, type_LogViewer_tdl } from "../../../common/types/type_widget_tdl";
 import { EpicsDate } from "../../../common/EpicsTime";
 

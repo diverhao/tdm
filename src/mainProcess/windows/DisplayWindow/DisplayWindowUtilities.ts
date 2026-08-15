@@ -7,7 +7,7 @@ import { generateAboutInfo, getCurrentDateTimeStr } from "../../global/GlobalMet
 import { Log } from "../../../common/Log";
 import { ContextMenuDesktop } from "./ContextMenuDesktop";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
-import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import { v4 as uuidv4 } from "uuid";
 import { type_macros_tdl } from "../../../common/types/type_widget_tdl";
 

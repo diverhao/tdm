@@ -10,7 +10,7 @@ import { websocketPvServerPort } from "../global/GlobalVariables";
 import { CaSnooperServer } from "./CaSnooperServer";
 import { CaswServer } from "./CaswServer";
 import { Sql } from "../archive/Sql";
-import { IpcDispWinToMainProc, type_input_args } from "../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, type_input_args } from "../../common/types/IpcEventArgType";
 import * as path from "path";
 import { EdlFileConverterThread } from "../file/EdlFileConverterThread";
 import { WsOpenerServer } from "./WsOpenerServer";

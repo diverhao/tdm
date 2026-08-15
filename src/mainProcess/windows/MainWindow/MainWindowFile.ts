@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { dialog } from "electron";
 import { Environment } from "epics-tca";
 import path from "path";
-import { IpcMainWinToMainProc } from "../../../common/IpcEventArgType";
+import { IpcMainWinToMainProc } from "../../../common/types/IpcEventArgType";
 import { Log } from "../../../common/Log";
 import { fileDialogOptionsByType, type_fileType } from "../../../common/types/type_Files";
 import { Profiles } from "../../profile/Profiles";

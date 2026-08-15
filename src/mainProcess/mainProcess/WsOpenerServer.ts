@@ -3,7 +3,7 @@ import { WebSocket, WebSocketServer, RawData } from "ws";
 import { FileReader } from "../file/FileReader";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { Log } from "../../common/Log";
-import { type_input_args } from "../../common/IpcEventArgType";
+import { type_input_args } from "../../common/types/IpcEventArgType";
 import { openTdlFileAsRequestedByAnotherInstance } from "../global/GlobalMethods";
 
 // this class is part of MainProcesses, it has nothing to do with the runtime MainProcess

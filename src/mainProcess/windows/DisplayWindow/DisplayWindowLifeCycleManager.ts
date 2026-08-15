@@ -1,7 +1,7 @@
 import { BrowserWindow, Menu, MenuItem, app } from "electron";
 import * as path from "path";
 import * as url from "url";
-import { IpcDispWinToMainProc } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc } from "../../../common/types/IpcEventArgType";
 import { DisplayWindowAgent } from "../../windows/DisplayWindow/DisplayWindowAgent";
 import { Log } from "../../../common/Log";
 import { type_tdl } from "../../../common/GlobalVariables";

@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { Log } from "../../../common/Log";
-import { IpcMainProcToDispWin } from "../../../common/IpcEventArgType";
+import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 
 export class DisplayWindowIpc {

@@ -1,4 +1,4 @@
-import { IpcDispWinToMainProc, IpcMainWinToMainProc, type_DialogInputBox } from "../../../common/IpcEventArgType";
+import { IpcDispWinToMainProc, IpcMainWinToMainProc, type_DialogInputBox } from "../../../common/types/IpcEventArgType";
 import type { Prompt } from "./Prompt";
 
 type type_SendFromDisplayWindow = <T extends keyof IpcDispWinToMainProc>(channelName: T, data: IpcDispWinToMainProc[T]) => void;
