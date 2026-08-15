@@ -73,7 +73,6 @@ export class WsPvClient {
 
         this.ws.on("message", (rawData: WebSocket.RawData) => {
             const data = JSON.parse(rawData.toString());
-            // console.log(data)
             const command = data["command"];
             this.log("debug", "--------------- message --------------")
             this.log("debug", JSON.stringify(data, null, 4))
@@ -110,7 +109,6 @@ export class WsPvClient {
                 }
                 delete this.getChannels[channelName];
             } else {
-                // console.log("wrong data", data);
             }
         });
     }

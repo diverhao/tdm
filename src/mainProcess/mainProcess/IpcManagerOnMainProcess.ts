@@ -1024,7 +1024,6 @@ export class IpcManagerOnMainProcess {
     handleFetchFolderContent = (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["fetch-folder-content"]) => {
 
         const { displayWindowId } = data;
-        console.log("options ----------------------", data)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.getDisplayWindowFile().readFolder(data);
@@ -1179,7 +1178,6 @@ export class IpcManagerOnMainProcess {
     };
 
     handleRequestArchiveData = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["request-archive-data"]) => {
-        console.log("request archive data -------------------------", data)
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
             return;

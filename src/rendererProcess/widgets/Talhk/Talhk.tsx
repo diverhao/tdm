@@ -106,7 +106,6 @@ export class Talhk extends BaseWidget {
                 style={style}
             // onMouseDown={this._handleMouseDown}
             // onMouseDown={() => {
-            //     console.log("aaa")
             // }}
             // onDoubleClick={this._handleMouseDoubleClick}
             >

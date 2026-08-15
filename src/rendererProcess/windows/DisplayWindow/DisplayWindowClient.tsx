@@ -187,7 +187,6 @@ export class DisplayWindowClient {
             const canvas = g_widgets1.getWidget2("Canvas");
             if (canvas instanceof Canvas) {
                 const macros = canvas.getAllMacros();
-                console.log("--------------------->>>>>>>>>>>>>>>>>>>>>>>", `${macros}`);
                 titleContents = macros.apply(titleContents);
             }
         } else if (windowTitleType === "file-name") {

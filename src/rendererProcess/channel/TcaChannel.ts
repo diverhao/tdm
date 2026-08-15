@@ -645,7 +645,6 @@ export class TcaChannel {
             }
         }
 
-        // console.log("send to main process for put", channelName, displayWindowId, dbrData, ioTimeout, pvaValueField)
         // the backend must have a full channel name
         if (TcaChannel.checkChannelName(channelName) === "local" && !channelName.includes("@window_")) {
             channelName = channelName + "@window_" + displayWindowId;
@@ -698,7 +697,6 @@ export class TcaChannel {
         // try {
         //     const result = await this.getIoPromise(ioId);
         //     // if waitNotify === false, it rejects at here, below is only for waitNotify === true
-        //     console.log("caput result = ", result)
         //     // undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
         //     const status = result["status"];
         //     return status;
@@ -1205,7 +1203,6 @@ export class TcaChannel {
                 // const type = this.getPvaTypeAtPvRequest() as any;
                 const type = this.getPvaType() as any;
                 const value = this.getPvaValue() as any;
-                // console.log("tcachannel get value", this.getChannelName(), type, value)
 
                 // if the type is struct, try to find the values's .value field
                 if (type["typeIndex"] === "0x80") {
@@ -1336,7 +1333,6 @@ export class TcaChannel {
         } else if (this.getProtocol() === "pva") {
             // try to get the alarm field
             const alarm = this.getPvaValue("alarm");
-            // console.log(this.getChannelName(), "the alarm is", this.getPvaValue(), alarm)
             if (alarm !== undefined) {
                 const severityNum = alarm["severity"];
                 if (severityNum === 0) {
@@ -1603,7 +1599,6 @@ export class TcaChannel {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
-        console.log("get dbr data", this.getDbrData())
         if (this.getProtocol() === "ca") {
             return this.getDbrData()["lower_warning_limit"];
         } else if (this.getProtocol() === "pva") {
@@ -2015,7 +2010,6 @@ export class TcaChannel {
             return undefined;
         }
         let pvRequest = this.getPvRequest();
-        // console.log("pvrequest", pvRequest)
         if (pvRequest === "" && subRequest === "") {
             return fullPvaType;
         } else if (pvRequest === "" && subRequest !== "") {
@@ -2025,7 +2019,6 @@ export class TcaChannel {
         }
 
         const pvRequestArray = pvRequest.split(".");
-        // console.log("pvrequest array", pvRequestArray)
         let result: Record<string, any> = fullPvaType;
         for (const pvRequstElement of pvRequestArray) {
             const fields = result["fields"];

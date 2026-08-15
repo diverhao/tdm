@@ -53,7 +53,6 @@ export class ApplicationMenu {
                         label: 'About',
                         click: () => {
                             // Handle the click event for the custom item
-                            // console.log('Custom Item Clicked');
                             // get focused display/main window
                             const focusedBrowserWindow = BrowserWindow.getFocusedWindow();
                             const mainProcess = this.getMainProcess();

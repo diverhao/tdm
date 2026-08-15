@@ -1558,7 +1558,6 @@ export abstract class BaseWidget {
         }
         const tmp: any[] = [...this.getEqChannelArray()];
         const channelNames = this.getChannelNamesLevel4();
-        // console.log("getEqChannelArray = ", this.getEqChannelArray())
 
         for (let index = 0; index < channelNames.length; index++) {
             const channelName = channelNames[index];
@@ -2543,10 +2542,8 @@ export abstract class BaseWidget {
                                     {
                                         text: "OK",
                                         handleClick: (dialogInputText?: string) => {
-                                            // console.log("pass word is ", dialogInputText, "...")
                                             if (dialogInputText !== password) {
                                                 // password does not match
-                                                // console.log("pass word does notmatch")
                                                 ipcManager.handleDialogShowMessageBox({
                                                         info: {
                                                             command: "write-pv-confirmation-wit-password-failed",

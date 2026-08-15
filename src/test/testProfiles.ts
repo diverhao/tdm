@@ -7,9 +7,7 @@
 // const readFile = (filePath: string) => {
 // 	let profiles = new Profiles(filePath);
 // 	profiles.read().then((success: boolean) => {
-// 		console.log(success);
 // 		const names = profiles.getProfileNames();
-// 		console.log(names);
 // 	});
 // };
 

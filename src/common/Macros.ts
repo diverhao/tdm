@@ -105,7 +105,6 @@ export class Macros {
     /**
      * Format the macros as a table for logging and display.
      * 
-     * Use in in this way: console.log(`${macros}`)
      */
     toString = (): string => {
         const formatCell = (value: string): string => {

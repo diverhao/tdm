@@ -789,7 +789,6 @@ export class IpcManagerOnDisplayWindow {
                         //     value is kept. We use this feature (bug) to keep the old value, so that something 
                         //     can be displayed in the widget. The widget only updates the severity and the corresponding 
                         //     severity outline.
-                        // console.log("append to data", data)
                         tcaChannel.appendToDbrData(data);
                     }
                     // (2)
@@ -852,8 +851,6 @@ export class IpcManagerOnDisplayWindow {
     // (3) flush widgets
     handleTcaGetResult = (data: IpcMainProcToDispWin["tca-get-result"]) => {
         const { ioId, newDbrData, widgetKey } = data;
-        // console.log(newDbrData);
-        // console.log("receive", JSON.stringify(newDbrData));
         const readWriteIos = g_widgets1.getReadWriteIos();
         // lift the block of GET operation
         readWriteIos.resolveIo(ioId, newDbrData);
@@ -874,8 +871,6 @@ export class IpcManagerOnDisplayWindow {
     // (2) determine which widgets should be re-rendered
     // (3) flush widgets
     handleTcaPutResult = (result: IpcMainProcToDispWin["tca-put-result"]) => {
-        // console.log(newDbrData);
-        // console.log("receive", JSON.stringify(newDbrData));
         const readWriteIos = g_widgets1.getReadWriteIos();
         // lift the block of PUT operation
         readWriteIos.resolveIo(result["ioId"], result);

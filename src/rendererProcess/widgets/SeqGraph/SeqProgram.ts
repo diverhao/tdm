@@ -139,7 +139,6 @@ export class SeqProgram {
         }
         this._stateSwitchCount.splice(0, numExpire);
         this._stateSwitchCount.push(Date.now());
-        // console.log(this._stateSwitchCount)
     }
     resetStateSwitchCount = () => {
         this._stateSwitchCount.length = 0;
@@ -234,7 +233,6 @@ export class SeqStateSet {
     checkCurrentState = async (newEntrance: boolean) => {
         if (this.getBusyCheckingConditions() === false) {
             const currentState = this.getCurrentState();
-            // console.log("check current state", currentState?.getName())
             if (currentState !== undefined) {
                 await currentState.checkConditions(newEntrance);
             }
@@ -400,10 +398,7 @@ export class SeqState {
 
         for (const condition of this.getConditions()) {
             const booleanFunc = condition.getBooleanFunc();
-            // console.log("booleanFunc", booleanFunc)
-            // console.log("booleanFunc starts")
             const booleanResult = await booleanFunc();
-            // console.log("booleanFunc ends")
             // transition to next state
             if (booleanResult === true) {
                 // execute exec/action function of this condition
@@ -432,8 +427,6 @@ export class SeqState {
                     return;
                 }
 
-                // console.log("Leave state", this.getName());
-                // console.log("Go to next state:", nextState.getName());
 
                 // stops at the first true condition
                 break;

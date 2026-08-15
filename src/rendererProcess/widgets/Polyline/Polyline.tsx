@@ -475,7 +475,6 @@ export class Polyline extends BaseWidget {
         const pointY = pointGlobalY - style["top"];
         const width = style["width"];
         const height = style["height"];
-        // console.log(pointX, width, pointY, height)
         // x, resize the widget 
         if (pointX > width) {
             // if new point is on right side of widget

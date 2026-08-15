@@ -32,7 +32,6 @@ const start = async (options: {
     }
 }
 
-console.log('Received data from main thread:', workerData);
 
 start(workerData).then(() => {
     parentPort?.postMessage({

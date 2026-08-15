@@ -334,26 +334,18 @@ export class FileReader {
         } else if (tdlFileType === "bob") {
             const parser = new xml2js.Parser();
             const bobContents = fs.readFileSync(fullTdlFileName, "utf-8");
-            // console.log(bobContents)
             const bobJson = await parser.parseStringPromise(bobContents);
-            // console.log("parsing finished")
-            // console.log("parsing finished 2")
 
             // ! will be replaced, xml2json has some compatible issue
             // ! let xmlJSON = JSON.parse(parser.toJson(xml));
-            // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
             await BobPropertyConverter.parseBob(bobJson["display"], tdl, fullTdlFileName, convertEdlSuffix);
         } else if (tdlFileType === "plt") {
             const parser = new xml2js.Parser();
             const pltContents = fs.readFileSync(fullTdlFileName, "utf-8");
-            // console.log(bobContents)
             const pltJson = await parser.parseStringPromise(pltContents);
-            // console.log("parsing finished")
-            // console.log("parsing finished 2")
 
             // ! will be replaced, xml2json has some compatible issue
             // ! let xmlJSON = JSON.parse(parser.toJson(xml));
-            // console.log("------------->", JSON.stringify(xmlJSON, null, 2));
             await BobPropertyConverter.parsePlt(pltJson, tdl);
         } else if (tdlFileType === "edl") {
             if (!this.isRemotePath(fullTdlFileName)) {
@@ -371,7 +363,6 @@ export class FileReader {
                 const edlContentsLines = edlContents.split(/\r?\n/);
                 const edlJSON = EdlConverter.convertEdltoJSON(edlContentsLines, 0);
                 EdlConverter.parseEdl(edlJSON, tdl, false, fullTdlFileName, convertEdlSuffix);
-                // console.log(JSON.stringify(tdl, null, 4));
             }
         } else if (tdlFileType === "stp") {
             if (!this.isRemotePath(fullTdlFileName)) {
@@ -389,7 +380,6 @@ export class FileReader {
                 const edlContentsLines = edlContents.split(/\r?\n/);
                 const edlJSON = EdlConverter.convertEdltoJSON(edlContentsLines, 0);
                 EdlConverter.parseEdl(edlJSON, tdl, false, fullTdlFileName, convertEdlSuffix);
-                // console.log(JSON.stringify(tdl, null, 4));
             }
         } else {
             Log.error("Unknow file type", tdlFileName);
@@ -461,10 +451,7 @@ export class FileReader {
                 JSON.stringify(tdl, null, 4)
                 // , function (err) {
                 // 	if (err) {
-                // 		console.log("tdl file", newFullTdlFileName, "save failed.");
-                // 		console.log(err);
                 // 	} else {
-                // 		console.log("tdl file", newFullTdlFileName, "saved.");
                 // 	}
                 // }
             );
@@ -508,12 +495,10 @@ export class FileReader {
             recursive: false,
         });
 
-        // console.log(filesAndFolders);
 
         for (let fileAndFolder of filesAndFolders) {
             if (typeof fileAndFolder === "string") {
                 const fileAndFolderFullName = path.join(sourceFolder, fileAndFolder);
-                // console.log(fileAndFolderFullName, path.extname(fileAndFolderFullName));
                 if (path.extname(fileAndFolder) === ".edl") {
                     // edl file
                     await this.readEdlAndSaveTdl(fileAndFolderFullName, destinationFolder, undefined, convertEdlSuffix, parentPort);
@@ -608,7 +593,6 @@ export class FileReader {
     static writeJSON = (fileName: string, data: Record<string, any>) => {
         fs.writeFile(fileName, JSON.stringify(data, null, 4), function (err) {
             // if (err) {
-            // 	console.log(err);
             // 	event.sender.send("error-message", err.toString());
             // } else {
             // 	event.sender.send("tdl-file-saved", dataFileName);
@@ -667,7 +651,6 @@ export class FileReader {
             dbFileContentsArray1.push(line.substring(0, ii));
         }
 
-        // console.log(dbFileContentsArray1);
 
         const dbFileContents = dbFileContentsArray1.join("\n");
         return dbFileContents;
@@ -690,7 +673,6 @@ export class FileReader {
             for (let field of fields) {
                 // include
                 if (field.trim().startsWith("include")) {
-                    // console.log(field);
                     let includeFileName = field.replace("include", "").replaceAll(`"`, "").trim();
                     if (!path.isAbsolute(includeFileName)) {
                         includeFileName = path.join(path.dirname(fileName), includeFileName);
@@ -704,7 +686,6 @@ export class FileReader {
                     const resultField: type_dbd_field = {TYPE: "", NAME: ""};
                     const header = field.match(regFieldHead);
                     const body = field.match(regFieldBody);
-                    // console.log("==> body", body);
                     // parse header
                     if (header === null || header?.length !== 1) {
                         Log.error("header wrong 1", header);
@@ -751,7 +732,6 @@ export class FileReader {
                                         .replaceAll(this.leftParenthesis, "(")
                                         .replaceAll(this.leftBrace, "{")
                                         .replaceAll(this.rightBrace, "}");
-                                    // console.log("element:", element, element.split("("), name, value);
                                     if (name !== undefined && value !== undefined) {
                                         name = name.trim().replaceAll(")", "").replaceAll(`"`, "");
                                         value = value.trim().replaceAll(")", "").replaceAll(`"`, "");
@@ -769,7 +749,6 @@ export class FileReader {
             }
         }
 
-        // console.log(result);
         return result;
     };
 
@@ -809,7 +788,6 @@ export class FileReader {
             }
         }
         result["choices"] = choices;
-        // console.log(result);
         return result;
     };
 

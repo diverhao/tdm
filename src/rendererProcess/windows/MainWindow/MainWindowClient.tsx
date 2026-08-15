@@ -265,7 +265,6 @@ export class MainWindowClient {
     };
 
     getSelectedProfile = () => {
-        // console.log("this._profiles[this._selectedProfileName]", this._profiles, this._selectedProfileName);
         return this._profiles[this._selectedProfileName];
     };
 

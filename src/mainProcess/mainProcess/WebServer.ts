@@ -299,14 +299,11 @@ export class WebServer {
             const displayWindowId = ${JSON.stringify(displayWindowId)};
 			const hostnameRaw = urlParams.get("hostname"); // might be null
 			const hostname = hostnameRaw === null ? undefined : hostnameRaw;
-            console.log("display window Id", displayWindowId);
-            console.log("ipcServerPort", ipcServerPort, "displayWindowId", displayWindowId);
 
 
             const nav = performance.getEntriesByType("navigation")[0];
             const isReload = nav?.type === "reload";
             
-            console.log("isReload =", isReload);
           	new window.DisplayWindowClientClass(displayWindowId, parseInt(ipcServerPort), hostname);
 
 		</script>

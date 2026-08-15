@@ -66,14 +66,12 @@ export class PA {
             // websocket = new WebSocket(WS_SERVER_URL);
 
             // websocket.onopen = () => {
-            //     console.log('WebSocket connection established');
 
             // Set up audio processing
             this.processor.onaudioprocess = (event: AudioProcessingEvent) => {
                 // Get audio data and convert to 16-bit PCM
                 const audioData = event.inputBuffer.getChannelData(0);
                 const pcmData = this.convertFloat32ToInt16(audioData);
-                // console.log(pcmData)
                 this.getMainPage().sendToServer("pa-voice-data", {
                     voiceData: this.arrayBufferToBase64(pcmData),
                     echo: this.getMainPage().testingPa === true? true: false,

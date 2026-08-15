@@ -56,7 +56,6 @@ export class XYPlotPlotSettings {
         }
 
 
-        console.log("this.getXAxisComponents()", this.getXAxisComponents())
 
         return (
             <div

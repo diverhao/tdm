@@ -2009,7 +2009,6 @@ export class BobPropertyConverter {
                 widgetKeys: Object.keys(widgetsTdl),
             }
         } catch (e) {
-            console.log("you catch me")
             return {
                 itemName: itemName,
                 widgetsTdl: {},

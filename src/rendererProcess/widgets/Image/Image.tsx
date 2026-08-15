@@ -196,7 +196,6 @@ export class Image extends BaseWidget {
     }
 
     processChannelNames(widgetMacros: type_macros_tdl = [], removeDuplicated: boolean = true) {
-        // console.log("this.getChannelNamesLevel0()", this.getChannelNamesLevel0())
         // if (this.getChannelNamesLevel0().length > 1) {
         //     this.getChannelNamesLevel0().length = 1;
         // }
@@ -210,7 +209,6 @@ export class Image extends BaseWidget {
         }
 
         super.processChannelNames(widgetMacros, removeDuplicated);
-        // console.log("this.getChannelNamesLevel0() aaa", this.getChannelNamesLevel0())
     }
 
     // --------------------- getters -----------------------

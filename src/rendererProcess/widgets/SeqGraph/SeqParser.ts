@@ -123,7 +123,6 @@ state_entry
           / entryBlock:state_entry_block {
                 return {type: "entry_block", value: entryBlock};
             }) _ {
-       // console.log(entry);
       return entry;
   }
 
@@ -442,7 +441,6 @@ state_entry
             }
          / skipStatement
         ) _ {
-       // console.log(entry);
       return entry;
   }
 

@@ -204,7 +204,6 @@ export const mergePvaTypeAndData = (type: Record<string, any>, key: string | und
             const fieldTmp = mergePvaTypeAndData(fieldType, fieldName, fieldData);
             const newFieldName = fieldTmp["key"];
             const newFieldData = fieldTmp["data"];
-            // console.log("\n\n\n", fieldType, fieldName, fieldData, fieldTmp)
             structTmp[newFieldName] = newFieldData;
 
         }

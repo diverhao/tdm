@@ -403,7 +403,6 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
     // 	this.getPointsRelativeX().splice(this.getPointsRelativeX().length - 1, 1);
     // 	this.getPointsRelativeY().splice(this.getPointsRelativeY().length - 1, 1);
 
-    // 	console.log(pointRelativeX);
 
     // 	if (pointRelativeX >= 0.999999) {
     // 		let newWidth = width * Math.max(...this.getPointsRelativeX());
@@ -446,7 +445,6 @@ export class SidebarPolylinePointsTable extends SidebarComponent {
     // 	}
 
     // 	if (pointRelativeY <= 0.000001) {
-    // 		console.log("we are 0");
     // 		let newHeight = height * (1 - Math.min(...this.getPointsRelativeY()));
     // 		if (newHeight < 5) {
     // 			newHeight = 5;

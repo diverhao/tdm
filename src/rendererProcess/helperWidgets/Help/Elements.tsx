@@ -456,13 +456,11 @@ const parseLine = (lines: string[], lineNum: number, parentData: Record<string, 
     }
     const nextLineLevel = nextLine?.match(reg)?.length || -1;
     const nextName = nextLine?.replace(reg, "").trim();
-    // console.log(level, nextLineLevel, name, nextName);
 
     if (level === nextLineLevel) {
         // next line is a sibling file or sibling folder
         // they have the same parent
         // this line may be a file or empty folder
-        // console.log("same level", name, nextName);
         parentData[name] = "";
         parseLine(lines, lineNum + 1, parentData);
     } else if (level < nextLineLevel) {

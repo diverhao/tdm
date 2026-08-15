@@ -899,7 +899,6 @@ export class ChannelGraph extends BaseWidget {
                             highlight: colors.highlight,
                         }
                     };
-                    // console.log("insert satellite node", linkFieldTargetChannelBaseName)
                     allNodes.add(linkFieldTargetChannelNode)
                 }
 
@@ -918,7 +917,6 @@ export class ChannelGraph extends BaseWidget {
                 // create edge for each link
                 const from = linkType === "inLinks" ? linkFieldTargetChannelNode.id : mainNode.id;
                 const to = linkType === "inLinks" ? mainNode.id : linkFieldTargetChannelNode.id;
-                // console.log("new edge:", "from = ", from, "to = ", to, "label = ", edgeLabel, "with color", edgeColors[linkType])
                 allEdges.add({
                     from: from,
                     to: to,
@@ -1170,7 +1168,6 @@ export class ChannelGraph extends BaseWidget {
 
     getFieldValue = async (channelName: string, fieldType: "RTYP" | "SCAN" | "CALC", timeout: number) => {
         // if (this.rtyp !== "" || this.rtyp === this.rtypWaitingName) {
-        //     console.log("RTYP already obtained or waiting");
         //     return;
         // }
 

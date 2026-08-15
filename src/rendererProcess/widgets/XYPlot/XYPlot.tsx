@@ -152,6 +152,5 @@ export class XYPlot extends BaseWidget {
         this.processChannelNames([], false);
         this.getPlot().initRuntimeData();
         this.getPlot().getSettings().createComponents();
-        console.log("create components =========================================")
     }
 }

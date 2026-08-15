@@ -93,7 +93,6 @@ export class Sql {
 
     reconnectDb = async () => {
         if (this.getState() === SqlState.CONNECTED || this.getState() === SqlState.CONNECTING) {
-            // console.log("We already initiated to connect SQL db, be patient ...");
             return;
         }
         this.disconnectDb();

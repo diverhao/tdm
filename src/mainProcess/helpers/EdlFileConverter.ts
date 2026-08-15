@@ -94,13 +94,11 @@ const iterateFolder = (folderPath: string) => {
         const fileSize = stat.size;
         if (fileSize < 10 * 1024 * 1024) {
             if (stat.isFile()) {
-                // console.log("File : ", fullPath);
                 const fileContent = fs.readFileSync(fullPath);
                 const hash = crypto.createHash('md5');
                 hash.update(fileContent);
                 jsonContent[fullPath] = hash.digest('hex');
             } else if (stat.isDirectory()) {
-                // console.log('Directory : ', fullPath);
                 iterateFolder(fullPath);
             } else if (stat.isSymbolicLink()) {
                 Log.info("Skip symbolic link file", fullPath);
@@ -109,7 +107,6 @@ const iterateFolder = (folderPath: string) => {
             }
         } else {
             // large file, the md5 is stat
-            // console.log("File (too large) : ", fullPath);
             jsonContent[fullPath] = JSON.stringify(stat);
         }
     }

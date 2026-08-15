@@ -111,7 +111,6 @@ export class Label extends BaseWidget {
     // --------------------- sidebar --------------------------
 
     createSidebar = () => {
-        console.log("create sidebar ====================================")
         if (this._sidebar === undefined) {
             this._sidebar = new LabelSidebar(this);
         }

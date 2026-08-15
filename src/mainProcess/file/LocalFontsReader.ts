@@ -173,11 +173,9 @@ export class LocalFontsReader {
                                 });
                             } else {
                                 // font file may miss some properties
-                                // console.log("Error in font file", fontName)
                                 resolve(undefined);
                             }
                         } catch (e) {
-                            // console.log(e);
                             resolve(undefined);
                         }
                     }

@@ -502,7 +502,6 @@ export class DataViewerPlot {
                     window.removeEventListener("mousemove", this.updateCursorElement);
                 }}
                 onMouseDown={(event: React.MouseEvent) => {
-                    console.log("a;lfdaslkdfasd")
                     if (event.button === 0) {
                         window.addEventListener("mousemove", this.getPlotMouseHelper().handleMouseMoveOnPlotX);
                     } else if (event.button === 2) {
@@ -515,7 +514,6 @@ export class DataViewerPlot {
                     if (event.ctrlKey === true) {
                         this.handleWheelOnPlotY(event);
                     } else {
-                        console.log("bbb")
                         this.handleWheelOnPlotX(event);
                     }
                 }}

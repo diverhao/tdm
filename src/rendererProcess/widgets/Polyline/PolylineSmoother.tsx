@@ -101,7 +101,6 @@ export class PolylineSmoother {
 		const bezierCommandCalc = this.bezierCommand(this.controlPoint(this.line, this.smoothing));
 		const path = this.svgPath(pointsPositions, bezierCommandCalc, h);
 		// const circles = this.svgCircles(pointsPositions);
-		// console.log(this.svgRender(path + circles, w, h));
 		// this.svgRender(path, w, h);
 		return path;
 	};

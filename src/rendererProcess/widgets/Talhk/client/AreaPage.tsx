@@ -40,7 +40,6 @@ export class AreaPage {
             <select
                 value={"AreaPage"}
                 onChange={(event) => {
-                    // console.log(event.target.value)
                     if (event.target.value === "AreaPage") {
                         return;
                     } else {

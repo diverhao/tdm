@@ -314,7 +314,6 @@ export class Table extends BaseWidget {
             let dbrData = tcaChannel.getDbrData();
             const labels = dbrData["labels"];
             const valuesObj = dbrData["value"] as any;
-            // console.log("values obj", valuesObj)
             const values = Object.values(valuesObj) as (number | string | boolean)[][];
             // "labels" and "value" are mandatory fields
             if (Array.isArray(values) === false || Array.isArray(labels) === false) {

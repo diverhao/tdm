@@ -157,7 +157,6 @@ export class EdlConverter {
             const swapButtons1 = widgetTdl["text"]["swapButtons"] || widgetTdl["text"]["button3Popup"];
             // ActionButtonWidgetTdl = widgetTdl;
             const toBeDeletedIndex = this.combinActionButtons2(tdl, indices, ii, left1, right1, top1, bottom1, swapButtons1, toBeDeletedIndices);
-            // console.log("to be deleted", toBeDeletedIndex);
             if (toBeDeletedIndex !== -1) {
                 toBeDeletedIndices.push(toBeDeletedIndex);
             }

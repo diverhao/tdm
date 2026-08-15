@@ -107,7 +107,6 @@ export class Group extends BaseWidget {
                     outline: outline,
                 }}
                 onMouseDown={(event: any) => {
-                    console.log("on mouse down")
                     if (g_widgets1.isEditing()) {
                         this.updateCoverage();
                     }
@@ -116,7 +115,6 @@ export class Group extends BaseWidget {
                     if (g_widgets1.isEditing()) {
                         this.selectChildWidgets()
                     }
-                    console.log("step 4")
 
                 }}
                 onDoubleClick={this._handleMouseDoubleClick}

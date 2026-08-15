@@ -329,7 +329,6 @@ export class BooleanButtonHelper extends BaseWidgetHelper {
             });
         }
 
-        console.log(tdl)
         return tdl;
     };
 

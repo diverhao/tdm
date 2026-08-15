@@ -529,7 +529,6 @@ export class CaChannelAgent {
                         Log.debug("Cannot find EPICS channel for", this.getChannelName());
                     }
                 } else {
-                    // console.log("Error: cannot find EPICS context");
                 }
             }
         } catch (e) {

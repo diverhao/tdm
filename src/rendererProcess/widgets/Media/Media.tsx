@@ -282,7 +282,6 @@ export class Media extends BaseWidget {
                 hls.attachMedia(videoRef.current);
 
                 hls.on(HLS.Events.MANIFEST_PARSED, () => {
-                    // console.log("HLS manifest loaded");
                     // Optional: auto-play
                     // videoRef.current?.play();
                 });

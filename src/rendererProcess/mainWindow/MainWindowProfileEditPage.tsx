@@ -1972,7 +1972,6 @@ export class MainWindowProfileEditPage {
         setLocalItemValue: (value: string) => void;
     }) => {
 
-        // console.log("render me", focus, isEditing, localItemValue, this.getNewArrayPropertyItemAddress())
 
         const inputRef = React.useRef<HTMLInputElement>(null);
 

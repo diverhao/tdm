@@ -302,7 +302,6 @@ export function isStartedFromShell() {
 
         // const hasTerm = !!process.env.TERM;
         const isTTY = process.stdin.isTTY;
-        // console.log("Linux", parentProcess, hasTerm, isTTY)
         // try {
         //     writeFileSync("/home/1h7/tdmlog.log", JSON.stringify({
         //         parentProcess: parentProcess,

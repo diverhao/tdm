@@ -15,9 +15,7 @@ const client = new WsPvClient(workerData);
 // }, 1000);
 
 // wsPvClient.wsMonitor("loc://arr1", (dbrData: Record<string, any>) => {
-//     console.log("==============================================")
 //     wsPvClient.wsGet("val1", 1, (data: any) => {
-//         console.log("data ==============", data)
 //     })
 // 	const value = dbrData["value"];
 // 	if (Array.isArray(value)) {
@@ -46,7 +44,6 @@ client.monitor("val7", dataOffset)
 // const fns = ["/Users/1h7/Desktop/aaa.png", "/Users/1h7/Desktop/download.jpg", "/Users/1h7/Desktop/download-1.jpg"];
 
 // wsClient.wsMonitor("loc://selectImg", (dbrData: Record<string, any>) => {
-// 	console.log("select img changed!")
 //     const value = dbrData["value"];
 // 	if (typeof value === "number") {
 // 		let currentImg = value;
@@ -61,8 +58,6 @@ client.monitor("val7", dataOffset)
 // setTimeout(() => {
 // 	// wsClient.wsGet("loc://alarmMsg", "Wake up, it's time to work");
 // 	wsClient.wsGet("arr2", 5000, (dbrData: Record<string, any>) => {
-//         console.log(dbrData);
-//         console.log("hohoho")
 //     });
 // }, 200);
 
