@@ -5,7 +5,7 @@ import { Profile } from "../profile/Profile";
 import { MainProcess } from "../mainProcess/MainProcess";
 import { LocalChannelAgent } from "./LocalChannelAgent";
 import { Log } from "../../common/Log";
-import { DbdFiles } from "../../common/DbdFiles";
+import { Dbd } from "../../common/Dbd";
 import { FileReader } from "../file/FileReader";
 
 //todo: singleton class
@@ -17,7 +17,7 @@ export class ChannelAgentsManager {
     private _context: Context | undefined = undefined;
     private _mainProcess: MainProcess;
 
-    private _dbdFiles: DbdFiles;
+    private _dbd: Dbd;
 
     // <channelName, CaChannelAgent>
     private _channelAgents: Record<string, CaChannelAgent | LocalChannelAgent> = {};
@@ -30,7 +30,7 @@ export class ChannelAgentsManager {
         // this._mainProcessId = mainProcess.getProcessId();
 
         // all dbd files are read and parsed
-        this._dbdFiles = FileReader.readAllDbdFiles();
+        this._dbd = FileReader.readAllDbdFiles();
     }
 
     // updateProfileAndReInitContext = async (newProfile: Profile) => {
@@ -188,7 +188,7 @@ export class ChannelAgentsManager {
         return this._mainProcess;
     };
 
-    getDbdFiles = () => {
-        return this._dbdFiles;
+    getDbd = () => {
+        return this._dbd;
     }
 }

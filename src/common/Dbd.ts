@@ -1,22 +1,24 @@
 import { type_dbd_field, type_dbd_menus, type_dbd_record, type_dbd_records } from "./types/type_dbd";
 
 /**
- * Representation of all DBD files in EPICS base. Actually it contains only all
- * the record types and menus definitions.
- * 
- * 
+ * Represents the parsed contents of the bundled EPICS Base DBD files.
+ *
+ * The class stores record-type and menu definitions, rather than raw file
+ * contents, in dictionaries keyed by name. It provides lookups for records,
+ * fields, link fields, menu choices, and field defaults, and is shared by the
+ * main and renderer processes.
  */
-export class DbdFiles {
-    private _recordTypes: type_dbd_records = {};
+export class Dbd {
+    private _records: type_dbd_records = {};
     private _menus: type_dbd_menus = {};
-    constructor(recordTypes: type_dbd_records, menus: type_dbd_menus) {
-        this._recordTypes = recordTypes;
+    constructor(records: type_dbd_records, menus: type_dbd_menus) {
+        this._records = records;
         this._menus = menus;
     }
 
-    getRecordTypeInLinkFieldNames = (recordType: string) => {
+    getRecordInLinkFieldNames = (record: string) => {
         const result: string[] = [];
-        const data = this.getRecordTypes()[recordType];
+        const data = this.getRecords()[record];
         if (data !== undefined) {
             for (let field of Object.values(data["fields"])) {
                 if (field["TYPE"] === "DBF_INLINK") {
@@ -27,9 +29,9 @@ export class DbdFiles {
         return result;
     }
 
-    getRecordTypeOutLinkFieldNames = (recordType: string) => {
+    getRecordOutLinkFieldNames = (record: string) => {
         const result: string[] = [];
-        const data = this.getRecordTypes()[recordType];
+        const data = this.getRecords()[record];
         if (data !== undefined) {
             for (let field of Object.values(data["fields"])) {
                 if (field["TYPE"] === "DBF_OUTLINK") {
@@ -40,9 +42,9 @@ export class DbdFiles {
         return result;
     }
 
-    getRecordTypeFwdLinkFieldNames = (recordType: string) => {
+    getRecordFwdLinkFieldNames = (record: string) => {
         const result: string[] = [];
-        const data = this.getRecordTypes()[recordType];
+        const data = this.getRecords()[record];
         if (data !== undefined) {
             for (let field of Object.values(data["fields"])) {
                 if (field["TYPE"] === "DBF_FWDLINK") {
@@ -56,18 +58,18 @@ export class DbdFiles {
 
     // ------------------ record getters -------------------
 
-    getRecordType = (recordTypeName: string): type_dbd_record | undefined => {
-        return this.getRecordTypes()[recordTypeName];
+    getRecord = (recordName: string): type_dbd_record | undefined => {
+        return this.getRecords()[recordName];
     }
 
     // ------------------ field getters -------------------
 
-    getFieldNames = (recordTypeName: string) => {
-        const recordType = this.getRecordType(recordTypeName);
-        if (recordType === undefined) {
+    getFieldNames = (recordName: string) => {
+        const record = this.getRecord(recordName);
+        if (record === undefined) {
             return [];
         };
-        const fields = recordType["fields"];
+        const fields = record["fields"];
         if (fields === undefined) {
             return [];
         } else {
@@ -75,17 +77,17 @@ export class DbdFiles {
         }
     }
 
-    getField = (recordTypeName: string, fieldName: string): type_dbd_field | undefined => {
-        const recordType = this.getRecordType(recordTypeName);
-        if (recordType === undefined) {
+    getField = (recordName: string, fieldName: string): type_dbd_field | undefined => {
+        const record = this.getRecord(recordName);
+        if (record === undefined) {
             return undefined;
         }
-        const fields = recordType["fields"];
+        const fields = record["fields"];
         return fields[fieldName];
     }
 
-    getFieldType = (recordTypeName: string, fieldName: string): string => {
-        const field = this.getField(recordTypeName, fieldName);
+    getFieldType = (recordName: string, fieldName: string): string => {
+        const field = this.getField(recordName, fieldName);
         if (field !== undefined) {
             return field["TYPE"];
         } else {
@@ -93,8 +95,8 @@ export class DbdFiles {
         }
     }
 
-    getFieldMenu = (recordTypeName: string, fieldName: string): string[] => {
-        const field = this.getField(recordTypeName, fieldName);
+    getFieldMenu = (recordName: string, fieldName: string): string[] => {
+        const field = this.getField(recordName, fieldName);
         if (field === undefined) {
             return [];
         }
@@ -107,8 +109,8 @@ export class DbdFiles {
         return [];
     }
 
-    getFieldDefaultValue = (recordTypeName: string, fieldName: string) => {
-        const field = this.getField(recordTypeName, fieldName);
+    getFieldDefaultValue = (recordName: string, fieldName: string) => {
+        const field = this.getField(recordName, fieldName);
         if (field === undefined) {
             return "";
         }
@@ -137,8 +139,8 @@ export class DbdFiles {
         }
     }
 
-    fieldIsLink = (recordTypeName: string, fieldName: string) => {
-        const field = this.getField(recordTypeName, fieldName);
+    fieldIsLink = (recordName: string, fieldName: string) => {
+        const field = this.getField(recordName, fieldName);
         if (field === undefined) {
             return false;
         }
@@ -167,15 +169,15 @@ export class DbdFiles {
     // ----------------- getters ----------------------
 
     // getters and setters
-    getRecordTypes = () => {
-        return this._recordTypes;
+    getRecords = () => {
+        return this._records;
     };
     getMenus = () => {
         return this._menus;
     };
 
-    setRecordTypes = (newTypes: type_dbd_records) => {
-        this._recordTypes = newTypes;
+    setRecords = (newTypes: type_dbd_records) => {
+        this._records = newTypes;
     };
     setMenus = (newMenus: type_dbd_menus) => {
         this._menus = newMenus;

@@ -4,6 +4,8 @@ import { LINK, IMG, ARTICLE, P, H1, H2, H3, SLIDESHOW, LI, CODE, parseTree, TREE
 
 const treeStr = `
 
+├── common
+│   └── Dbd.ts
 ├── mainProcess
 │   ├── archive
 │   │   └── Sql.ts
@@ -14,7 +16,6 @@ const treeStr = `
 │   │   ├── ChannelAgentsManager.ts
 │   │   └── LocalChannelAgent.ts
 │   ├── file
-│   │   ├── DbdFiles.ts
 │   │   ├── FileReader.ts
 │   │   └── LocalFontsReader.ts
 │   ├── global
@@ -325,7 +326,6 @@ const treeStr = `
 │       └── WsPvServer.ts
 ├── rendererProcess
 │   ├── channel
-│   │   ├── DbdFiles.ts
 │   │   ├── Promises.ts
 │   │   ├── ReadWriteIos.ts
 │   │   └── TcaChannel.ts
@@ -1068,6 +1068,8 @@ npm install -g typescript
         <TREEWRAP
             tree={parseTree(treeStr)}
             sideNote={{
+                "/common": "code shared by the main and renderer processes",
+                "/common/Dbd.ts": "parsed EPICS record and menu definitions",
                 "/mainProcess": "main process for the backend logic",
                 "/mainProcess/archive": "communication with EPICS Archive",
                 "/mainProcess/arg": "command line arguments",
@@ -1123,7 +1125,6 @@ npm install -g typescript
                 "/mainProcess/wsPv": "WebSocket-based CA client",
                 "/rendererProcess": "renderer process for the frontend GUI",
                 "/rendererProcess/channel": "CA/PVA/virtual channels in renderer process",
-                "/rendererProcess/channel/DbdFiles.ts": "EPICS dbd files for renderer process",
                 "/rendererProcess/channel/Promises.ts": "asynchronous event framework for renderer process",
                 "/rendererProcess/channel/ReadWriteIos.ts": "channel read/write I/O event framework",
                 "/rendererProcess/channel/TcaChannel.ts": "CA/PVA/virtual channels",

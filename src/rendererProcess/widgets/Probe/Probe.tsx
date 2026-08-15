@@ -14,11 +14,11 @@ import { mergePvaTypeAndData } from "./PvaHelper";
 import { type_Probe_tdl, defaultProbeTdl } from "../../../common/types/type_widget_tdl";
 import { type_dbd_menus, type_dbd_records } from "../../../common/types/type_dbd";
 import { Table } from "../../helperWidgets/Table/Table";
-import { DbdFiles } from "../../../common/DbdFiles";
+import { Dbd } from "../../../common/Dbd";
 
 export class Probe extends BaseWidget {
 
-    private _dbdFiles: DbdFiles = new DbdFiles({}, {});
+    private _dbd: Dbd = new Dbd({}, {});
     private readonly _channelNamesLevel5: string[] = [];
     private readonly _basicInfoData: Record<string, string> = {};
 
@@ -697,7 +697,7 @@ export class Probe extends BaseWidget {
      *   names (space-separated tokens, matched case-insensitively).
      */
     _ElementFields = ({ filterValue }: { filterValue: string }) => {
-        const dbdFiles = this.getDbdFiles();
+        const dbd = this.getDbd();
         return (
             <div>
                 {
@@ -717,7 +717,7 @@ export class Probe extends BaseWidget {
 
                         // do not show DBF_NOACCESS channel
                         const rtyp = this.getRtyp();
-                        const fieldType = dbdFiles.getFieldType(rtyp, fieldName);
+                        const fieldType = dbd.getFieldType(rtyp, fieldName);
                         if (fieldType === "DBF_NOACCESS" || fieldType === undefined) {
                             return null;
                         }
@@ -727,9 +727,9 @@ export class Probe extends BaseWidget {
                             return null;
                         }
 
-                        const fieldMenu = dbdFiles.getFieldMenu(rtyp, fieldName);
-                        const fieldDefaultValue = dbdFiles.getFieldDefaultValue(rtyp, fieldName);
-                        const fieldIsLink = dbdFiles.fieldIsLink(rtyp, fieldName);
+                        const fieldMenu = dbd.getFieldMenu(rtyp, fieldName);
+                        const fieldDefaultValue = dbd.getFieldDefaultValue(rtyp, fieldName);
+                        const fieldIsLink = dbd.fieldIsLink(rtyp, fieldName);
 
                         const isMenuField = fieldMenu.length > 0;
                         return (
@@ -1078,7 +1078,7 @@ export class Probe extends BaseWidget {
                 `record(${rtyp}, "${baseChannelName}") {`];
 
 
-            const dbdFiles = this.getDbdFiles();
+            const dbd = this.getDbd();
             this.getFieldNames().map((fieldName: string, index: number) => {
                 if (fieldName === "NAME") {
                     return;
@@ -1086,7 +1086,7 @@ export class Probe extends BaseWidget {
 
                 const channelName = `${this.getChannelNamesLevel4()[0]}.${fieldName}`;
                 const rtyp = this.getRtyp();
-                const fieldDefaultValue = dbdFiles.getFieldDefaultValue(rtyp, fieldName);
+                const fieldDefaultValue = dbd.getFieldDefaultValue(rtyp, fieldName);
                 const value = g_widgets1.getChannelValue(channelName);
                 if (value !== undefined) {
 
@@ -1136,14 +1136,14 @@ export class Probe extends BaseWidget {
             return;
         }
 
-        const dbdFiles = this.getDbdFiles();
+        const dbd = this.getDbd();
         this.getChannelNamesLevel5().length = 0;
         const baseChannelName = this.getChannelNamesLevel4()[0];
         if (baseChannelName !== undefined) {
             this.getChannelNamesLevel5().push(baseChannelName);
             for (let fieldName of this.getFieldNames()) {
                 // do not try to connect DBF_NOACCESS, it causes CA server error
-                const fieldType = dbdFiles.getFieldType(rtyp, fieldName);
+                const fieldType = dbd.getFieldType(rtyp, fieldName);
                 if (fieldType === "DBF_NOACCESS" || fieldType === "") {
                     continue;
                 }
@@ -1191,7 +1191,7 @@ export class Probe extends BaseWidget {
      * Handle the `"request-epics-dbd-reply"` IPC message.
      *
      * Called once when the EPICS runtime becomes available. It initialises
-     * the {@link DbdFiles} instance with the record-type and menu
+     * the {@link Dbd} instance with the record-type and menu
      * definitions received from the main process, then kicks off a
      * {@link newProbe} call for the current channel (if any) when the
      * widget is in operating mode.
@@ -1206,7 +1206,7 @@ export class Probe extends BaseWidget {
         menus: type_dbd_menus,
         recordTypes: type_dbd_records,
     }) => {
-        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
+        this._dbd = new Dbd(result["recordTypes"], result["menus"]);
 
         if (g_widgets1.isEditing()) {
             return;
@@ -1331,8 +1331,8 @@ export class Probe extends BaseWidget {
         return this._channelNamesLevel5;
     }
 
-    getDbdFiles = () => {
-        return this._dbdFiles;
+    getDbd = () => {
+        return this._dbd;
     };
 
     createSidebar = () => {
@@ -1348,7 +1348,7 @@ export class Probe extends BaseWidget {
     getFieldNames = () => {
         const rtyp = this.getRtyp();
         if (typeof rtyp === "string") {
-            const fieldNames = this.getDbdFiles().getFieldNames(rtyp);
+            const fieldNames = this.getDbd().getFieldNames(rtyp);
             return fieldNames;
         } else {
             return [];
@@ -1395,7 +1395,7 @@ export class Probe extends BaseWidget {
     jobsAsOperatingModeBegins() {
         super.jobsAsEditingModeBegins();
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
+        const dbdAssigned = Object.keys(this.getDbd().getRecords()).length > 0;
 
         if (dbdAssigned) {
             if (this.getChannelNames().length > 0 && this.getChannelNames()[0].trim() !== "") {

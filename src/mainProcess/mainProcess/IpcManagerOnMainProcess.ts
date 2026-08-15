@@ -1247,9 +1247,9 @@ export class IpcManagerOnMainProcess {
     }
 
     handleRequestEpicsDbd = (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["request-epics-dbd"]) => {
-        const dbdFiles = this.getMainProcess().getChannelAgentsManager().getDbdFiles();
-        const menus = dbdFiles.getMenus();
-        const recordTypes = dbdFiles.getRecordTypes();
+        const dbd = this.getMainProcess().getChannelAgentsManager().getDbd();
+        const menus = dbd.getMenus();
+        const recordTypes = dbd.getRecords();
         const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
             displayWindowAgent.sendFromMainProcess("request-epics-dbd-reply", {

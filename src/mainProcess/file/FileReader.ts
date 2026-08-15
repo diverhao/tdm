@@ -13,7 +13,7 @@ import xml2js from 'xml2js';
 import { type_tdl } from "../../common/GlobalVariables";
 import { type_dbd_field, type_dbd_menus, type_dbd_records, verifyDbdMenu, verifyDbdMenus, verifyDbdRecord, verifyDbdRecords } from "../../common/types/type_dbd";
 import { defaultCanvasTdl } from "../../common/types/type_widget_tdl";
-import { DbdFiles } from "../../common/DbdFiles";
+import { Dbd } from "../../common/Dbd";
 
 export class FileReader {
     static fetchWithTimeout = async (url: string, timeout: number = 10) => {
@@ -847,7 +847,7 @@ export class FileReader {
      *
      * The method scans the DBD resource directory, parses `*Record.dbd` and
      * `menu*.dbd` files, validates every definition and the aggregated maps,
-     * and returns a `DbdFiles` instance containing entries keyed by name.
+     * and returns a `Dbd` instance containing entries keyed by name.
      *
      * @throws If a bundled definition does not match its runtime schema.
      * @returns The validated record-type and menu definitions.
@@ -883,7 +883,7 @@ export class FileReader {
         // just in case there is anything wrong
         verifyDbdMenus(menus);
         verifyDbdRecords(recordTypes);
-        return new DbdFiles(recordTypes, menus);
+        return new Dbd(recordTypes, menus);
     };
 
 

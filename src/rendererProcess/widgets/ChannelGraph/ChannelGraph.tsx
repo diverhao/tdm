@@ -14,7 +14,7 @@ import { defaultChannelGraphTdl, type_ChannelGraph_tdl } from "../../../common/t
 import { type_dbd_menus, type_dbd_records } from "../../../common/types/type_dbd";
 import { ChannelGraphSidebar } from "./ChannelGraphSidebar";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
-import { DbdFiles } from "../../../common/DbdFiles";
+import { Dbd } from "../../../common/Dbd";
 
 enum type_nodeStatus {
     expaneded,
@@ -100,7 +100,7 @@ const networkOptions = {
 
 export class ChannelGraph extends BaseWidget {
     readonly rtypWaitingName: string = uuidv4();
-    _dbdFiles: DbdFiles = new DbdFiles({}, {});
+    _dbd: Dbd = new Dbd({}, {});
 
     networkData: {
         nodes: DataSet<any, "id">;
@@ -1057,10 +1057,10 @@ export class ChannelGraph extends BaseWidget {
 
 
         // (4)
-        const dbdFiles = this.getDbdFiles();
-        const inLinkFieldNames = dbdFiles.getRecordTypeInLinkFieldNames(rtyp);
-        const outLinkFieldNames = dbdFiles.getRecordTypeOutLinkFieldNames(rtyp);
-        const fwdLinkFieldNames = dbdFiles.getRecordTypeFwdLinkFieldNames(rtyp);
+        const dbd = this.getDbd();
+        const inLinkFieldNames = dbd.getRecordInLinkFieldNames(rtyp);
+        const outLinkFieldNames = dbd.getRecordOutLinkFieldNames(rtyp);
+        const fwdLinkFieldNames = dbd.getRecordFwdLinkFieldNames(rtyp);
         for (const linkFieldName of inLinkFieldNames) {
             linksStaticData.inLinks[linkFieldName] = undefined;
         }
@@ -1205,7 +1205,7 @@ export class ChannelGraph extends BaseWidget {
         menus: type_dbd_menus,
         recordTypes: type_dbd_records,
     }) => {
-        this._dbdFiles = new DbdFiles(result["recordTypes"], result["menus"]);
+        this._dbd = new Dbd(result["recordTypes"], result["menus"]);
 
         if (g_widgets1.isEditing()) {
             return;
@@ -1221,8 +1221,8 @@ export class ChannelGraph extends BaseWidget {
     _ElementArea = React.memo(this._ElementAreaRaw, () => this._useMemoedElement());
 
     // -------------------- helper functions ----------------
-    getDbdFiles = () => {
-        return this._dbdFiles;
+    getDbd = () => {
+        return this._dbd;
     }
 
 
@@ -1273,7 +1273,7 @@ export class ChannelGraph extends BaseWidget {
     jobsAsOperatingModeBegins() {
         super.jobsAsEditingModeBegins();
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
-        const dbdAssigned = Object.keys(this.getDbdFiles().getRecordTypes()).length > 0;
+        const dbdAssigned = Object.keys(this.getDbd().getRecords()).length > 0;
         if (dbdAssigned) {
             // switch from editing mode to operating mode, with the DBD files already loaded
             // only need to expand node
