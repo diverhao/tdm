@@ -10,6 +10,10 @@ export enum type_log_levels {
 /**
  * A simple logger for main process and renderer process
  * 
+ * All methods are static
+ * 
+ * Note: the log output is disabled 
+ * 
  * 6 log levels:
  *  - trace
  *  - debug
@@ -23,7 +27,7 @@ export enum type_log_levels {
  * We can set to print the stack trace for all logs by presenting the --log-stack-trace option in command line
  * 
  * Format:
- * [2024-07-04 15:23:15.123] [info] -1 Main process is created
+ * [2024-07-04 15:23:15.123] [info] Something has happened
  */
 export class Log {
     private static _logLevel: type_log_levels = type_log_levels.info;
@@ -107,6 +111,9 @@ export class Log {
             this.printLog(type_log_levels.trace, ...args)
         }
     };
+
+    // ---------------- getters and setters -----------------
+
     static getLogLevel = () => {
         return this._logLevel;
     }

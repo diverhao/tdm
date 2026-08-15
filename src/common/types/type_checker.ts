@@ -10,6 +10,7 @@ export type type_TypeCheckError = {
     valuePreview: string;
 };
 
+/** Truncates text to a safe length for inclusion in an error message. */
 const truncateForError = (text: string, maxLength: number = 240) => {
     if (text.length <= maxLength) {
         return text;
@@ -17,6 +18,7 @@ const truncateForError = (text: string, maxLength: number = 240) => {
     return `${text.slice(0, maxLength)}...`;
 };
 
+/** Creates a concise, serialized preview of a received value. */
 const describeValue = (value: unknown) => {
     if (typeof value === "string") {
         return truncateForError(JSON.stringify(value));
@@ -35,6 +37,7 @@ const describeValue = (value: unknown) => {
     return truncateForError(String(value));
 };
 
+/** Returns a human-readable name for a value's runtime type. */
 const describeReceivedType = (value: unknown) => {
     if (value === undefined) {
         return "undefined";
@@ -48,10 +51,12 @@ const describeReceivedType = (value: unknown) => {
     return typeof value;
 };
 
+/** Summarizes an object schema by listing its field names. */
 const describeSchema = (schema: TypeSchema) => {
     return `object {${Object.keys(schema).join(", ")}}`;
 };
 
+/** Formats a field type as a human-readable expectation. */
 const describeExpectedType = (expectedType: FieldType | PrimitiveFieldType[] | string): string => {
     if (typeof expectedType === "string") {
         return expectedType;
@@ -85,6 +90,7 @@ const describeExpectedType = (expectedType: FieldType | PrimitiveFieldType[] | s
     return describeSchema(expectedType);
 };
 
+/** Creates a structured error for a failed type check. */
 const createTypeCheckError = (fieldPath: string, expectedType: FieldType | PrimitiveFieldType[] | string, value: unknown): type_TypeCheckError => {
     const path = fieldPath || "(root)";
     const expected = describeExpectedType(expectedType);
@@ -100,6 +106,7 @@ const createTypeCheckError = (fieldPath: string, expectedType: FieldType | Primi
     };
 };
 
+/** Validates one value against a field type and returns the first error. */
 function getSingleTypeError(value: unknown, expectedType: FieldType, fieldPath: string = ""): type_TypeCheckError | undefined {
     if (Array.isArray(expectedType)) {
         const matched = expectedType.some((typeCandidate) => getSingleTypeError(value, typeCandidate, fieldPath) === undefined);
@@ -234,6 +241,16 @@ function getSingleTypeError(value: unknown, expectedType: FieldType, fieldPath: 
     }
 }
 
+/**
+ * Validates an object against a type schema, including nested objects, unions,
+ * arrays, tuples, and dictionaries. Fields not declared by the schema are
+ * ignored.
+ *
+ * @param obj The value to validate. The root value must be a plain object.
+ * @param schema The schema that defines the required field types.
+ * @param _path An optional path prefix used in error messages.
+ * @returns The first type-check error, or `undefined` when the object is valid.
+ */
 export function getTypeCheckError(obj: unknown, schema: TypeSchema, _path: string = ""): type_TypeCheckError | undefined {
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
         return createTypeCheckError(_path, "plain object", obj);
@@ -276,6 +293,15 @@ export function getTypeCheckError(obj: unknown, schema: TypeSchema, _path: strin
     return undefined;
 }
 
+/**
+ * Checks whether an object matches a type schema. When validation fails, the
+ * first error is written through `Log.error`.
+ *
+ * @param obj The value to validate. The root value must be a plain object.
+ * @param schema The schema that defines the required field types.
+ * @param _path An optional path prefix used in the logged error message.
+ * @returns `true` when the object is valid; otherwise, `false`.
+ */
 export function isOfType(obj: unknown, schema: TypeSchema, _path: string = ""): boolean {
     const error = getTypeCheckError(obj, schema, _path);
     if (error !== undefined) {

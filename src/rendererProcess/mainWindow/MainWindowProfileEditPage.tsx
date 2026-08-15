@@ -143,13 +143,13 @@ export class MainWindowProfileEditPage {
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    backgroundColor: categoryName === this.getSelectedCategoryName() ? "rgba(200, 200, 200, 0.5)" : "rgba(200, 200, 200, 0)",
+                    backgroundColor: categoryName === this.getSelectedCategoryName() ? "rgba(200, 200, 200, 0.3)" : "rgba(200, 200, 200, 0)",
                     borderLeft: `solid 2px ${categoryName === this.getSelectedCategoryName() ? "rgba(255, 0, 0, 1)" : "rgba(200, 200, 200, 0)"}`,
                 }}
                 onMouseEnter={() => {
                     if (refCategory.current !== null) {
                         refCategory.current.style["cursor"] = "pointer";
-                        refCategory.current.style["backgroundColor"] = "rgba(200,200,200,0.5)";
+                        refCategory.current.style["backgroundColor"] = "rgba(200,200,200,0.3)";
                     }
                     if (refUpDownArrows.current !== null) {
                         refUpDownArrows.current.style["display"] = "inline-flex";
@@ -196,7 +196,7 @@ export class MainWindowProfileEditPage {
                         flexDirection: "row",
                     }}
                 >
-                    <ElementUpDownButtonOnSidebar
+                    {/* <ElementUpDownButtonOnSidebar
                         additionalStyle={{
                             fontSize: 19,
                         }}
@@ -217,7 +217,7 @@ export class MainWindowProfileEditPage {
                         }}
                     >
                         &#8595;
-                    </ElementUpDownButtonOnSidebar>
+                    </ElementUpDownButtonOnSidebar> */}
                 </div>
             </div>
         )
@@ -987,6 +987,7 @@ export class MainWindowProfileEditPage {
             color: "rgb(180, 180, 180)",
             fontSize: 13,
             width: "70%",
+            whiteSpace: "pre-line",
             borderWidth: 1,
             borderStyle: "solid",
             borderColor: "rgba(0,0,0,0)",
@@ -1007,18 +1008,21 @@ export class MainWindowProfileEditPage {
             outline: "none",
             border: "1px solid rgb(190, 190, 190)",
             width: "70%",
+            minHeight: 80,
+            resize: "vertical",
+            fontFamily: "inherit",
         } as React.CSSProperties;
 
         return (
             isEditing ?
-                <input
+                <textarea
                     style={styleInput}
                     value={categoryDescription}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
                         event.preventDefault();
                         setCategoryDescription(event.target.value);
                     }}
-                ></input>
+                ></textarea>
                 :
                 <div
                     style={styleDiv}
@@ -1330,12 +1334,13 @@ export class MainWindowProfileEditPage {
         return (
             envDefaultValue === undefined ? null :
                 <table style={{
-                    color: "rgb(180, 180, 180)",
+                    color: "rgb(51, 65, 85, 1)",
                     fontSize: 13,
                     width: "100%",
-                    backgroundColor: "rgba(90, 90, 90, 1)",
+                    backgroundColor: "rgba(238, 243, 248, 0)",
                     paddingLeft: 6,
                     paddingRight: 6,
+                    borderLeft: "4px solid rgba(109, 135, 165, 1)",
                 }}>
                     <col style={{ width: "30%" }}>
                     </col>
@@ -1374,6 +1379,10 @@ export class MainWindowProfileEditPage {
                     paddingBottom: 11,
                     paddingLeft: 13,
                     paddingRight: 13,
+                    marginRight: 5,
+                    marginBottom: 5,
+                    border: "1px solid rgba(200, 200, 200, 1)",
+                    borderRadius: 5,
                 }}
                 onMouseEnter={() => {
                     if (refElement.current !== null) {
@@ -1405,6 +1414,10 @@ export class MainWindowProfileEditPage {
                     paddingBottom: 11,
                     paddingLeft: 13,
                     paddingRight: 13,
+                    marginRight: 5,
+                    marginBottom: 5,
+                    border: "1px solid rgba(200, 200, 200, 1)",
+                    borderRadius: 5,
                 }}
                 onMouseEnter={() => {
                     if (refElement.current !== null) {
@@ -1436,6 +1449,10 @@ export class MainWindowProfileEditPage {
                     paddingBottom: 11,
                     paddingLeft: 13,
                     paddingRight: 13,
+                    marginRight: 5,
+                    marginBottom: 5,
+                    border: "1px solid rgba(200, 200, 200, 1)",
+                    borderRadius: 5,
                 }}
                 onMouseEnter={() => {
                     if (refElement.current !== null) {
@@ -1470,6 +1487,10 @@ export class MainWindowProfileEditPage {
                     paddingBottom: 11,
                     paddingLeft: 13,
                     paddingRight: 13,
+                    marginRight: 5,
+                    marginBottom: 5,
+                    border: "1px solid rgba(200, 200, 200, 1)",
+                    borderRadius: 5,
                 }}
                 onMouseEnter={() => {
                     if (refElement.current !== null) {

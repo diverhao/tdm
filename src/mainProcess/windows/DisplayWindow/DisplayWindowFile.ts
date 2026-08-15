@@ -637,7 +637,6 @@ export class DisplayWindowFile {
             return;
         }
         const fileName = await this.selectFile(fileType);
-        console.log("selection a file ---------------", fileName)
         if (fileName === undefined) {
             // do not show error message on display window, the user may just canceled it
         } else {

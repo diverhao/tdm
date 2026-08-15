@@ -126,7 +126,7 @@ const windowClientsConfig = {
 			new TerserPlugin({
 				terserOptions: {
 					compress: {
-						drop_console: true, // 🚀 remove console.* calls
+						drop_console: false, // keep logging
 						drop_debugger: true, // 🚀 remove debugger statements
 					},
 				},

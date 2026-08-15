@@ -1,6 +1,13 @@
 
 /**
- * The profiles.json has a 
+ * Creates the default contents of the special "For All Profiles" entry in
+ * `profiles.json`.
+ *
+ * This entry stores application-wide settings shared by every profile and is
+ * not a visible profile. It currently contains the general log-file
+ * configuration.
+ *
+ * @returns A new object containing the default application-wide settings.
  */
 export const generateForAllProfilesProfile = (): Record<string, any> => {
     return (
@@ -15,27 +22,53 @@ export const generateForAllProfilesProfile = (): Record<string, any> => {
                     "DESCRIPTION": "Logs of this profile are written to this file. If empty, the logs are output to default output device."
                 }
             }
-
         }
     )
 };
 
-// all atomic data must be string type, e.g. "localhost", "42"
+/**
+ * Creates the default configuration for a TDM profile.
+ *
+ * It can be used as the template for a new profile.
+ * 
+ * Primitive values are always represented as strings, for example `"localhost"` and `"42"`.
+ * 
+ * A "profiles.json" has 4 layers
+ *  - profile
+ *  - category
+ *  - entry
+ *  - DESCRIPTION, value, and other fields
+ *
+ * A value of an entry can be a
+ *  - string, as long as the value is a primitive type data, like "42", "localhost"
+ * 
+ * @returns A new object containing the default profile configuration.
+ */
 export const generateDefaultProfile = (): Record<string, any> => {
     return {
         "About": {
-            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Description of this profile.",
+            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830":
+                "The default TDM profile includes the following configurable categories:\n\n" +
+                " - EPICS CA Settings: Configures Channel Access channel discovery, connections, and network behavior.\n\n" +
+                " - EPICS PVA Settings: Configures PV Access channel discovery, connections, and network behavior.\n\n" +
+                " - epics-tca Settings: Provides advanced transport and timing options for the epics-tca client library.\n\n" +
+                " - EPICS Custom Environment: Controls startup displays, channel behavior, file locations, macros, and external integrations.\n\n" +
+                " - Preset Colors: Defines named RGBA colors available to displays and widgets.\n\n" +
+                "You can also add or remove categories and fields to meet the needs of your application."
         },
         "EPICS CA Settings": {
-            "DESCRIPTION_5f17d09e-fc05-43f2-88a2-d8f989b00c60": "EPICS Channel Access Settings. If you want to ignore a property defined by user, set its value to \"DO NOT SET\" (quotes not included).",
+            "DESCRIPTION_5f17d09e-fc05-43f2-88a2-d8f989b00c60": "EPICS Channel Access (CA) settings are applied in the following order of precedence, from lowest to highest: " +
+                "EPICS defaults, operating-system environment variables, and user-defined values. Configure user-defined values here. " +
+                "To ignore a user-defined property and allow a lower-priority value to apply, set it to \"DO NOT SET\" (without quotation marks).",
             "EPICS_CA_ADDR_LIST": {
-                "DESCRIPTION": "Computers that the TDM searches for the EPICS channels. If you want to ignore the setting, set one entry to \"DO NOT SET\" (quotes not included).",
+                "DESCRIPTION": "Network destinations used to search for EPICS Channel Access channels. Each entry may be a host name or IP address, "
+                    + "optionally followed by a port. To ignore this user-defined list and use a lower-priority setting, set its only entry to \"DO NOT SET\" (without quotation marks).",
                 "value": [
                     "DO NOT SET"
                 ]
             },
             "EPICS_CA_AUTO_ADDR_LIST": {
-                "DESCRIPTION": "Whether to search EPICS channels in local network using broadcast address.",
+                "DESCRIPTION": "Controls whether TDM automatically searches local-network broadcast addresses for EPICS Channel Access channels. Choose \"YES\" to enable this behavior, \"NO\" to disable it, or \"DO NOT SET\" to use a lower-priority setting.",
                 "value": "YES",
                 "choices": [
                     "YES",
@@ -43,51 +76,53 @@ export const generateDefaultProfile = (): Record<string, any> => {
                     "DO NOT SET"
                 ]
             },
+            "EPICS_CA_CONN_TMO": {
+                "DESCRIPTION": "The number of seconds the Channel Access client waits without receiving a beacon from an IOC before sending a TCP echo request to verify the connection.",
+                "value": "DO NOT SET"
+            },
+            "EPICS_CA_MAX_ARRAY_BYTES": {
+                "DESCRIPTION": "The maximum array-transfer size, in bytes, for Channel Access data. This setting is retained for configuration compatibility but is not currently used by epics-tca.",
+                "value": "DO NOT SET"
+            },
+            "EPICS_CA_MAX_SEARCH_PERIOD": {
+                "DESCRIPTION": "The maximum interval, in seconds, between repeated searches for an unresolved Channel Access channel. Search intervals increase up to this limit.",
+                "value": "DO NOT SET"
+            },
+            "EPICS_TS_MIN_WEST": {
+                "DESCRIPTION": "The local time-zone offset expressed as minutes west of GMT, as used by legacy EPICS timestamps. This setting is retained for compatibility but is not currently used by epics-tca.",
+                "value": "DO NOT SET"
+            },
+            "EPICS_CA_REPEATER_PORT": {
+                "DESCRIPTION": "The UDP port used by the local Channel Access repeater to receive IOC beacons and client registrations. The default port is 5065. If another repeater is already listening on this port, epics-tca uses the existing repeater.",
+                "value": "DO NOT SET"
+            },
             "EPICS_CA_NAME_SERVERS": {
-                "DESCRIPTION": "This variable is not used in epics-tca.",
+                "DESCRIPTION": "Addresses of EPICS Channel Access name servers for channel discovery. This setting is retained for configuration compatibility but is not currently used by epics-tca.",
                 "value": [
                     "DO NOT SET"
                 ]
             },
-            "EPICS_CA_CONN_TMO": {
-                "DESCRIPTION": "If the client has not seen a beacon from EPICS IOC for EPICS_CA_CONN_TMO seconds, send an echo message.",
-                "value": "DO NOT SET"
-            },
             "EPICS_CA_BEACON_PERIOD": {
-                "DESCRIPTION": "The maximum period for beacons sent from EPICS IOC. This property is not used by epics-tca.",
-                "value": "DO NOT SET"
-            },
-            "EPICS_CA_REPEATER_PORT": {
-                "DESCRIPTION": "The Channel Access repeater port used by epics-tca. If there is another CA repeater running, this setting is ignored.",
+                "DESCRIPTION": "The expected maximum interval, in seconds, between beacons from a Channel Access IOC. epics-tca uses this interval when checking inactive TCP connections.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_SERVER_PORT": {
-                "DESCRIPTION": "The port that the EPICS IOC uses for data transmission. This port also serves as the UDP channel search port. This setting is not used by epics-tca.",
+                "DESCRIPTION": "The default UDP destination port for Channel Access search requests when an address does not specify a port. It is also the standard TCP port for Channel Access servers. The default port is 5064.",
                 "value": "DO NOT SET"
             },
-            "EPICS_CA_MAX_ARRAY_BYTES": {
-                "DESCRIPTION": "The maximum size of the array for EPICS data. This property is not used by epics-tca.",
-                "value": "DO NOT SET"
-            },
-            "EPICS_CA_MAX_SEARCH_PERIOD": {
-                "DESCRIPTION": "The maximum search period (in unit of second) of the EPICS channel search.",
-                "value": "DO NOT SET"
-            },
-            "EPICS_TS_MIN_WEST": {
-                "DESCRIPTION": "Number of positive minutes west of GMT. This setting is not used by epics-tca.",
-                "value": "DO NOT SET"
-            }
         },
         "EPICS PVA Settings": {
-            "DESCRIPTION_099a9c8f-23ec-4b21-ae76-5dfb78e6ea6f": "EPICS PV Access Settings. If you want to ignore a property defined by user, set its value to \"DO NOT SET\" (quotes not included).  ",
+            "DESCRIPTION_099a9c8f-23ec-4b21-ae76-5dfb78e6ea6f": "EPICS PV Access (PVA) settings are applied in the following order of precedence, from lowest to highest: " +
+                "EPICS defaults, operating-system environment variables, and user-defined values. Configure user-defined values here. " +
+                "To ignore a user-defined property and allow a lower-priority value to apply, set it to \"DO NOT SET\" (without quotation marks).",
             "EPICS_PVA_ADDR_LIST": {
-                "DESCRIPTION": "The computers that the epics-tca searches for the channels.",
+                "DESCRIPTION": "Network destinations used to search for PV Access channels. Each entry may be a host name or IP address, optionally followed by a port. To ignore this user-defined list and use a lower-priority setting, set its only entry to \"DO NOT SET\" (without quotation marks).",
                 "value": [
                     "DO NOT SET"
                 ]
             },
             "EPICS_PVA_AUTO_ADDR_LIST": {
-                "DESCRIPTION": "Whether to search the PVA channel in local network through broadcast address.",
+                "DESCRIPTION": "Controls whether TDM automatically searches local-network broadcast addresses for PV Access channels. Choose \"YES\" to enable this behavior, \"NO\" to disable it, or \"DO NOT SET\" to use a lower-priority setting.",
                 "value": "DO NOT SET",
                 "choices": [
                     "YES",
@@ -96,97 +131,97 @@ export const generateDefaultProfile = (): Record<string, any> => {
                 ]
             },
             "EPICS_PVA_SERVER_PORT": {
-                "DESCRIPTION": "The port that EPICS IOC uses for data transmission. epics-tca does not this setting.",
+                "DESCRIPTION": "The default TCP port used by PV Access servers. The standard port is 5075. This client-side setting is retained for compatibility but is not currently used by epics-tca.",
                 "value": "DO NOT SET"
             },
             "EPICS_PVA_BROADCAST_PORT": {
-                "DESCRIPTION": "The epics-tca listens to this port for beacons from IOC. This port also serves as the UDP channel search port.",
+                "DESCRIPTION": "The UDP port used for PV Access channel-search requests and IOC beacons. epics-tca sends searches to and listens for beacons on this port. The default port is 5076.",
                 "value": "DO NOT SET"
             },
             "EPICS_PVA_CONN_TMO": {
-                "DESCRIPTION": "If the epics-tca has not received beacon for this time, send an echo message.",
+                "DESCRIPTION": "The PV Access TCP inactivity timeout, in seconds. epics-tca sends periodic echo requests and closes an unresponsive connection after this timeout is exceeded.",
                 "value": "DO NOT SET"
             },
             "EPICS_PVA_NAME_SERVERS": {
-                "DESCRIPTION": "Name servers for channel search. epics-tca does not use this setting.",
+                "DESCRIPTION": "Addresses of PV Access name servers for channel discovery. This setting is retained for configuration compatibility but is not currently used by epics-tca.",
                 "value": [
                     "DO NOT SET"
                 ]
             },
             "EPICS_PVA_BEACON_PERIOD": {
-                "DESCRIPTION": "The maximum period for beacons sent from IOC.",
+                "DESCRIPTION": "The expected maximum interval, in seconds, between beacons from a PV Access IOC. This setting is retained for compatibility but is not currently used by epics-tca.",
                 "value": "DO NOT SET"
             }
         },
         "epics-tca Settings": {
-            "DESCRIPTION_2df940c1-e4e6-45f2-a243-c696e5aae3e7": "Settings for the epics-tca library. This library is the backend of the Channel Access and PV Access.",
+            "DESCRIPTION_2df940c1-e4e6-45f2-a243-c696e5aae3e7": "Advanced transport and timing settings for epics-tca, the client library that provides TDM with Channel Access and PV Access communication.",
             "EPICS_CA_MIN_SEARCH_PERIOD": {
-                "DESCRIPTION": "The minimum search period (in unit of second) for a channel. Making it larger will relieve the network traffic.",
+                "DESCRIPTION": "The minimum interval, in seconds, between searches for an unresolved Channel Access channel. Increasing this value reduces search traffic but may delay channel discovery.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_GET_TIMEOUT_DEFAULT": {
-                "DESCRIPTION": "The default GET channel value time out. Unit is second. It is not currently used.",
+                "DESCRIPTION": "The default timeout, in seconds, for Channel Access get operations. This setting is defined for compatibility but is not currently used by epics-tca.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_SCHEDULING_PRIORITY_DEFAULT": {
-                "DESCRIPTION": "Default priority of CA channel scheduling. It is always 1.",
+                "DESCRIPTION": "The default server scheduling priority requested when a Channel Access channel is created. Valid values range from 0 to 100; the epics-tca default is 1.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_TCP_RE_SEARCH_CHAN_TIMESPAN": {
-                "DESCRIPTION": "This setting is not used in epics-tca. Unit is second.",
+                "DESCRIPTION": "A time span, in seconds, intended to randomize channel re-search delays after a TCP connection is lost. This setting is not currently used by epics-tca.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_TCP_RE_SEARCH_CHAN_TIMEOUT": {
-                "DESCRIPTION": "This setting is currently not used in epics-tca. Unit is second.",
+                "DESCRIPTION": "The intended delay, in seconds, before re-searching for a channel after its TCP transport is destroyed. This setting is not currently used by epics-tca.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_REPEATER_REGISTER_TIMEOUT": {
-                "DESCRIPTION": "Try to register this epics-tca client to CA repeater at this rate. Once the registration succeeds, it is ignored. Unit is second.",
+                "DESCRIPTION": "The interval, in seconds, between attempts to register this client with the Channel Access repeater. Registration attempts stop after one succeeds.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_TCP_INACTIVE_TIMEOUT": {
-                "DESCRIPTION": "If the TCP connection has no data after this time interval, send an echo. It is similar to EPICS_CA_CONN_TMO. But the later one relies on beacon. Unit is second.",
+                "DESCRIPTION": "The TCP inactivity interval, in seconds, after which epics-tca sends an echo request. Unlike EPICS_CA_CONN_TMO, this check is based on TCP traffic rather than IOC beacons.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_BEACON_TIMEOUT": {
-                "DESCRIPTION": "If the epics-tca has not received the beacon within this time interval, clear the resource for this beacon in epics-tca. It is just for saving resources, it does not affect the connection.",
+                "DESCRIPTION": "The inactivity interval, in seconds, used to retire stored IOC beacon information. This cleanup conserves resources and does not itself change channel connections.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_MAX_UDP_BUFFER": {
-                "DESCRIPTION": "The maximum size of the UDP channel search packet. Unit is byte.",
+                "DESCRIPTION": "The maximum size, in bytes, of a UDP packet containing batched Channel Access search requests.",
                 "value": "DO NOT SET"
             },
             "EPICS_CA_REPEATER_CLIENT_CHECK_TIME": {
-                "DESCRIPTION": "Used by CA repeater to periodically check if the registered clients are still alive. If not, release the resource. Unit is second.",
+                "DESCRIPTION": "The interval, in seconds, at which the Channel Access repeater checks registered clients and releases resources for clients that are no longer running.",
                 "value": "DO NO TUSE"
             },
             "EPICS_CA_REPEATER_THREAD_CHECK_TIME": {
-                "DESCRIPTION": "Periodically check if the CA repeater is still alive. If not, (re)start the CA repeater. Unit is second.",
+                "DESCRIPTION": "The interval, in seconds, at which epics-tca checks whether the Channel Access repeater is running and starts or restarts it when necessary.",
                 "value": "DO NOT SET"
             },
             "EPICS_PVA_MIN_SEARCH_PERIOD": {
-                "DESCRIPTION": "The minimum PVA channel search period. Unit is second.",
+                "DESCRIPTION": "The minimum interval, in seconds, between searches for an unresolved PV Access channel. Search intervals increase from this initial value.",
                 "value": "DO NOT SET"
             },
             "EPICS_PVA_MAX_SEARCH_PERIOD": {
-                "DESCRIPTION": "the maximum PVA channel search period.",
+                "DESCRIPTION": "The maximum interval, in seconds, between repeated searches for an unresolved PV Access channel.",
                 "value": "DO NOT SET"
             }
         },
         "EPICS Custom Environment": {
-            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Custom EPICS environment.",
-            "Default TDL Files": { value: [], DESCRIPTION: "Open these tdl files when this profile starts to run. It could be an absolute path, relative path, or a web path." },
-            "Default Search Paths": { value: ["./", "$HOME"], DESCRIPTION: "Paths where TDM looks for the relative path tdl files. Note: web path is not honored in TDM." },
+            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Application and EPICS-related settings that control startup displays, channel behavior, file locations, and external integrations.",
+            "Default TDL Files": { value: [], DESCRIPTION: "Display files that TDM opens automatically when this profile starts. Each entry may be an absolute path, a path resolved through Default Search Paths, or a web URL where supported." },
+            "Default Search Paths": { value: ["./", "$HOME"], DESCRIPTION: "Local directories searched, in order, when TDM resolves a relative display-file path. Web URLs are not supported as search paths." },
             // speical type for "Default Mode"
-            "Default Mode": { value: "operating", DESCRIPTION: "Mode for default tdl files.", choices: ["operating", "editing"] },
+            "Default Mode": { value: "operating", DESCRIPTION: "The initial mode for display files opened automatically when this profile starts: operating or editing.", choices: ["operating", "editing"] },
             // manually opened displays and newly created blank displays are always editable
-            "Editable": { value: "No", DESCRIPTION: "Whether the default TDL files and the TDLs opened from them are editable. The newly created TDL files are always editable.", choices: ["Yes", "No"] },
+            "Editable": { value: "No", DESCRIPTION: "Controls whether default display files and displays opened from them may be edited. Newly created blank displays are always editable.", choices: ["Yes", "No"] },
             // manually opened displays and newly created blank displays are always editable
-            "Manually Opened TDL Editable": { value: "Yes", DESCRIPTION: "Whether the manually opened TDL files and the TDL opened from them are editable.", choices: ["Yes", "No"] },
+            "Manually Opened TDL Editable": { value: "Yes", DESCRIPTION: "Controls whether manually opened display files and displays opened from them may be edited.", choices: ["Yes", "No"] },
             // manually opened displays and newly created blank displays are always editable
-            "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The mode for manually opened TDL files.", choices: ["operating", "editing"] },
+            "Manually Opened TDL Mode": { value: "operating", DESCRIPTION: "The initial mode for manually opened display files: operating or editing.", choices: ["operating", "editing"] },
             "Disable PUT": {
-                "DESCRIPTION": "Whether to disable the PUT (like caput/pvput ...) operation for CA/PVA channels.",
+                "DESCRIPTION": "Controls whether Channel Access and PV Access write operations, such as caput and pvput, are blocked. Choose \"YES\" to disable writes or \"NO\" to allow them.",
                 "value": "NO",
                 "choices": [
                     "NO",
@@ -194,7 +229,7 @@ export const generateDefaultProfile = (): Record<string, any> => {
                 ]
             },
             "Default Protocol": {
-                "DESCRIPTION": "The default protocol when the channel is created. The PV is created with the default protocol if the protocol is not specified. If the channel name starts with \"pva://\" or\"ca://\", the protocol is determined by the prefix.",
+                "DESCRIPTION": "The protocol used when a channel name does not specify one. An explicit \"ca://\" or \"pva://\" prefix overrides this setting.",
                 "value": "CA",
                 "choices": [
                     "CA",
@@ -203,49 +238,57 @@ export const generateDefaultProfile = (): Record<string, any> => {
             },
             "Archiver Appliance Retrieval Address": {
                 value: [],
-                DESCRIPTION: "Archiver Appliance retrieval address, e.g. 127.0.0.1:17668/retrieval"
+                DESCRIPTION: "EPICS Archiver Appliance retrieval endpoints used to query historical data. Example: 127.0.0.1:17668/retrieval."
             },
             "File Browser Bookmarks": {
-                "DESCRIPTION": "Bookmarks for File Browser. The first column is the folder/file path. The second column is for Web mode write permission: if YES, the user can create/modify/rename files, if NO, the user can only read the file/folder.",
+                "DESCRIPTION": "Bookmarks displayed in the File Browser. Each row contains a file or folder path and its Web-mode write permission: \"YES\" allows creating, modifying, and renaming items; \"NO\" provides read-only access.",
                 "value": [],
                 "type": "[string,string][]"
             },
             "Symbol Library": {
-                "DESCRIPTION": "Folders for symbols",
+                "DESCRIPTION": "Local folders that TDM scans for custom symbols to include in the Symbol Gallery.",
                 "value": []
             },
             // speical type for "Macros"
-            Macros: { value: [], DESCRIPTION: "Macros for default tdl files. Left column is the macro name, right column is the macro value.", type: "[string,string][]" },
-            "EPICS Log Level": { value: "error", DESCRIPTION: "The log level for EPICS library (epics-tca).", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
-            "Video Saving Folder": { value: " ", DESCRIPTION: "Automatically save video files to this folder. Fallback is HOME folder." },
-            "Image Saving Folder": { value: " ", DESCRIPTION: "Automatically save image files to this folder. Fallback is HOME folder." },
-            "Python Command": { value: "python3", DESCRIPTION: "The python command for running script attached to the display windows. You can add options to it." },
-            "Channel Lookup Server Address": { value: " ", DESCRIPTION: "The channel lookup server address, e.g. the Channel Explorer server address like http://localhost:3000" }
+            Macros: { value: [], DESCRIPTION: "Name-value macros applied to display files opened automatically when this profile starts. Each row contains a macro name and its value.", type: "[string,string][]" },
+            "EPICS Log Level": { value: "error", DESCRIPTION: "The minimum severity level emitted by the epics-tca library. Messages below this level are suppressed.", choices: ["trace", "debug", "info", "warn", "error", "fatal"] },
+            "Video Saving Folder": { value: " ", DESCRIPTION: "The folder where TDM saves video recordings. If the folder is blank, unavailable, or not writable, TDM uses the current user's home folder." },
+            "Image Saving Folder": { value: " ", DESCRIPTION: "The folder where TDM saves captured images. If the folder is blank, unavailable, or not writable, TDM uses the current user's home folder." },
+            "Python Command": { value: "python3", DESCRIPTION: "The command used to run Python scripts attached to display windows. Command-line options may be included." },
+            "Channel Lookup Server Address": { value: " ", DESCRIPTION: "The base URL of the channel lookup service used to search for channel names. Example: http://localhost:3000." }
         },
         "Preset Colors": {
-            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Colors.",
-            Background: { value: ["255", "255", "255", "100"], DESCRIPTION: "Background color" },
-            Attention: { value: ["255", "160", "0", "100"], DESCRIPTION: "Attention color" },
-            "Button Background": { value: ["210", "210", "210", "100"], DESCRIPTION: "Button's background color" },
-            Disconnected: { value: ["200", "0", "200", "80"], DESCRIPTION: "color" },
-            Invalid: { value: ["255", "0", "255", "100"], DESCRIPTION: "color" },
-            Major: { value: ["255", "0", "0", "100"], DESCRIPTION: "color" },
-            Minor: { value: ["255", "128", "0", "100"], DESCRIPTION: "color" },
-            Off: { value: ["60", "100", "60", "100"], DESCRIPTION: "color" },
-            OK: { value: ["0", "255", "0", "100"], DESCRIPTION: "color" },
-            On: { value: ["0", "255", "0", "100"], DESCRIPTION: "color" },
-            "Read Background": { value: ["240", "240", "240", "100"], DESCRIPTION: "color" },
-            Stop: { value: ["255", "0", "0", "100"], DESCRIPTION: "color" },
-            Text: { value: ["0", "0", "0", "100"], DESCRIPTION: "color" },
-            "Write Background": { value: ["128", "255", "255", "100"], DESCRIPTION: "color" },
-            "Header Background": { value: ["77", "77", "77", "100"], DESCRIPTION: "color" },
-            "Header Foreground": { value: ["255", "255", "255", "100"], DESCRIPTION: "color" },
-            "Active Text": { value: ["255", "255", "0", "100"], DESCRIPTION: "color" },
-            Grid: { value: ["128", "128", "128", "100"], DESCRIPTION: "color" },
+            "DESCRIPTION_3439f8f9-0010-4d60-ba8b-5a01fbfd4830": "Named colors available to displays and widgets. Each value contains red, green, blue, and opacity components.",
+            Background: { value: ["255", "255", "255", "100"], DESCRIPTION: "The default display background color." },
+            Attention: { value: ["255", "160", "0", "100"], DESCRIPTION: "The color used to draw attention to an item or state." },
+            "Button Background": { value: ["210", "210", "210", "100"], DESCRIPTION: "The default background color for buttons." },
+            Disconnected: { value: ["200", "0", "200", "80"], DESCRIPTION: "The color used when a channel is disconnected." },
+            Invalid: { value: ["255", "0", "255", "100"], DESCRIPTION: "The color used for invalid channel values or states." },
+            Major: { value: ["255", "0", "0", "100"], DESCRIPTION: "The color used for a major alarm severity." },
+            Minor: { value: ["255", "128", "0", "100"], DESCRIPTION: "The color used for a minor alarm severity." },
+            Off: { value: ["60", "100", "60", "100"], DESCRIPTION: "The color used to represent an off state." },
+            OK: { value: ["0", "255", "0", "100"], DESCRIPTION: "The color used to represent a normal or OK state." },
+            On: { value: ["0", "255", "0", "100"], DESCRIPTION: "The color used to represent an on state." },
+            "Read Background": { value: ["240", "240", "240", "100"], DESCRIPTION: "The default background color for read-only values and controls." },
+            Stop: { value: ["255", "0", "0", "100"], DESCRIPTION: "The color used to represent a stopped state or stop action." },
+            Text: { value: ["0", "0", "0", "100"], DESCRIPTION: "The default text color." },
+            "Write Background": { value: ["128", "255", "255", "100"], DESCRIPTION: "The default background color for writable values and controls." },
+            "Header Background": { value: ["77", "77", "77", "100"], DESCRIPTION: "The default background color for headers." },
+            "Header Foreground": { value: ["255", "255", "255", "100"], DESCRIPTION: "The default foreground color for header content." },
+            "Active Text": { value: ["255", "255", "0", "100"], DESCRIPTION: "The text color used for active or selected items." },
+            Grid: { value: ["128", "128", "128", "100"], DESCRIPTION: "The default color for grid lines." },
         },
     };
 };
 
+/**
+ * Creates the SNS-specific archive configuration category.
+ *
+ * The generated category contains the Oracle database credentials and
+ * connection string used to access the SNS archive.
+ *
+ * @returns A new object containing the default SNS archive configuration.
+ */
 export const generateArchiveCategory_SNS = () => {
     return {
         "Archieve": {
