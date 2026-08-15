@@ -23,9 +23,6 @@ export class Promises {
 			resolveFunc = resolve;
 			rejectFunc = reject;
 		});
-		// .catch((err: any) => {
-		// 	GlobalMethods.errorLog(`Promise ${name} is rejected.`);
-		// });
 
 		this.queue[name] = {
 			...customProps,
@@ -40,7 +37,7 @@ export class Promises {
 	};
 
 	// to prevent the unhandled rejection error if the promise is never awaited
-	dummyAwait = async (name: string) => {
+	private dummyAwait = async (name: string) => {
 		try {
             // no countdown
 			await this.getPromise(name, false);

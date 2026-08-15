@@ -6,7 +6,7 @@ import { MainWindowStartupPage } from "../../../rendererProcess/mainWindow/MainW
 import { MainWindowProfileRunPage } from "../../../rendererProcess/mainWindow/MainWindowProfileRunPage";
 import { IpcManagerOnMainWindow } from "./IpcManagerOnMainWindow";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
-import { disableImageDragging } from "../../../rendererProcess/global/disableImageDragging";
+import { Mouse } from "../../../rendererProcess/keyboard_mouse/Mouse";
 import { PromptOnMainWindow } from "../../../rendererProcess/helperWidgets/Prompt/PromptOnMainWindow";
 import { Log } from "../../../common/Log";
 import { type_MainProcessMode } from "../../../common/types/type_widget_tdl";
@@ -65,7 +65,7 @@ export class MainWindowClient {
     private _site: string = "";
 
     constructor(mainWindowId: string, ipcServerPort: number, hostname: string | undefined = undefined) {
-        disableImageDragging();
+        Mouse.disableImageAndTextDragging();
         this._loadCustomFonts();
         this._windowId = mainWindowId;
         this.setProcessId(mainWindowId);

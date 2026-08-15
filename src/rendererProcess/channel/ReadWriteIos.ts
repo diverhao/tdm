@@ -72,12 +72,6 @@ export class ReadWriteIos extends Promises {
         return true;
     };
 
-    // public getEnv = (
-    // 	envName: string = ""
-    // ): string | number | string[] | number[] | Record<string, string | number | string[] | number[]> | undefined => {
-    // 	return Environment.getInstance().getEnv(envName);
-    // };
-
     // --------------- promise --------------
 
     getIo = (id: number) => {

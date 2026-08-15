@@ -1167,7 +1167,7 @@ npm install -g typescript
                 "/rendererProcess/helperWidgets/Table": "table component in the display window",
                 "/rendererProcess/helperWidgets/VideoRecorder": "video recorder functionality",
                 "/rendererProcess/history": "history of user actions when editing the display window",
-                "/rendererProcess/keyboard": "shortcut keys for the display window",
+                "/rendererProcess/keyboard_mouse": "shortcut keys for the display window",
                 "/rendererProcess/mainWindow": "main window components in renderer process",
                 "/rendererProcess/mainWindow/GlobalVariables.ts": "shared data for main window",
                 "/rendererProcess/mainWindow/MainWindowProfileEditPage.tsx": "profile editor page in main window",

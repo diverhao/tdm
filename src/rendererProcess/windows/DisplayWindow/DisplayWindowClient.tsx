@@ -5,7 +5,8 @@ import { g_widgets1, getBasePath } from "../../../rendererProcess/global/GlobalV
 import { Canvas } from "../../../rendererProcess/helperWidgets/Canvas/Canvas";
 import { IpcManagerOnDisplayWindow } from "./IpcManagerOnDisplayWindow";
 import { FontsData } from "../../../rendererProcess/global/FontsData";
-import { Keyboard } from "../../../rendererProcess/keyboard/Keyboard";
+import { Keyboard } from "../../../rendererProcess/keyboard_mouse/Keyboard";
+import { Mouse } from "../../../rendererProcess/keyboard_mouse/Mouse";
 import { ActionHistory } from "../../../rendererProcess/history/ActionHistory";
 import { VideoRecorder } from "../../../rendererProcess/helperWidgets/VideoRecorder/VideoRecorder";
 import { Log, type_log_levels } from "../../../common/Log";
@@ -20,7 +21,6 @@ import '../../../common/resources/css/katex.min.css'
 import { toBlob } from "dom-to-image-more";
 import { ChannelNameHint } from "../../../rendererProcess/helperWidgets/ChannelNameHint/ChannelNameHint";
 import { SymbolGallery } from "../../helperWidgets/SymbolGallery/SymbolGallery";
-import { disableImageDragging } from "../../global/disableImageDragging";
 import { DisplayWindowFile } from "./DisplayWindowFile";
 import { DisplayWindowEvent } from "./DisplayWindowEvent";
 import { type_MainProcessMode } from "../../../common/types/type_widget_tdl";
@@ -81,7 +81,7 @@ export class DisplayWindowClient {
     constructor(displayWindowId: string, ipcServerPort: number | undefined, hostname: string | undefined = undefined) {
         // set log level
         Log.setLogLevel(type_log_levels.info);
-        disableImageDragging();
+        Mouse.disableImageAndTextDragging();
 
         Log.debug("Start to create DisplayWindowClient object");
         this._loadCustomFonts();
