@@ -1,13 +1,13 @@
-import { Promises, type_promise } from "../../channel/Promises";
+import { Promises, type_promise_entry } from "../../channel/Promises";
 
-interface type_terminal_io extends type_promise {
+interface type_terminal_io extends type_promise_entry {
 	command: string;
     callback: any;
 }
 
 // used only by Context, singleton
 export class TerminalIos extends Promises {
-	queue: Record<string, type_terminal_io> = {};
+	registry: Record<string, type_terminal_io> = {};
 	// the most recent id
 	private id: number = 0;
 	private constructor() {
@@ -24,13 +24,13 @@ export class TerminalIos extends Promises {
 		}
 	};
 
-	// timeout = second
-	appendIo(command: string, timeout: number | undefined = undefined, callback: any = undefined) {
+	// timeoutSeconds is measured in seconds
+	addIo(command: string, timeoutSeconds: number | undefined = undefined, callback: any = undefined) {
 		const id = this.obtainAnId();
-        this.appendPromise(this.id.toString(), {
+		this.addPromise(this.id.toString(), timeoutSeconds ?? 0, {
 			command: command,
-            callback: callback,
-		}, timeout);
+			callback: callback,
+		});
 		return id;
 	}
 
@@ -66,11 +66,11 @@ export class TerminalIos extends Promises {
 	// --------------- promise --------------
 
 	getIo = (id: number) => {
-		return this.getPromiseWrapper(id.toString());
+		return this.getPromiseEntry(id.toString());
 	};
 
 	getAllIos = () => {
-		return this.queue;
+		return this.registry;
 	};
 
 	getIoPromise = (id: number) => {
@@ -84,9 +84,9 @@ export class TerminalIos extends Promises {
 	};
 
 	resolveIo = (id: number, result: any) => {
-        // before the resolvePromise()
+        // before resolve()
         const callback = this.getCallback(id);
-		this.resolvePromise(id.toString(), result);
+		this.resolve(id.toString(), result);
         // run callback
         if (callback !== undefined) {
             callback();
@@ -96,27 +96,24 @@ export class TerminalIos extends Promises {
     // --------------- callback ------------
 
     getCallback = (id: number): any => {
-        if (this.queue[id.toString()] === undefined) {
+        if (this.registry[id.toString()] === undefined) {
             return undefined;
         }
-        return this.queue[id.toString()].callback;
+        return this.registry[id.toString()].callback;
     }
 
 	// --------------- reject --------------
 
-	getIoAllRejectFunc = () => {
-		return this.getAllRejectFuncs();
-	};
 
 	getIoRejectFunc = (id: number) => {
 		return this.getRejectFunc(id.toString());
 	};
 
 	rejectAllIos = () => {
-		this.rejectAllPromises();
+		this.rejectAll();
 	};
 
 	rejectIo = (id: number, reason: string = "") => {
-		this.rejectPromise(id.toString(), reason);
+		this.reject(id.toString(), reason);
 	};
 }

@@ -180,7 +180,7 @@ export class Terminal extends BaseWidget {
 
 
     terminalCommand = async (command: string, args: any[] = []) => {
-        const ioId = this.getIos().appendIo("os.homedir", 1, undefined);
+        const ioId = this.getIos().addIo("os.homedir", 1, undefined);
         g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("terminal-command", {
             displayWindowId: g_widgets1.getRoot().getDisplayWindowClient().getWindowId(),
             // bounce back

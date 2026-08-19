@@ -44,7 +44,6 @@ export class DisplayWindowChannel {
                 channelName: channelName,
                 widgetKey: widgetKey,
                 fullPvaType: data,
-                ioId: ioId,
             });
             return;
         }
@@ -57,16 +56,15 @@ export class DisplayWindowChannel {
     };
 
     handleFetchPvaType = async (options: IpcDispWinToMainProc["fetch-pva-type"]) => {
-        const { channelName, widgetKey, ioId, timeout } = options;
+        const { channelName, widgetKey } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
-        const data = await displayWindowAgent.fetchPvaType(channelName, timeout);
+        const data = await displayWindowAgent.fetchPvaType(channelName, undefined);
 
         Log.debug("fetch Pva Type for", channelName, "is", data);
         displayWindowAgent.sendFromMainProcess("fetch-pva-type-reply", {
             channelName: channelName,
             widgetKey: widgetKey,
             fullPvaType: data,
-            ioId: ioId,
         });
     };
 

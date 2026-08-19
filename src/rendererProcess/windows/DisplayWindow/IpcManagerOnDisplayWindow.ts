@@ -877,18 +877,13 @@ export class IpcManagerOnDisplayWindow {
     };
 
     handleFetchPvaTypeReply = (data: IpcMainProcToDispWin["fetch-pva-type-reply"]) => {
-        const { ioId, channelName, fullPvaType } = data;
+        const { channelName, fullPvaType } = data;
         try {
-            const readWriteIos = g_widgets1.getReadWriteIos();
-            // lift the block of GET operation
-            readWriteIos.resolveIo(ioId, fullPvaType);
-
             const channel = g_widgets1.getTcaChannel(channelName);
             channel.setFullPvaType(fullPvaType);
             channel.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_VALUE_FIELD);
         } catch (e) {
             const readWriteIos = g_widgets1.getReadWriteIos();
-            readWriteIos.rejectIo(ioId, `${e}`);
             Log.error(`${e}`);
         }
     };

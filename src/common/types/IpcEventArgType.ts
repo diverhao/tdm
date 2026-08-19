@@ -520,8 +520,8 @@ const IpcDispWinToMainProcSchema = {
         channelName: ipcString(),
         displayWindowId: ipcString(),
         widgetKey: ipcOptional(ipcString()),
-        ioId: ipcNumber(),
-        timeout: ipcOptional(ipcNumber()),
+        // ioId: ipcNumber(),
+        // timeout: ipcOptional(ipcNumber()),
     }),
     "tca-put": ipcObject({
         channelName: ipcString(),
@@ -858,7 +858,6 @@ const IpcMainProcToDispWinSchema = {
         channelName: ipcString(),
         widgetKey: ipcOptional(ipcString()),
         fullPvaType: ipcUnknown<any>(),
-        ioId: ipcNumber(),
     }),
     "dialog-show-message-box": ipcObject({
         info: ipcDialogMessageBoxSchema,

@@ -1,7 +1,7 @@
 import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPES, type_dbrData, type_pva_value } from "../../common/EpicsTcaLib";
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
-import { ReadWriteIos, IO_TYPES } from "./ReadWriteIos";
+import { ReadWriteIos, IO_TYPE } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../../common/GlobalMethods";
 import { type_LocalChannel_data } from "../../common/GlobalVariables";
@@ -486,8 +486,8 @@ export class TcaChannel {
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
 
-        // the ioTimeout for appendIo() is undefined, it never times out
-        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], ioTimeout, callback);
+        // the ioTimeout for addIo() is undefined, it never times out
+        const ioId = this.getReadWriteIos().addIo(this, IO_TYPE["READ"], ioTimeout ?? 0, callback);
         // windowId and ioId are identifiers of this command,
         // ioId is unique across the display window
         // ioTimeout is for caget in main process, after ioTimeout seconds, the caget obtains "undefined"
@@ -541,7 +541,7 @@ export class TcaChannel {
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
         // never timeout
-        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
+        const ioId = this.getReadWriteIos().addIo(this, IO_TYPE["READ"], timeout ?? 0, undefined);
 
         ipcManager.sendFromRendererProcess("tca-get-meta",
             {
@@ -577,8 +577,8 @@ export class TcaChannel {
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
         const windowId = displayWindowClient.getWindowId();
+
         // never timeout
-        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["READ"], timeout, undefined);
 
         // channel name, pva://demo:abc/timeStamp/nanoseconds
         ipcManager.sendFromRendererProcess("fetch-pva-type",
@@ -586,11 +586,9 @@ export class TcaChannel {
                 channelName: this.getChannelName(),
                 displayWindowId: windowId,
                 widgetKey: widgetKey,
-                ioId: ioId,
-                timeout: timeout,
-
             }
         )
+
     };
 
     /**
@@ -628,8 +626,11 @@ export class TcaChannel {
         // accept this input
         dbrData.value = value;
 
-        // the ioTimeout for appendIo() is irrelavent to the timeout of put operation, it is always rejected
-        const ioId = this.getReadWriteIos().appendIo(this, IO_TYPES["WRITE"], ioTimeout, callback);
+        // the ioTimeout for addIo() is irrelevant to the timeout of put operation, it is always rejected
+        let ioId = -1;
+        if (waitNotify === true) {
+            ioId = this.getReadWriteIos().addIo(this, IO_TYPE["WRITE"], ioTimeout, callback);
+        }
         // ioId is unique across the display window
         // ioTimeout is for caput in main process, after ioTimeout seconds
 
@@ -784,7 +785,7 @@ export class TcaChannel {
             if (pvaType === undefined) {
                 return undefined;
             }
-            
+
             let subRequest = "";
             if (this.getPvaValueDisplayType() === pvaValueDisplayType.PRIMITIVE_VALUE_FIELD) {
                 subRequest = "value";
@@ -1124,7 +1125,7 @@ export class TcaChannel {
             }
 
             // (4)
-            this.getReadWriteIos().rejectAllIos(this);
+            this.getReadWriteIos().rejectChannelIos(this);
             // (5)
             const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
             g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-destroy",
