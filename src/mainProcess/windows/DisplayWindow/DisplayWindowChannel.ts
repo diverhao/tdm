@@ -87,6 +87,13 @@ export class DisplayWindowChannel {
         // return status;
     };
 
+    handlePvaPut = async (options: IpcDispWinToMainProc["pva-put"]) => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const { channelName, value, valuePvRequest } = options;
+
+        await displayWindowAgent.pvaPut(channelName, value, 1, valuePvRequest);
+    };
+
     getDisplayWindowAgent = () => {
         return this._displayWindowAgent;
     };

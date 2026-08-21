@@ -1,4 +1,4 @@
-import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value } from "../../common/Epics";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPES, type_dbrData, type_pva_value } from "../../common/EpicsTcaLib";
 import { g_widgets1 } from "../global/GlobalVariables";
 import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPE } from "./ReadWriteIos";
@@ -477,7 +477,7 @@ export class TcaChannel {
     get = async (
         widgetKey: string | undefined,
         ioTimeout: number | undefined,
-        dbrType: Channel_DBR_TYPE | undefined,
+        dbrType: Channel_DBR_TYPES | undefined,
         useInterval: boolean, // only use interval (0.1 s) to send back data, the return value is undefined in this case
         callback?: () => void
     ): Promise<type_dbrData | type_LocalChannel_data> => {
@@ -996,7 +996,7 @@ export class TcaChannel {
                     valueStrArray.push(valueStr.trim());
                 }
             }
-            const dbrTypeStr = Channel_DBR_TYPE[dbrTypeNum];
+            const dbrTypeStr = Channel_DBR_TYPES[dbrTypeNum];
 
             for (let valueStr of valueStrArray) {
                 if (dbrTypeStr.includes("INT") || dbrTypeStr.includes("SHORT") || dbrTypeStr.includes("LONG")) {
@@ -1436,10 +1436,10 @@ export class TcaChannel {
     /**
      * Get dbr type of this channel. Only for CA channel.
      * 
-     * @returns {Channel_DBR_TYPE | undefined} DBR type. If the channel is not connected, return undefined.
+     * @returns {Channel_DBR_TYPES | undefined} DBR type. If the channel is not connected, return undefined.
      * If the display window is in editing mode, return undefined.
      */
-    getDbrType = (): Channel_DBR_TYPE | undefined => {
+    getDbrType = (): Channel_DBR_TYPES | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }
@@ -1452,7 +1452,7 @@ export class TcaChannel {
     /**
      * Get unit of this channel.
      *
-     * @returns {Channel_DBR_TYPE | undefined} Unit. If the channel is not connected, return "".
+     * @returns {Channel_DBR_TYPES | undefined} Unit. If the channel is not connected, return "".
      * If the display window is in editing mode, return "".
      */
     getUnit = (): string => {

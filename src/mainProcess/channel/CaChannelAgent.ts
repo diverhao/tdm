@@ -1,5 +1,5 @@
 import { Channel, ChannelMonitor, Context, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
-import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value } from "../../common/Epics";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request} from "../../common/Epics";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { Log } from "../../common/Log";
@@ -305,7 +305,7 @@ export class CaChannelAgent {
 
     };
 
-    putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<type_pva_status> => {
+    putPva = async (displayWindowId: string, value: type_pva_value, ioTimeout: number, valuePvRequest: type_pva_value_pv_request): Promise<type_pva_status> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         let putStatus: type_pva_status = {
             type: PVA_STATUS_TYPE["ERROR"],
@@ -324,20 +324,9 @@ export class CaChannelAgent {
             }
 
             let pvRequest = this.getPvRequest();
-            if (pvaValueField !== "") {
-                if (pvRequest === "") {
-                    pvRequest = pvaValueField;
-                } else {
-                    pvRequest = pvRequest + "." + pvaValueField;
-                }
-            }
+            pvRequest = [pvRequest, valuePvRequest].filter((part) => part !== "").join(".");
 
-            const newValue = dbrData.value;
-            if (newValue === undefined) {
-                const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
-                throw new Error(errMsg);
-            }
-            putStatus = await channel.putPva(pvRequest, [newValue], ioTimeout);
+            putStatus = await channel.putPva(pvRequest, [value as any], ioTimeout);
         } catch (e) {
             Log.error(e);
         }

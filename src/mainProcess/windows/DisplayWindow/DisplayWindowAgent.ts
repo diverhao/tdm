@@ -1,11 +1,11 @@
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
 import { CaChannelAgent } from "../../channel/CaChannelAgent";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { Channel_DBR_TYPE, type_dbrData } from "../../../common/Epics";
+import { Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
-import { Promises, type_pva_status, type_pva_value } from "epics-tca";
+import { Promises, type_pva_status} from "epics-tca";
 import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
 import { DisplayWindowAttachedScript } from "./DisplayWindowAttachedScript";
 import { DisplayWindowChannel } from "./DisplayWindowChannel";
@@ -306,8 +306,8 @@ export class DisplayWindowAgent {
     };
 
 
-    pvaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string, waitNotify: boolean): Promise<void> => {
-        // return await this.getDisplayWindowChannelsManager().tcaPut(channelName, dbrData, ioTimeout, pvaValueField, waitNotify);
+    pvaPut = async (channelName: string, dbrData: type_pva_value, ioTimeout: number, valuePvRequest: type_pva_value_pv_request): Promise<void> => {
+        return await this.getDisplayWindowChannelsManager().pvaPut(channelName, dbrData, ioTimeout, valuePvRequest);
     };
 
     tcaMonitor = async (channelName: string): Promise<boolean> => {

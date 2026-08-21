@@ -3,7 +3,7 @@
  */
 
 import { type_pva_status } from "epics-tca";
-import { Channel_DBR_TYPE, type_dbrData, type_pva_value } from "../Epics";
+import { Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../Epics";
 import { type_LocalChannel_data } from "../GlobalVariables";
 import { type_tdl } from "../GlobalVariables";
 import { Log } from "../Log";
@@ -335,7 +335,7 @@ const ipcTdlSchema: type_IpcValueSchema<type_tdl> = ipcCustom<type_tdl>("valid T
         // do not verify TDL here, let the Widget do it
         // verifyTdl(value);
         return true;
-    } catch(e) {
+    } catch (e) {
         Log.error(e);
         return false;
     }
@@ -517,6 +517,11 @@ const IpcDispWinToMainProcSchema = {
     "tca-put": ipcObject({
         channelName: ipcString(),
         dbrData: ipcUnknown<type_dbrData | type_LocalChannel_data>("DBR or local-channel data"),
+    }),
+    "pva-put": ipcObject({
+        channelName: ipcString(),
+        value: ipcUnknown<type_pva_value>("pva input type data"),
+        valuePvRequest: ipcUnknown<type_pva_value_pv_request>("pva input type data"),
     }),
     "tca-monitor": ipcObject({
         displayWindowId: ipcString(),

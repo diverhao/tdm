@@ -1,12 +1,12 @@
 import * as os from "os";
-import { type_pva_status, type_pva_value } from "epics-tca";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData } from "../../../common/Epics";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
 import { Log } from "../../../common/Log";
 import { CaChannelAgent, DisplayOperations } from "../../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { DisplayWindowAgent } from "./DisplayWindowAgent";
 import { IpcMainProcToDispWin } from "../../../common/types/IpcEventArgType";
+import { access } from "fs";
 
 export class DisplayWindowChannelsManager {
 
@@ -145,7 +145,11 @@ export class DisplayWindowChannelsManager {
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
         const channelType = channelAgentsManager.determineChannelType(channelName);
-        let result: any = undefined;
+        let result: Record<string, any> = {
+            pvaType: undefined,
+            serverAddr: "",
+            accessRight: -1,
+        };
 
         if (channelType !== "pva") {
             return undefined;
@@ -287,59 +291,45 @@ export class DisplayWindowChannelsManager {
     };
 
 
-    pvaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number, pvaValueField: string, waitNotify: boolean): Promise<void> => {
-        // const displayWindowAgent = this.getDisplayWindowAgent();
-        // const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
-        // const mainProcess = windowAgentsManager.getMainProcess();
-        // const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        // const channelType = channelAgentsManager.determineChannelType(channelName);
-        // let putStatus: number | undefined | type_pva_status = undefined;
+    pvaPut = async (channelName: string, value: type_pva_value, ioTimeout: number, valuePvRequest: type_pva_value_pv_request): Promise<void> => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+        const mainProcess = windowAgentsManager.getMainProcess();
+        const channelAgentsManager = mainProcess.getChannelAgentsManager();
+        const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        // if (channelType === "ca" || channelType === "pva") {
-        //     const t0 = Date.now();
-        //     const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
-        //     const t1 = Date.now();
-        //     if (t1 - t0 > ioTimeout * 1000) {
-        //         return putStatus;
-        //     }
-        //     const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        //     if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-        //         Log.debug(`tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
-        //         return putStatus;
-        //     }
 
-        //     const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
-        //     if (selectedProfile === undefined) {
-        //         Log.error("No profile selected, quit PUT operation.");
-        //         return putStatus;
-        //     }
-        //     const disablePut = selectedProfile.getDisablePut();
-        //     if (`${disablePut}`.toLowerCase() === "yes") {
-        //         Log.warn("This profile does allow PUT operation for", channelName);
-        //         return putStatus;
-        //     }
+        const t0 = Date.now();
+        const connectSuccess = await this.addAndConnectChannel(channelName, ioTimeout);
+        const t1 = Date.now();
+        if (t1 - t0 > ioTimeout * 1000) {
+            return;
+        }
+        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
+            Log.debug(`tcaPut: EPICS channel ${channelName} cannot be created/connected.`);
+            return;
+        }
 
-        //     if (channelType === "ca") {
-        //         putStatus = await channelAgent.put(displayWindowAgent.getId(), dbrData, waitNotify, ioTimeout);
-        //     } else {
-        //         putStatus = await channelAgent.putPva(displayWindowAgent.getId(), dbrData, ioTimeout, pvaValueField);
-        //     }
+        const selectedProfile = displayWindowAgent.getWindowAgentsManager().getMainProcess().getProfiles().getSelectedProfile();
+        if (selectedProfile === undefined) {
+            Log.error("No profile selected, quit PUT operation.");
+            return;
+        }
+        const disablePut = selectedProfile.getDisablePut();
+        if (`${disablePut}`.toLowerCase() === "yes") {
+            Log.warn("This profile does allow PUT operation for", channelName);
+            return;
+        }
 
-        //     Log.info("TCA PUT: ", channelName, os.hostname(), JSON.stringify(dbrData).substring(0, 30));
-        //     if (this.checkChannelOperations(channelName) === false) {
-        //         this.removeChannel(channelName);
-        //     }
-        //     return putStatus;
-        // }
+        await channelAgent.putPva(displayWindowAgent.getId(), value, ioTimeout, valuePvRequest);
 
-        // const connectSuccess = this.addAndConnectLocalChannel(channelName);
-        // const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        // if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-        //     Log.debug(`tcaPut: Local channel ${channelName} cannot be created/connected.`);
-        //     return putStatus;
-        // }
-        // channelAgent.put(displayWindowAgent.getId(), dbrData as type_LocalChannel_data);
-        // return putStatus;
+        Log.info("TCA PUT: ", channelName, os.hostname(), JSON.stringify(value).substring(0, 30));
+        if (this.checkChannelOperations(channelName) === false) {
+            this.removeChannel(channelName);
+        }
+        return;
+
     };
 
     tcaMonitor = async (channelName: string): Promise<boolean> => {

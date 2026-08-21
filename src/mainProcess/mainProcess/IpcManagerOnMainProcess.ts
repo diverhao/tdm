@@ -352,6 +352,7 @@ export class IpcManagerOnMainProcess {
         this.ipcMain.on("pva-get", this.handlePvaGet);
         this.ipcMain.on("pva-get-meta", this.handlePvaGetMeta);
         this.ipcMain.on("tca-put", this.handleTcaPut);
+        this.ipcMain.on("pva-put", this.handlePvaPut);
         this.ipcMain.on("tca-monitor", this.handleTcaMonitor);
         this.ipcMain.on("tca-destroy", this.handleTcaDestroy);
         this.ipcMain.on("request-archive-data", this.handleRequestArchiveData);
@@ -1191,6 +1192,16 @@ export class IpcManagerOnMainProcess {
             return;
         }
         await displayWindowAgent.getDisplayWindowChannel().handleTcaPut(data);
+    };
+
+    handlePvaPut = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["pva-put"],) => {
+        const displayWindowId = eventMeta["windowId"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${displayWindowId}. Cancel PVA PUT for ${data["channelName"]}.`);
+            return;
+        }
+        await displayWindowAgent.getDisplayWindowChannel().handlePvaPut(data);
     };
 
     handleRequestArchiveData = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["request-archive-data"]) => {
