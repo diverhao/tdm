@@ -29,6 +29,7 @@ import { SeqGraph } from "../../../rendererProcess/widgets/SeqGraph/SeqGraph";
 import { Image } from "../../../rendererProcess/widgets/Image/Image";
 import { IpcDispWinToMainProc, IpcMainProcToDispWin, isIpcDispWinToMainProcEventName, isIpcMainProcToDispWinEventName, isIpcMainWinToMainProcEventName, verifyIpcMainProcToDispWinEvent } from "../../../common/types/IpcEventArgType";
 import { Table } from "../../widgets/Table/Table";
+import { ChannelState } from "../../channel/CaChannel";
 
 
 /**
@@ -410,7 +411,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
         this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
 
-        this.ipcRenderer.on("fetch-pva-type-reply", this.handleFetchPvaTypeReply);
+        this.ipcRenderer.on("pva-get-result", this.handlePvaGetResult);
+        this.ipcRenderer.on("pva-get-meta-result", this.handlePvaGetMetaResult);
         this.ipcRenderer.on("dialog-show-message-box", this.handleDialogShowMessageBox);
         this.ipcRenderer.on("dialog-show-input-box", this.handleDialogShowInputBox);
         this.ipcRenderer.on("tdl-file-saved", this.handleTdlFileSaved);
@@ -719,7 +721,11 @@ export class IpcManagerOnDisplayWindow {
     };
 
 
-
+    handleChannelDisconnected = (data: IpcMainProcToDispWin["channel-disconnected"]) => {
+        const { channelName } = data;
+        // todo: find CaChannel
+        caChannel.setChannelState(ChannelState.NOT_CONNECTED);
+    }
 
     /**
      * New channel data arrives.
@@ -850,20 +856,16 @@ export class IpcManagerOnDisplayWindow {
     // (2) determine which widgets should be re-rendered
     // (3) flush widgets
     handleTcaGetResult = (data: IpcMainProcToDispWin["tca-get-result"]) => {
-        const { ioId, newDbrData, widgetKey } = data;
-        const readWriteIos = g_widgets1.getReadWriteIos();
-        // lift the block of GET operation
-        readWriteIos.resolveIo(ioId, newDbrData);
-        // if the tca-get operation is initiated by no widget `undefined`,
-        // all widgets are flsuhed
-        if (widgetKey === undefined) {
-            for (let key of [...g_widgets1.getWidgets().keys()]) {
-                g_widgets1.addToForceUpdateWidgets(key);
-            }
-        } else {
-            g_widgets1.addToForceUpdateWidgets(widgetKey);
-        }
-        g_flushWidgets();
+        const { channelName, newDbrData } = data;
+        // todo: obtaiin CaChannel object from channelName
+        caChannel.handleTcaGetResult(newDbrData);
+    };
+
+    handleTcaGetMetaResult = (data: IpcMainProcToDispWin["tca-get-meta-result"]) => {
+        const { channelName, newDbrGrData, serverAddr, dataType, dataCount, accessRight } = data;
+        // todo: obtaiin CaChannel object from channelName
+        caChannel.handleTcaGetResult(newDbrGrData, serverAddr, dataType, dataCount, accessRight);
+
     };
 
 
@@ -876,16 +878,17 @@ export class IpcManagerOnDisplayWindow {
         readWriteIos.resolveIo(result["ioId"], result);
     };
 
-    handleFetchPvaTypeReply = (data: IpcMainProcToDispWin["fetch-pva-type-reply"]) => {
-        const { channelName, fullPvaType } = data;
-        try {
-            const channel = g_widgets1.getTcaChannel(channelName);
-            channel.setFullPvaType(fullPvaType);
-            channel.setPvaValueDisplayType(pvaValueDisplayType.PRIMITIVE_VALUE_FIELD);
-        } catch (e) {
-            const readWriteIos = g_widgets1.getReadWriteIos();
-            Log.error(`${e}`);
-        }
+    handlePvaGetMetaResult = (data: IpcMainProcToDispWin["pva-get-meta-result"]) => {
+        const { channelName, pvaType, accessRight, serverAddr } = data;
+        // todo: get PvaChannel
+        pvaChannel.handlePvaGetMetaResult(pvaType, accessRight, serverAddr);
+    };
+
+
+    handlePvaGetResult = (data: IpcMainProcToDispWin["pva-get-result"]) => {
+        const { channelName, pvaData } = data;
+        // todo: get PvaChannel
+        pvaChannel.handlePvaGetResult(pvaData);
     };
 
 

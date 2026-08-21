@@ -3,7 +3,7 @@ import * as React from "react";
 import { ElementProfileBlockNameInput } from "../../mainWindow/MainWindowStyledComponents";
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import { defaultFontSize } from "../../../common/GlobalVariables";
-import { type_dbrData, type_pva_value } from "../../../common/EpicsTcaLib";
+import { type_dbrData, type_pva_value } from "../../../common/Epics";
 import { g_widgets1, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { type_LocalChannel_data } from "../../../common/GlobalVariables";

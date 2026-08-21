@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { type_dbrData, type_pva_value } from "../../../common/EpicsTcaLib";
+import { type_dbrData, type_pva_value } from "../../../common/Epics";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";

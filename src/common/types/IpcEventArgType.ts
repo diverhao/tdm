@@ -3,7 +3,7 @@
  */
 
 import { type_pva_status } from "epics-tca";
-import { Channel_DBR_TYPES, type_dbrData, type_pva_value } from "../EpicsTcaLib";
+import { Channel_DBR_TYPE, type_dbrData, type_pva_value } from "../Epics";
 import { type_LocalChannel_data } from "../GlobalVariables";
 import { type_tdl } from "../GlobalVariables";
 import { Log } from "../Log";
@@ -502,35 +502,21 @@ const IpcDispWinToMainProcSchema = {
     }),
     "tca-get": ipcObject({
         channelName: ipcString(),
-        displayWindowId: ipcString(),
-        widgetKey: ipcOptional(ipcString()),
-        ioId: ipcNumber(),
-        ioTimeout: ipcOptional(ipcNumber()),
-        dbrType: ipcOptional(ipcUnknown<Channel_DBR_TYPES>("Channel_DBR_TYPES")),
-        useInterval: ipcBoolean(),
+        ioTimeout: ipcNumber(),
+    }),
+    "pva-get": ipcObject({
+        channelName: ipcString(),
+        ioTimeout: ipcNumber(),
     }),
     "tca-get-meta": ipcObject({
         channelName: ipcString(),
-        displayWindowId: ipcString(),
-        widgetKey: ipcOptional(ipcString()),
-        ioId: ipcNumber(),
-        timeout: ipcOptional(ipcNumber()),
     }),
-    "fetch-pva-type": ipcObject({
+    "pva-get-meta": ipcObject({
         channelName: ipcString(),
-        displayWindowId: ipcString(),
-        widgetKey: ipcOptional(ipcString()),
-        // ioId: ipcNumber(),
-        // timeout: ipcOptional(ipcNumber()),
     }),
     "tca-put": ipcObject({
         channelName: ipcString(),
-        displayWindowId: ipcString(),
         dbrData: ipcUnknown<type_dbrData | type_LocalChannel_data>("DBR or local-channel data"),
-        ioTimeout: ipcNumber(),
-        pvaValueField: ipcString(),
-        ioId: ipcOptional(ipcNumber()),
-        waitNotify: ipcOptional(ipcBoolean()),
     }),
     "tca-monitor": ipcObject({
         displayWindowId: ipcString(),
@@ -825,6 +811,9 @@ const IpcMainProcToDispWinSchema = {
         endTime: ipcNumber(),
         archiveData: ipcTuple([ipcArray(ipcNumber()), ipcArray(ipcNumber())]),
     }),
+    "channel-disconnected": ipcObject({
+        channelName: ipcString(),
+    }),
     "new-tdl": ipcObject({
         newTdl: ipcTdlSchema,
         tdlFileName: ipcString(),
@@ -843,9 +832,16 @@ const IpcMainProcToDispWinSchema = {
         contents: ipcAnyRecord(),
     }),
     "tca-get-result": ipcObject({
-        ioId: ipcNumber(),
-        widgetKey: ipcOptional(ipcString()),
+        channelName: ipcString(),
         newDbrData: ipcUnknown<type_dbrData | type_pva_value>("DBR or PVA data"),
+    }),
+    "tca-get-meta-result": ipcObject({
+        channelName: ipcString(),
+        newDbrGrData: ipcUnknown<type_dbrData>("DBR or PVA data"),
+        dataType: ipcNumber(),
+        dataCount: ipcNumber(),
+        serverAddr: ipcString(),
+        accessRight: ipcNumber(),
     }),
     "tca-put-result": ipcObject({
         channelName: ipcString(),
@@ -854,10 +850,15 @@ const IpcMainProcToDispWinSchema = {
         waitNotify: ipcBoolean(),
         status: ipcOptional(ipcUnion(ipcNumber(), ipcUnknown<type_pva_status>("PVA status"))),
     }),
-    "fetch-pva-type-reply": ipcObject({
+    "pva-get-meta-result": ipcObject({
         channelName: ipcString(),
-        widgetKey: ipcOptional(ipcString()),
-        fullPvaType: ipcUnknown<any>(),
+        pvaType: ipcUnknown<any>(),
+        accessRight: ipcNumber(),
+        serverAddr: ipcString(),
+    }),
+    "pva-get-result": ipcObject({
+        channelName: ipcString(),
+        pvaData: ipcUnknown<any>(),
     }),
     "dialog-show-message-box": ipcObject({
         info: ipcDialogMessageBoxSchema,

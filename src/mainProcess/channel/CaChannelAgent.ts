@@ -1,5 +1,5 @@
-import { Channel, ChannelMonitor, Context, Channel_DBR_TYPES, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
-import { type_dbrData, type_pva_value } from "../../common/EpicsTcaLib";
+import { Channel, ChannelMonitor, Context, type_pva_status, PVA_STATUS_TYPE } from "epics-tca";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value } from "../../common/Epics";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { Log } from "../../common/Log";
@@ -12,13 +12,8 @@ export enum DisplayOperations {
 }
 
 
-export enum ChannelSeverity {
-    NO_ALARM,
-    MINOR,
-    MAJOR,
-    INVALID,
-    NOT_CONNECTED,
-}
+const asChannelDbrType = (dbrType: number): Channel_DBR_TYPE => dbrType as Channel_DBR_TYPE;
+
 /**
  * Represents a CA channel. <br>
  *
@@ -112,7 +107,8 @@ export class CaChannelAgent {
      *
      */
     connecting: boolean | undefined = false;
-    connect = async (creationTimeout: number | undefined = undefined): Promise<boolean> => {
+    connect = async (creationTimeout: number): Promise<boolean> => {
+
         try {
             this.connecting = true;
             let channelTmp = undefined;
@@ -126,10 +122,10 @@ export class CaChannelAgent {
                 // this._channelCreationPromise = context.createChannel(this._channelName, 5);
                 let bareChannelName = this.getBareChannelName();
                 if (this.getProtocol() === "ca") {
-                    this._channelCreationPromise = context.createChannel(bareChannelName, "ca", creationTimeout);
+                    this._channelCreationPromise = context.createChannel(bareChannelName, "ca", creationTimeout === 0 ? undefined : creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 } else if (this.getProtocol() === "pva") {
-                    this._channelCreationPromise = context.createChannel(bareChannelName, "pva", creationTimeout);
+                    this._channelCreationPromise = context.createChannel(bareChannelName, "pva", creationTimeout === 0 ? undefined : creationTimeout);
                     channelTmp = await this._channelCreationPromise;
                 }
 
@@ -156,8 +152,14 @@ export class CaChannelAgent {
                                 // the "value: undefined" won't be sent to the display window due to the
                                 // serialization. However, we can use this feature (bug) to retain the
                                 // last meaningful value for the widget, only updating the severity.
-                                let newDbrData = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
-                                (displayWindowAgent as DisplayWindowAgent).addNewChannelData(this.getChannelName(), newDbrData);
+                                // let newDbrData = { value: undefined, severity: ChannelSeverity.NOT_CONNECTED };
+                                // (displayWindowAgent as DisplayWindowAgent).addNewChannelData(this.getChannelName(), newDbrData);
+                                (displayWindowAgent as DisplayWindowAgent).sendFromMainProcess(
+                                    "channel-disconnected",
+                                    {
+                                        channelName: this._channelName
+                                    }
+                                )
                             }
                         }, 200)
                     }
@@ -186,17 +188,17 @@ export class CaChannelAgent {
      * It checks the lifecycle of the channel. If this channel has no "client", then destroy
      * the channel and clean up the data.
      *
-     * @param {Channel_DBR_TYPES | undefined} dbrType The DBR type we want to get. If `undefined`, use the default DBR type.
+     * @param {Channel_DBR_TYPE | undefined} dbrType The DBR type we want to get. If `undefined`, use the default DBR type.
      * @param {number} ioTimeout Time out [s] of the operation. Default 1 second.
      * @returns {Promise<type_dbrData>} If channel is not connected or time out, return `undefined` value.
      */
     get = async (
         displayWindowId: string,
-        dbrType: Channel_DBR_TYPES | undefined = undefined,
-        ioTimeout: number = 1
-    ): Promise<type_dbrData | { value: undefined }> => {
+        dbrType: Channel_DBR_TYPE,
+        ioTimeout: number,
+    ): Promise<type_dbrData | undefined> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
-        let data: type_dbrData = { value: undefined };
+        let data: type_dbrData | undefined = undefined;
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -204,19 +206,8 @@ export class CaChannelAgent {
                 throw new Error(errMsg);
             }
 
-            const protocol = channel.getProtocol();
-            if (protocol !== "ca") {
-                const errMsg = `Channel ${this.getChannelName()} is not a CA channel.`;
-                throw new Error(errMsg);
-            }
-
-            // default ioTimeout = 1 second
-            const dataRaw = await channel.get(ioTimeout, dbrType);
-            if (dataRaw === undefined) {
-                data = { value: undefined };
-            } else {
-                data = structuredClone(dataRaw);
-            }
+            const dataRaw = await channel.get(ioTimeout === 0 ? undefined : ioTimeout, dbrType as any);
+            data = structuredClone(dataRaw);
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
@@ -226,15 +217,14 @@ export class CaChannelAgent {
             Log.error(e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
-            return { value: undefined };
+            return undefined;
         }
     };
 
     getPva = async (
         displayWindowId: string,
-        ioTimeout: number = 1,
-        pvRequest: string | undefined = undefined, // when undefined, use CaChannel's own pvRequest,
-    ): Promise<type_pva_value | { value: undefined }> => {
+        ioTimeout: number,
+    ): Promise<type_pva_value | undefined> => {
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
         let data: type_pva_value | undefined = undefined;
         try {
@@ -244,34 +234,18 @@ export class CaChannelAgent {
                 throw new Error(errMsg);
             }
 
-            const protocol = channel.getProtocol();
-            if (protocol !== "pva") {
-                const errMsg = `Channel ${this.getChannelName()} is not a PVA channel.`;
-                throw new Error(errMsg);
-            }
-
-            // default ioTimeout = 1 second
-            if (pvRequest !== undefined) {
-                data = structuredClone(await channel.getPva(ioTimeout, pvRequest));
-            } else {
-                data = structuredClone(await channel.getPva(ioTimeout, this.getPvRequest()));
-            }
+            data = structuredClone(await channel.getPva(ioTimeout, this.getPvRequest()));
 
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
 
-            if (data === undefined) {
-                return { value: undefined };
-            } else {
-                (data as any)["serverAddress"] = this.getServerAddress();
-                return data;
-            }
+            return data;
         } catch (e) {
 
             Log.error(e);
             this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.GET);
             this.checkLifeCycle();
-            return { value: undefined };
+            return undefined;
         }
     };
 
@@ -282,7 +256,6 @@ export class CaChannelAgent {
     fetchPvaType = async () => {
         const channel = this.getChannel();
         if (channel !== undefined) {
-            const pvRequest = this.getPvRequest();
             const result = await channel.fetchPvaType();
             return result
         } else {
@@ -305,10 +278,10 @@ export class CaChannelAgent {
      * @param {number} ioTimeout Time out [s] of the operation. Default 1 second.
      * @returns undefined if the CA operation fails, the IO ID for synchronous version (waitNotify = false), the ECA status code for asynchronous version (waitNotify = true). PVA always returns a Status
      */
-    put = async (displayWindowId: string, dbrData: type_dbrData, waitNotify: boolean, ioTimeout: number = 1): Promise<number | undefined> => {
+    put = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number): Promise<void> => {
 
         this.addDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
-        let putStatus: number | undefined = undefined;
+
         try {
             const channel = this.getChannel();
             if (channel === undefined) {
@@ -321,17 +294,15 @@ export class CaChannelAgent {
                 const errMsg = `Value to put for channel ${this.getChannelName()} is undefined.`;
                 throw new Error(errMsg);
             }
-            putStatus = await channel.put(newValue, ioTimeout, waitNotify);
+            await channel.put(newValue, ioTimeout === 0 ? undefined : ioTimeout, false);
         } catch (e) {
             Log.error(e);
-            putStatus = undefined;
         }
         // this.reduceClientsNum();
         // this.addPutOperation();
         this.removeDisplayWindowOperation(displayWindowId, DisplayOperations.PUT);
         this.checkLifeCycle();
 
-        return putStatus;
     };
 
     putPva = async (displayWindowId: string, dbrData: type_dbrData, ioTimeout: number = 1, pvaValueField: string): Promise<type_pva_status> => {
@@ -425,8 +396,8 @@ export class CaChannelAgent {
                 const windowAgentsManager = mainProcess.getWindowAgentsManager();
                 const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
                 if (displayWindowAgent instanceof DisplayWindowAgent) {
-                    const dbrData_time = await this.get(displayWindowId, channel.getDbrType_TIME(), 1);
-                    displayWindowAgent.addNewChannelData(this.getChannelName(), dbrData_time);
+                    const dbrData_time = await this.get(displayWindowId, asChannelDbrType(channel.getDbrType_TIME()), 1);
+                    displayWindowAgent.addNewChannelData(this.getChannelName(), dbrData_time === undefined ? 0 : dbrData_time);
                 }
             }
 
@@ -657,12 +628,12 @@ export class CaChannelAgent {
      *
      * @returns {string} The choice in `enum Channel_ACCESS_RIGHTS`
      */
-    getAccessRight = (): string => {
+    getAccessRight = (): Channel_ACCESS_RIGHTS => {
         const channel = this.getChannel();
         if (channel === undefined) {
-            return "NOT_AVAILABLE";
+            return Channel_ACCESS_RIGHTS.NOT_AVAILABLE;
         } else {
-            return channel.getAccessRightStr();
+            return channel.getAccessRight();
         }
     };
 
@@ -708,61 +679,61 @@ export class CaChannelAgent {
     /**
      * Obtain the DBR GR type for this channel.
      *
-     * @returns {Channel_DBR_TYPES | undefined} `undefined` if the channel is not
+     * @returns {Channel_DBR_TYPE | undefined} `undefined` if the channel is not
      * connected/exist.
      */
-    getDbrTypeNum_GR = (): Channel_DBR_TYPES | undefined => {
+    getDbrTypeNum_GR = (): Channel_DBR_TYPE | undefined => {
         const channel = this.getChannel();
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrType_GR();
+            return asChannelDbrType(channel.getDbrType_GR());
         }
     };
 
     /**
      * Obtain the basic DBR type for this channel.
      */
-    getDbrTypeNum_RAW = (): Channel_DBR_TYPES | undefined => {
+    getDbrTypeNum_RAW = (): Channel_DBR_TYPE | undefined => {
         const channel = this.getChannel();
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrType();
+            return asChannelDbrType(channel.getDbrType());
         }
     };
 
-    getDbrTypeNum_STS = (): Channel_DBR_TYPES | undefined => {
+    getDbrTypeNum_STS = (): Channel_DBR_TYPE | undefined => {
         const channel = this.getChannel();
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrType_STS();
+            return asChannelDbrType(channel.getDbrType_STS());
         }
     };
 
-    getDbrTypeNum_TIME = (): Channel_DBR_TYPES | undefined => {
+    getDbrTypeNum_TIME = (): Channel_DBR_TYPE | undefined => {
         const channel = this.getChannel();
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrType_TIME();
+            return asChannelDbrType(channel.getDbrType_TIME());
         }
     };
 
-    getDbrTypeNum_CTRL = (): Channel_DBR_TYPES | undefined => {
+    getDbrTypeNum_CTRL = (): Channel_DBR_TYPE | undefined => {
         const channel = this.getChannel();
         if (channel === undefined) {
             return undefined;
         } else {
-            return channel.getDbrType_CTRL();
+            return asChannelDbrType(channel.getDbrType_CTRL());
         }
     };
 
     getValueCount = () => {
         const channel = this.getChannel();
         if (channel === undefined) {
-            return undefined;
+            return 0;
         } else {
             return channel.getValueCount();
         }

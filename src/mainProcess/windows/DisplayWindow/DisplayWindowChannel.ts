@@ -9,87 +9,82 @@ export class DisplayWindowChannel {
         this._displayWindowAgent = displayWindowAgent;
     }
 
-    handleTcaGet = async (options: IpcDispWinToMainProc["tca-get"]) => {
-        const { channelName, widgetKey, ioId, ioTimeout, dbrType, useInterval } = options;
-        const displayWindowAgent = this.getDisplayWindowAgent();
-
-        const data = await displayWindowAgent.tcaGet(channelName, ioTimeout, dbrType);
-        if (useInterval && typeof data === "object" && data !== null && "value" in data) {
-            displayWindowAgent.addNewChannelData(channelName, data);
-        }
-
-        displayWindowAgent.sendFromMainProcess("tca-get-result", {
-            ioId: ioId,
-            widgetKey: widgetKey,
-            newDbrData: data,
-        });
-
-        return data;
-    };
-
     handleTcaGetMeta = async (options: IpcDispWinToMainProc["tca-get-meta"]) => {
-        const { channelName, widgetKey, ioId, timeout } = options;
+        let { channelName } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
-        const channelType = this.getChannelType(channelName);
-        const data = await displayWindowAgent.tcaGetMeta(channelName, timeout);
+        const data = await displayWindowAgent.tcaGetMeta(channelName);
 
-        if (channelType === "pva") {
-            // Send twice so newly created widgets still receive an initial refresh.
-            displayWindowAgent.addNewChannelData(channelName, data);
-        }
-
-        Log.debug("tca-get-meta result for", channelName, "is", data);
-        if (channelType === "pva") {
-            displayWindowAgent.sendFromMainProcess("fetch-pva-type-reply", {
-                channelName: channelName,
-                widgetKey: widgetKey,
-                fullPvaType: data,
-            });
+        if (data === undefined) {
             return;
+        } else {
+            Log.debug("tca-get-meta result for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("tca-get-meta-result",
+                data as any
+            );
         }
-
-        displayWindowAgent.sendFromMainProcess("tca-get-result", {
-            ioId: ioId,
-            widgetKey: widgetKey,
-            newDbrData: data,
-        });
     };
 
-    handleFetchPvaType = async (options: IpcDispWinToMainProc["fetch-pva-type"]) => {
-        const { channelName, widgetKey } = options;
+    handleTcaGet = async (options: IpcDispWinToMainProc["tca-get"]) => {
+        const { channelName, ioTimeout } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
-        const data = await displayWindowAgent.fetchPvaType(channelName, undefined);
 
-        Log.debug("fetch Pva Type for", channelName, "is", data);
-        displayWindowAgent.sendFromMainProcess("fetch-pva-type-reply", {
-            channelName: channelName,
-            widgetKey: widgetKey,
-            fullPvaType: data,
-        });
+        const data = await displayWindowAgent.tcaGet(channelName, ioTimeout);
+
+        if (data === undefined) {
+            return;
+        } else {
+            Log.debug("tca-get result for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("tca-get-result", {
+                channelName: channelName,
+                newDbrData: data as any,
+            });
+        }
+    };
+
+
+    handlePvaGetMeta = async (options: IpcDispWinToMainProc["pva-get-meta"]) => {
+        const { channelName } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const data = await displayWindowAgent.pvaGetMeta(channelName);
+
+        if (data === undefined) {
+            return;
+        } else {
+            Log.debug("pva-get-meta for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("pva-get-meta-result", {
+                channelName: channelName,
+                pvaType: data.pvaType,
+                accessRight: data.accessRight,
+                serverAddr: data.serverAddr,
+            });
+        }
+    };
+
+    handlePvaGet = async (options: IpcDispWinToMainProc["pva-get"]) => {
+        const { channelName, ioTimeout } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const data = await displayWindowAgent.pvaGet(channelName, ioTimeout);
+
+        if (data === undefined) {
+            return;
+        } else {
+            Log.debug("pva-get result for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("pva-get-result", {
+                channelName: channelName,
+                pvaData: data,
+            });
+        }
     };
 
     handleTcaPut = async (options: IpcDispWinToMainProc["tca-put"]) => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const channelName = options["channelName"];
-        const displayWindowId = options["displayWindowId"];
         const dbrData = options["dbrData"];
-        const ioTimeout = options["ioTimeout"];
-        const pvaValueField = options["pvaValueField"];
-        const waitNotify = options["waitNotify"] ?? false;
-        const ioId = options["ioId"] ?? -1;
+        // const pvaValueField = options["pvaValueField"];
 
-        const status = await displayWindowAgent.tcaPut(channelName, dbrData, ioTimeout, pvaValueField, waitNotify);
-        if (waitNotify) {
-            displayWindowAgent.sendFromMainProcess("tca-put-result", {
-                channelName: channelName,
-                displayWindowId: displayWindowId,
-                ioId: ioId,
-                waitNotify: waitNotify,
-                status: status,
-            });
-        }
-
-        return status;
+        await displayWindowAgent.tcaPut(channelName, dbrData, 1);
+        // const status = await displayWindowAgent.tcaPut(channelName, dbrData, 1, pvaValueField, false);
+        // return status;
     };
 
     getDisplayWindowAgent = () => {

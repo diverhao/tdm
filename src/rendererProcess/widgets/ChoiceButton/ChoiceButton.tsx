@@ -1,5 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { Channel_ACCESS_RIGHTS } from "../../../common/EpicsTcaLib";
+import { Channel_ACCESS_RIGHTS } from "../../../common/Epics";
 import * as React from "react";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { AlarmSelectedBackgroundStyle, BaseWidget } from "../BaseWidget/BaseWidget";

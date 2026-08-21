@@ -1,6 +1,6 @@
 import { Log } from "../../common/Log";
+import { CaChannel } from "./CaChannel";
 import { Promises, type_promise_entry } from "./Promises";
-import { TcaChannel } from "./TcaChannel";
 
 export enum IO_TYPE {
     READ = 0,
@@ -8,17 +8,17 @@ export enum IO_TYPE {
 }
 
 /**
- * Extends the promise entry in Promises, with additional properties such as TcaChannel, IO_TYPE,
+ * Extends the promise entry in Promises, with additional properties such as CaChannel, IO_TYPE,
  * and operation finishing callback.
  */
 interface type_io extends type_promise_entry {
-    channel: TcaChannel;
+    channel: CaChannel;
     type: IO_TYPE;
     callback: (() => void) | undefined; // callback function
 }
 
 /**
- * Manages pending asynchronous read and write operations for all `TcaChannel`
+ * Manages pending asynchronous read and write operations for all `CaChannel`
  * instances. Each operation is automatically assigned a unique numeric identifier 
  * and stored with its channel, I/O type, timeout, and optional completion callback.
  *
@@ -63,7 +63,7 @@ export class ReadWriteIos extends Promises {
      * @param callback Optional function invoked after the operation resolves.
      * @returns Numeric identifier assigned to the registered operation.
      */
-    addIo(channel: TcaChannel, type: IO_TYPE, timeoutSeconds: number, callback?: () => void) {
+    addIo(channel: CaChannel, type: IO_TYPE, timeoutSeconds: number, callback?: () => void) {
         // obtain a new unique ID
         const id = this.obtainAnId();
 
@@ -168,9 +168,9 @@ export class ReadWriteIos extends Promises {
     // --------------- reject --------------
 
     /**
-     * Reject all IOs for the provided TcaChannel
+     * Reject all IOs for the provided CaChannel
      */
-    rejectChannelIos = (channel: TcaChannel) => {
+    rejectChannelIos = (channel: CaChannel) => {
         for (let [ioId, io] of Object.entries(this.registry)) {
             if (io.channel === channel) {
                 this.reject(ioId, "Rejecting all IOs for channel" + channel.getChannelName());

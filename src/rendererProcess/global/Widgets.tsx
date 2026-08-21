@@ -7,7 +7,7 @@ import { g_flushWidgets } from "../helperWidgets/Root/Root";
 import { GroupSelection2 } from "../helperWidgets/GroupSelection/GroupSelection2";
 import { MouseSelectionRegion } from "../helperWidgets/MouseSelectionRegion/MouseSelectionRegion";
 import { getMouseEventClientX, getMouseEventClientY, calcSidebarWidth, getWindowVerticalScrollBarWidth } from "./GlobalVariables";
-import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPES, type_dbrData } from "../../common/EpicsTcaLib";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData } from "../../common/Epics";
 import { g_widgets1 } from "./GlobalVariables";
 import { v4 as uuidv4 } from "uuid";
 import { ReadWriteIos } from "../channel/ReadWriteIos";
@@ -2062,11 +2062,11 @@ export class Widgets {
     /**
      * Get TcaChannel's DBR type
      * @param {string} channelName
-     * @returns {Channel_DBR_TYPES | undefined} TcaChannel dbr type. In editing mode, dbr type is always undefined.
+     * @returns {Channel_DBR_TYPE | undefined} TcaChannel dbr type. In editing mode, dbr type is always undefined.
      * In operating mode, if TcaChannel object does not exist or the channel is not connected, returns undefined.
      *
      */
-    getChannelDbrType = (channelName: string): Channel_DBR_TYPES | undefined => {
+    getChannelDbrType = (channelName: string): Channel_DBR_TYPE | undefined => {
         if (g_widgets1.getRendererWindowStatus() !== rendererWindowStatus.operating) {
             return undefined;
         }

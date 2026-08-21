@@ -349,7 +349,8 @@ export class IpcManagerOnMainProcess {
         // ------------------------- channel access ------------------------
         this.ipcMain.on("tca-get", this.handleTcaGet);
         this.ipcMain.on("tca-get-meta", this.handleTcaGetMeta);
-        this.ipcMain.on("fetch-pva-type", this.handleFetchPvaType);
+        this.ipcMain.on("pva-get", this.handlePvaGet);
+        this.ipcMain.on("pva-get-meta", this.handlePvaGetMeta);
         this.ipcMain.on("tca-put", this.handleTcaPut);
         this.ipcMain.on("tca-monitor", this.handleTcaMonitor);
         this.ipcMain.on("tca-destroy", this.handleTcaDestroy);
@@ -1102,33 +1103,47 @@ export class IpcManagerOnMainProcess {
      * It should be invoked after the meta data is obtained, otherwise we do not know the
      */
     handleTcaGet = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["tca-get"]) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        const displayWindowId = eventMeta.windowId;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error(`No such display window ${data["displayWindowId"]}. Cancel TCA GET for ${data["channelName"]}.`);
+            Log.error(`No such display window ${displayWindowId}. Cancel TCA GET for ${data["channelName"]}.`);
             return;
         }
-        return await displayWindowAgent.getDisplayWindowChannel().handleTcaGet(data);
+        await displayWindowAgent.getDisplayWindowChannel().handleTcaGet(data);
     };
 
     /**
      * Get the meta data, it is assumed
      */
     handleTcaGetMeta = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["tca-get-meta"]) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        const displayWindowId = eventMeta["windowId"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error(`No such display window ${data["displayWindowId"]}. Cancel TCA GET META for ${data["channelName"]}.`);
+            Log.error(`No such display window ${displayWindowId}. Cancel TCA GET META for ${data["channelName"]}.`);
             return;
         }
         await displayWindowAgent.getDisplayWindowChannel().handleTcaGetMeta(data);
     };
 
-    handleFetchPvaType = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["fetch-pva-type"]) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+    handlePvaGetMeta = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["pva-get-meta"]) => {
+        const displayWindowId = eventMeta.windowId;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error(`No such display window ${data["displayWindowId"]}. Cancel fetching PVA type for ${data["channelName"]}.`);
+            Log.error(`No such display window ${displayWindowId}. Cancel fetching PVA type for ${data["channelName"]}.`);
             return;
         }
-        await displayWindowAgent.getDisplayWindowChannel().handleFetchPvaType(data);
+        await displayWindowAgent.getDisplayWindowChannel().handlePvaGetMeta(data);
+    };
+
+
+    handlePvaGet = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["pva-get"]) => {
+        const displayWindowId = eventMeta.windowId;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${displayWindowId}. Cancel Getting PVA value for ${data["channelName"]}.`);
+            return;
+        }
+        await displayWindowAgent.getDisplayWindowChannel().handlePvaGet(data);
     };
 
     handleTcaMonitor = (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["tca-monitor"]) => {
@@ -1169,12 +1184,13 @@ export class IpcManagerOnMainProcess {
      * @param {number | undefined} ioTimeout Timeout [second]. If `undefined`, never time out.
      */
     handleTcaPut = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["tca-put"],) => {
-        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(data["displayWindowId"]);
+        const displayWindowId = eventMeta["windowId"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
         if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
-            Log.error(`No such display window ${data["displayWindowId"]}. Cancel TCA PUT for ${data["channelName"]}.`);
+            Log.error(`No such display window ${displayWindowId}. Cancel TCA PUT for ${data["channelName"]}.`);
             return;
         }
-        return await displayWindowAgent.getDisplayWindowChannel().handleTcaPut(data);
+        await displayWindowAgent.getDisplayWindowChannel().handleTcaPut(data);
     };
 
     handleRequestArchiveData = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["request-archive-data"]) => {
