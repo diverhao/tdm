@@ -1,7 +1,7 @@
 import { XYPlot } from "./XYPlot";
 import * as React from "react";
 import { type_dbrData } from "epics-tca";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
+import { type_LocalChannel_data } from "../../../common/Epics";
 import { g_flushWidgets } from "../../helperWidgets/Root/Root";
 import { generateRgbaColor } from "../../../common/GlobalMethods";
 import { g_widgets1, getBasePath, getMouseEventClientX, getMouseEventClientY } from "../../global/GlobalVariables";

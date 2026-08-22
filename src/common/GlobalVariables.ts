@@ -10,15 +10,6 @@ export const setLogLevel = (newLogLevel: type_log_levels) => {
     logLevel = newLogLevel;
 }
 
-// ------------- local channel ---------------------------
-
-export type type_LocalChannel_data = {
-    value: number | string | number[] | string[] | undefined;
-    type?: "number" | "string" | "number[]" | "string[]" | "enum";
-    // for enum, if "strings" is empty or not long enough, we will use "0", "1" ... as enum names
-    strings?: string[];
-} & Record<string, any>;
-
 // --------------- font and color -----------------------
 
 // font, should sync with main window one in mainWindow/

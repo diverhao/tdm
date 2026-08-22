@@ -1,6 +1,6 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
 import * as React from "react";
-import { type_dbrData, type_pva_value } from "../../../common/Epics";
+import { type_dbrData, type_LocalChannel_data, type_pva_value } from "../../../common/Epics";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { BaseWidget } from "../BaseWidget/BaseWidget";
 import { DataViewerSidebar } from "./DataViewerSidebar";
@@ -9,7 +9,6 @@ import { type_DataViewer_yAxis, defaultDataViewerYAxis } from "../../../common/t
 import { type_DataViewer_tdl, defaultDataViewerTdl, defaultDataViewerTicksInfo } from "../../../common/types/type_widget_tdl";
 import { DataViewerMainSettings } from "./DataViewerMainSettings";
 import { ErrorBoundary } from "../../helperWidgets/ErrorBoundary/ErrorBoundary";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
 import { DataViewerTraceSetting } from "./DataViewerTraceSetting";
 
 export class DataViewer extends BaseWidget {

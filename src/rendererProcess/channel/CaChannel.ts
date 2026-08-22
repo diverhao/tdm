@@ -337,8 +337,7 @@ export class CaChannel {
         const windowId = g_widgets1.getRoot().getDisplayWindowClient().getWindowId();
         g_widgets1.getRoot().getDisplayWindowClient().getIpcManager().sendFromRendererProcess("tca-monitor",
             {
-                displayWindowId: windowId,
-                channelName: this.getChannelName()
+                channelName: this.getChannelName(),
             }
         );
     };

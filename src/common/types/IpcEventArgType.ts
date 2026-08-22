@@ -3,8 +3,7 @@
  */
 
 import { type_pva_status } from "epics-tca";
-import { Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../Epics";
-import { type_LocalChannel_data } from "../GlobalVariables";
+import { Channel_DBR_TYPE, type_dbrData, type_IaValue, type_LocalChannel_data, type_pva_value, type_pva_value_pv_request } from "../Epics";
 import { type_tdl } from "../GlobalVariables";
 import { Log } from "../Log";
 import { type_macros_tdl, verifyTdl } from "./type_widget_tdl";
@@ -504,6 +503,10 @@ const IpcDispWinToMainProcSchema = {
         channelName: ipcString(),
         ioTimeout: ipcNumber(),
     }),
+    "ia-get": ipcObject({
+        channelName: ipcString(), // un-norm channel name
+        ioTimeout: ipcNumber(),
+    }),
     "pva-get": ipcObject({
         channelName: ipcString(),
         ioTimeout: ipcNumber(),
@@ -511,8 +514,15 @@ const IpcDispWinToMainProcSchema = {
     "tca-get-meta": ipcObject({
         channelName: ipcString(),
     }),
+    "ia-get-meta": ipcObject({
+        channelName: ipcString(),
+    }),
     "pva-get-meta": ipcObject({
         channelName: ipcString(),
+    }),
+    "ia-put": ipcObject({
+        channelName: ipcString(),
+        value: ipcUnknown<type_IaValue>("local-channel value"),
     }),
     "tca-put": ipcObject({
         channelName: ipcString(),
@@ -524,7 +534,6 @@ const IpcDispWinToMainProcSchema = {
         valuePvRequest: ipcUnknown<type_pva_value_pv_request>("pva input type data"),
     }),
     "tca-monitor": ipcObject({
-        displayWindowId: ipcString(),
         channelName: ipcString(),
     }),
     "tca-destroy": ipcObject({
@@ -847,6 +856,20 @@ const IpcMainProcToDispWinSchema = {
         dataCount: ipcNumber(),
         serverAddr: ipcString(),
         accessRight: ipcNumber(),
+    }),
+    "ia-get-result": ipcObject({
+        channelName: ipcString(),
+        value: ipcUnknown<type_IaValue>("internal channel value"),
+        enumChoices: ipcArray(ipcString()),
+        secondsSinceEpoch: ipcNumber(),
+        nanoSeconds: ipcNumber(),
+    }),
+    "ia-get-meta-result": ipcObject({
+        channelName: ipcString(),
+        value: ipcUnknown<type_IaValue>("internal channel value"),
+        enumChoices: ipcArray(ipcString()),
+        secondsSinceEpoch: ipcNumber(),
+        nanoSeconds: ipcNumber(),
     }),
     "tca-put-result": ipcObject({
         channelName: ipcString(),

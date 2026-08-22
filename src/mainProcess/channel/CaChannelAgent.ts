@@ -52,6 +52,7 @@ export class CaChannelAgent {
     private _oldStateStr: string = "";
 
     _channelCreationPromise: Promise<Channel | undefined> | undefined;
+    _channelReadyMonitorPromise: Promise<Channel | undefined> | undefined;
 
     // private _mainProcessId: string;
 

@@ -1,4 +1,5 @@
-import { type_InternalChannelValue, verifyChannelName } from "../../common/Epics";
+import { type_IaValue, verifyChannelName } from "../../common/Epics";
+import { EpicsDate } from "../../common/EpicsTime";
 import { Log } from "../../common/Log";
 import { g_widgets1 } from "../global/GlobalVariables";
 
@@ -13,14 +14,14 @@ import { g_widgets1 } from "../global/GlobalVariables";
  * 
  * Its value and data type can be changed during runtime.
  * 
- * Assume the provided channel name is a legitimate internal name. These are acceptabl input arg
- * loc://ABC@window_1        // default is a number with 0 value
- * loc://ABC@window_1  = 3.2
- * loc://ABC@window_1  = "ABC"
- * loc://ABC@window_1  = ["A", "B"]
- * loc://ABC@window_1  = [1,2,3]
- * loc://ABC@window_1:["OFF", "ON"] // default to 0
- * loc://ABC@window_1:["OFF", "ON"] = 1
+ * Assume the provided channel name is a legitimate internal name. These are acceptable input arguments:
+ * loc://ABC        // default is a number with 0 value
+ * loc://ABC  = 3.2
+ * loc://ABC  = "ABC"
+ * loc://ABC  = ["A", "B"]
+ * loc://ABC  = [1,2,3]
+ * loc://ABC:["OFF", "ON"] // default to 0
+ * loc://ABC:["OFF", "ON"] = 1
  * 
  * glb://ABC
  * glb://ABC  = 3.2
@@ -31,10 +32,10 @@ import { g_widgets1 } from "../global/GlobalVariables";
  * glb://ABC:["OFF", "ON"] = 1
  */
 export class IaChannel {
-    // full name, including display window ID
     private readonly _channelName: string = "";
-    private _value: type_InternalChannelValue = 0;
+    private _value: type_IaValue = 0;
     private _enumChoices: string[] = []; // enum type
+    private _timeStamp: EpicsDate = EpicsDate.fromEpicsTimeMs(0);
 
     constructor(channelNameExpr: string) {
         const parsedChannelNameExpr = this.parseChannelNameExpr(channelNameExpr);
@@ -46,23 +47,23 @@ export class IaChannel {
         this._enumChoices = parsedChannelNameExpr.enumChoices;
         this._value = parsedChannelNameExpr.value;
     }
-    
+
     /**
      * Parse an internal-channel expression into its canonical name, enum choices,
      * and initial value. An omitted initial value defaults to `0`; an enum value
      * may be either a choice index or a choice string.
      *
      * The channel-name portion follows the same character rules as a CA/PVA
-     * channel name. A local channel may additionally contain TDM's generated
-     * `@window_<id>` suffix, which is validated separately from the PV name.
+     * channel name. A local channel expression does not contain a display-window
+     * suffix; its window ID is obtained from `g_widgets1` when needed.
      *
      * @returns `undefined` when the channel name, expression, initial value, or
      * enum definition is invalid.
      */
     parseChannelNameExpr = (channelNameExpr: string): {
-        channelName: string, // include display window ID
+        channelName: string,
         enumChoices: string[],
-        value: type_InternalChannelValue,
+        value: type_IaValue,
     } | undefined => {
         const expression = channelNameExpr.trim();
         const protocolMatch = expression.match(/^(loc:\/\/|glb:\/\/)/);
@@ -138,18 +139,7 @@ export class IaChannel {
             return undefined;
         }
 
-        let channelNameIsValid = verifyChannelName(channelNameBody);
-        if (protocol === "loc://") {
-            const windowSuffixIndex = channelNameBody.lastIndexOf("@window_");
-            if (windowSuffixIndex !== -1) {
-                const pvName = channelNameBody.slice(0, windowSuffixIndex);
-                const displayWindowId = channelNameBody.slice(windowSuffixIndex + "@window_".length);
-                channelNameIsValid = verifyChannelName(pvName)
-                    && displayWindowId !== ""
-                    && verifyChannelName(displayWindowId);
-            }
-        }
-        if (!channelNameIsValid) {
+        if (!verifyChannelName(channelNameBody)) {
             return undefined;
         }
 
@@ -221,31 +211,156 @@ export class IaChannel {
 
         const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
         const ipcManager = displayWindowClient.getIpcManager();
-        const windowId = displayWindowClient.getWindowId();
 
-        
         ipcManager.sendFromRendererProcess("ia-get-meta",
             {
                 channelName: this.getChannelName(),
             }
         );
+    };
+
+    get = async (
+        ioTimeout: number,
+    ): Promise<void> => {
+
+        const displayWindowClient = g_widgets1.getRoot().getDisplayWindowClient();
+        const ipcManager = displayWindowClient.getIpcManager();
+
+        ipcManager.sendFromRendererProcess("ia-get",
+            {
+                channelName: this.getChannelName(),
+                ioTimeout: ioTimeout,
+            }
+        )
+    };
+
+    handleGetResult = (secondsSinceEpoch: number, nanoSeconds: number, enumChoices: string[], value: type_IaValue) => {0
+        this.setTimeStamp(EpicsDate.fromEpicsTimeMs(secondsSinceEpoch * 1000 + nanoSeconds / 1000000));
+        this.setValue(value);
+        this.setEnumChoices(enumChoices);
+    }
+
+    put = async (iaValueStr: string): Promise<void> => {
         try {
-            let message: type_dbrData | type_LocalChannel_data = await this.getIoPromise(ioId);
-            this.appendToDbrData(message);
-            return message;
+            const value = this.parseInput(iaValueStr);
+
+            let channelName = this.getChannelName();
+
+            g_widgets1
+                .getRoot()
+                .getDisplayWindowClient()
+                .getIpcManager()
+                .sendFromRendererProcess("ia-put",
+                    {
+                        channelName: channelName,
+                        value: value,
+                    }
+
+                )
         } catch (e) {
-            this.appendToDbrData({ value: undefined });
-            return { value: undefined };
+            Log.error(e);
         }
     };
 
-    get = () => {
+    /**
+     * Parse input using the cached value's type; non-empty enum choices identify
+     * an enum. Arrays accept comma-separated or JSON syntax.
+     *
+     * An empty cached array is treated as `number[]`; distinguishing it from an
+     * empty `string[]` would require storing an explicit value type.
+     *
+     * @throws When the input cannot be represented by the channel's current type.
+     */
+    private parseInput = (iaValueStr: string): type_IaValue => {
+        const enumChoices = this.getEnumChoices();
+        if (enumChoices.length > 0) {
+            const input = iaValueStr.trim();
+            const choiceIndex = enumChoices.indexOf(input);
+            if (choiceIndex !== -1) {
+                return choiceIndex;
+            }
 
-    }
+            if (input === "") {
+                throw new Error("Enum input cannot be empty");
+            }
+            const numericIndex = Number(input);
+            if (!Number.isInteger(numericIndex)
+                || numericIndex < 0
+                || numericIndex >= enumChoices.length) {
+                throw new Error(`Invalid enum value: ${iaValueStr}`);
+            }
+            return numericIndex;
+        }
 
-    put = () => {
+        const currentValue = this.getValue();
+        if (typeof currentValue === "number") {
+            return this.parseNumberInput(iaValueStr);
+        }
+        if (typeof currentValue === "string") {
+            return iaValueStr;
+        }
+        if (!Array.isArray(currentValue)) {
+            throw new Error("Internal channel has an unsupported value type");
+        }
 
-    }
+        if (currentValue.length === 0 || currentValue.every((value) => typeof value === "number")) {
+            const arrayValue = this.parseArrayInput(iaValueStr);
+            return arrayValue.map((value) => {
+                if (typeof value !== "string" && typeof value !== "number") {
+                    throw new Error(`Invalid number-array element: ${String(value)}`);
+                }
+                return this.parseNumberInput(String(value));
+            });
+        }
+
+        if (currentValue.every((value) => typeof value === "string")) {
+            const arrayValue = this.parseArrayInput(iaValueStr);
+            if (!arrayValue.every((value) => typeof value === "string")) {
+                throw new Error("String-array input must contain only strings");
+            }
+            return arrayValue;
+        }
+
+        throw new Error("Internal channel array has mixed element types");
+    };
+
+    private parseNumberInput = (valueStr: string): number => {
+        const input = valueStr.trim();
+        if (input === "") {
+            throw new Error("Numeric input cannot be empty");
+        }
+        const value = Number(input);
+        if (!Number.isFinite(value)) {
+            throw new Error(`Invalid numeric value: ${valueStr}`);
+        }
+        return value;
+    };
+
+    private parseArrayInput = (valueStr: string): Array<string | number> => {
+        const input = valueStr.trim();
+        if (input === "") {
+            return [];
+        }
+
+        if (input.startsWith("[") || input.endsWith("]")) {
+            let value: unknown;
+            try {
+                value = JSON.parse(input);
+            } catch {
+                throw new Error(`Invalid JSON array: ${valueStr}`);
+            }
+            if (!Array.isArray(value)) {
+                throw new Error(`Expected an array: ${valueStr}`);
+            }
+            if (!value.every((element) => typeof element === "string" || typeof element === "number")) {
+                throw new Error("Array input must contain only strings or numbers");
+            }
+            return value;
+        }
+
+        return valueStr.split(",").map((value) => value.trim());
+    };
+
 
     // ------------------------ getter and setters -----------------------
 
@@ -253,30 +368,36 @@ export class IaChannel {
         return this.getChannelName().startsWith("loc://");
     }
 
-    getDisplayWindowId = (): string | undefined => {
-        if (this.isLocal()) {
-            const parts = this.getChannelName().split("@");
-            if (parts.length === 2) {
-                return parts[1];
-            } else {
-                Log.error("Wrong display window ID in local channel");
-                return undefined;
-            }
-        } else {
-            return undefined;
-        }
+    getDisplayWindowId = (): string => {
+        return g_widgets1.getRoot().getDisplayWindowClient().getWindowId()
     }
 
-    getEnumChoices = () => {
+    getEnumChoices = (): string[] => {
         return this._enumChoices;
     }
 
-    getValue = () => {
+    setEnumChoices = (newEnumChoices: string[]): void => {
+        this._enumChoices = newEnumChoices;
+    }
+
+    getValue = (): type_IaValue => {
         return this._value;
+    }
+
+    setValue = (newValue: type_IaValue): void => {
+        this._value = newValue;
+    }
+
+    getTimeStamp = (): EpicsDate => {
+        return this._timeStamp;
+    }
+
+    setTimeStamp = (newTimeStamp: EpicsDate): void => {
+        this._timeStamp = newTimeStamp;
     }
 
     getChannelName = () => {
         return this._channelName;
     }
-    
+
 }

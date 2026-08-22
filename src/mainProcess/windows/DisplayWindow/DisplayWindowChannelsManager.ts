@@ -1,6 +1,5 @@
 import * as os from "os";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
+import { Channel_ACCESS_RIGHTS, Channel_DBR_TYPE, type_dbrData, type_LocalChannel_data, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
 import { Log } from "../../../common/Log";
 import { CaChannelAgent, DisplayOperations } from "../../channel/CaChannelAgent";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
@@ -30,7 +29,7 @@ export class DisplayWindowChannelsManager {
         const displayWindowAgent = this.getDisplayWindowAgent();
         if (Object.keys(this._newChannelData).length > 0) {
             displayWindowAgent.sendFromMainProcess("new-channel-data", {
-                newDbrData: this._newChannelData,
+                newDbrData: this._newChannelData as any,
             });
             this._newChannelData = {};
         }
@@ -95,6 +94,49 @@ export class DisplayWindowChannelsManager {
         return result;
     };
 
+    // iaGetMeta = async (channelName: string): Promise<IpcMainProcToDispWin["ia-get-meta-result"] | undefined> => {
+    //     const displayWindowAgent = this.getDisplayWindowAgent();
+    //     const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+    //     const mainProcess = windowAgentsManager.getMainProcess();
+    //     const channelAgentsManager = mainProcess.getChannelAgentsManager();
+    //     let result: IpcMainProcToDispWin["ia-get-meta-result"] | undefined = undefined;
+
+    //     channelName = this.getNormIaChannelName(channelName);
+
+    //     const connectSuccess = this.addAndConnectLocalChannel(channelName);
+    //     const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+    //     if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
+    //         Log.debug(`tcaGetMeta: Internal Channel ${channelName} cannot be created/connected.`);
+    //         return result;
+    //     }
+    //     let dbrData = channelAgent.getDbrData();
+    //     result = {
+    //         secondsSinceEpoch: dbrData["secondsSinceEpoch"],
+    //         nanoSeconds: dbrData["nanoSeconds"],
+    //         channelName: channelAgent.getReducedChannelName(),
+    //         enumChoices: dbrData["strings"] ?? [],
+    //         value: dbrData["value"],
+    //     };
+
+    //     if (this.checkChannelOperations(channelName) === false) {
+    //         // this.removeChannel(channelName);
+    //     }
+
+    //     displayWindowAgent.promises.resolvePromise("tca-get-meta", "");
+    //     return result;
+    // };
+    iaGetMeta = async (channelName: string) => {
+        return await this.iaGet(channelName, 0);
+    }
+
+    getNormIaChannelName = (channelName: string) => {
+        if (channelName.startsWith("loc://") && !channelName.includes("@")) {
+            return channelName + "@" + "window_" + this.getDisplayWindowAgent().getId();
+        } else {
+            return channelName;
+        }
+    }
+
     tcaGet = async (channelName: string, ioTimeout: number): Promise<type_dbrData | type_LocalChannel_data | undefined> => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
@@ -133,6 +175,33 @@ export class DisplayWindowChannelsManager {
             result = channelAgent.getDbrData();
         }
 
+        if (this.checkChannelOperations(channelName) === false) {
+            this.removeChannel(channelName);
+        }
+        return result;
+    };
+
+    iaGet = async (channelName: string, ioTimeout: number): Promise<type_LocalChannel_data | undefined> => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+        const mainProcess = windowAgentsManager.getMainProcess();
+        const channelAgentsManager = mainProcess.getChannelAgentsManager();
+        let result: type_LocalChannel_data | undefined = undefined;
+
+        const connectSuccess = this.addAndConnectLocalChannel(channelName);
+        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
+            Log.debug(`tcaGet: Local channel ${channelName} cannot be created/connected.`);
+            return undefined;
+        }
+        let dbrData = channelAgent.getDbrData();
+        result = {
+            secondsSinceEpoch: dbrData["secondsSinceEpoch"],
+            nanoSeconds: dbrData["nanoSeconds"],
+            channelName: channelAgent.getReducedChannelName(),
+            enumChoices: dbrData["strings"] ?? [],
+            value: dbrData["value"],
+        };
         if (this.checkChannelOperations(channelName) === false) {
             this.removeChannel(channelName);
         }
@@ -211,34 +280,36 @@ export class DisplayWindowChannelsManager {
 
 
 
-    tcaPutMeta = (
-        channelName: string,
-        dbrMetaData: {
-            value: number | string | undefined;
-            type: "number" | "string" | "enum";
-            strings: string[];
-        }
-    ): void => {
-        const displayWindowAgent = this.getDisplayWindowAgent();
-        const channelAgentsManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
+    // iaPutMeta = (
+    //     channelName: string,
+    //     dbrMetaData: {
+    //         value: number | string | undefined;
+    //         type: "number" | "string" | "enum";
+    //         strings: string[];
+    //     }
+    // ): void => {
+    //     const displayWindowAgent = this.getDisplayWindowAgent();
+    //     const channelAgentsManager = displayWindowAgent.getWindowAgentsManager().getMainProcess().getChannelAgentsManager();
+    //     const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        if ((channelType !== "local") && (channelType !== "global")) {
-            return;
-        }
+    //     if ((channelType !== "local") && (channelType !== "global")) {
+    //         return;
+    //     }
 
-        this.addAndConnectLocalChannel(channelName);
+    //     this.addAndConnectLocalChannel(channelName);
 
-        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-        if (channelAgent instanceof LocalChannelAgent && channelAgent.metaDataInitialized === true) {
-            channelAgent.metaDataInitialized = true;
-            channelAgent.setValue(dbrMetaData["value"]);
-            channelAgent.setDbrType(dbrMetaData["type"]);
-            channelAgent.setDbrStrings(dbrMetaData["strings"]);
-        } else {
-            Log.error(`Cannot find the agent for local channel ${channelName}`);
-        }
-    };
+    //     const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+    //     if (channelAgent instanceof LocalChannelAgent && channelAgent.metaDataInitialized === true) {
+    //         channelAgent.metaDataInitialized = true;
+    //         channelAgent.setValue(dbrMetaData["value"]);
+    //         channelAgent.setDbrType(dbrMetaData["type"]);
+    //         channelAgent.setDbrStrings(dbrMetaData["strings"]);
+    //     } else {
+    //         Log.error(`Cannot find the agent for local channel ${channelName}`);
+    //     }
+    // };
+
+
 
     tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number): Promise<void> => {
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -291,6 +362,21 @@ export class DisplayWindowChannelsManager {
     };
 
 
+    iaPut = async (channelName: string, dbrData: type_LocalChannel_data): Promise<void> => {
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+        const mainProcess = windowAgentsManager.getMainProcess();
+        const channelAgentsManager = mainProcess.getChannelAgentsManager();
+
+        const connectSuccess = this.addAndConnectLocalChannel(channelName);
+        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
+            Log.debug(`tcaPut: Local channel ${channelName} cannot be created/connected.`);
+            return;
+        }
+        channelAgent.put(displayWindowAgent.getId(), dbrData as type_LocalChannel_data);
+    };
+
     pvaPut = async (channelName: string, value: type_pva_value, ioTimeout: number, valuePvRequest: type_pva_value_pv_request): Promise<void> => {
         const displayWindowAgent = this.getDisplayWindowAgent();
         const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
@@ -337,37 +423,62 @@ export class DisplayWindowChannelsManager {
         const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
         const mainProcess = windowAgentsManager.getMainProcess();
         const channelAgentsManager = mainProcess.getChannelAgentsManager();
-        const channelType = channelAgentsManager.determineChannelType(channelName);
 
-        if (channelType === "pva") {
-            await displayWindowAgent.promises.getPromise("fetch-pva-type");
-        } else {
-            await displayWindowAgent.promises.getPromise("tca-get-meta");
-        }
+        // blocked until get-meta 
+        await displayWindowAgent.promises.getPromise("tca-get-meta");
 
-        if (channelType === "ca" || channelType === "pva") {
-            const connectSuccess = await this.addAndConnectChannel(channelName, 0);
-            const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
-                Log.debug(`tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
-                return false;
-            }
-            await channelAgent.createMonitor(displayWindowAgent.getId());
-        } else {
-            const connectSuccess = this.addAndConnectLocalChannel(channelName);
-            const channelAgent = channelAgentsManager.getChannelAgent(channelName);
-            if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
-                Log.debug(`tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
-                return false;
-            }
-            channelAgent.createMonitor(displayWindowAgent.getId());
+        const connectSuccess = await this.addAndConnectChannel(channelName, 0);
+        const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+        if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
+            Log.debug(`tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
+            return false;
         }
+        await channelAgent._channelReadyMonitorPromise;
+        await channelAgent.createMonitor(displayWindowAgent.getId());
+
 
         if (this.checkChannelOperations(channelName) === false) {
             this.removeChannel(channelName);
         }
         return true;
     };
+
+    // tcaMonitor = async (channelName: string): Promise<boolean> => {
+    //     const displayWindowAgent = this.getDisplayWindowAgent();
+    //     const windowAgentsManager = displayWindowAgent.getWindowAgentsManager();
+    //     const mainProcess = windowAgentsManager.getMainProcess();
+    //     const channelAgentsManager = mainProcess.getChannelAgentsManager();
+    //     const channelType = channelAgentsManager.determineChannelType(channelName);
+
+    //     if (channelType === "pva") {
+    //         await displayWindowAgent.promises.getPromise("fetch-pva-type");
+    //     } else {
+    //         await displayWindowAgent.promises.getPromise("tca-get-meta");
+    //     }
+
+    //     if (channelType === "ca" || channelType === "pva") {
+    //         const connectSuccess = await this.addAndConnectChannel(channelName, 0);
+    //         const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+    //         if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof CaChannelAgent)) {
+    //             Log.debug(`tcaMonitor: EPICS channel ${channelName} cannot be created/connected.`);
+    //             return false;
+    //         }
+    //         await channelAgent.createMonitor(displayWindowAgent.getId());
+    //     } else {
+    //         const connectSuccess = this.addAndConnectLocalChannel(channelName);
+    //         const channelAgent = channelAgentsManager.getChannelAgent(channelName);
+    //         if (!connectSuccess || channelAgent === undefined || !(channelAgent instanceof LocalChannelAgent)) {
+    //             Log.debug(`tcaMonitor: Local channel ${channelName} cannot be created/connected.`);
+    //             return false;
+    //         }
+    //         channelAgent.createMonitor(displayWindowAgent.getId());
+    //     }
+
+    //     if (this.checkChannelOperations(channelName) === false) {
+    //         this.removeChannel(channelName);
+    //     }
+    //     return true;
+    // };
 
     handleWindowClosed = () => {
         this.removeAllChannels();
@@ -502,6 +613,20 @@ export class DisplayWindowChannelsManager {
         }
     };
 
+    resetChannelData = (channelName: string) => {
+        const existingData = this._newChannelData[channelName];
+        const newData = { value: 0 }
+        if (existingData !== undefined && newData !== undefined) {
+            if (Array.isArray(existingData)) {
+                this._newChannelData[channelName] = [...existingData, newData] as (type_pva_value | type_dbrData)[];
+            } else {
+                this._newChannelData[channelName] = [existingData, newData] as (type_pva_value | type_dbrData)[];
+            }
+        } else {
+            this._newChannelData[channelName] = newData;
+        }
+    };
+
     checkChannelsState = () => {
         for (const channelAgent of Object.values(this.getChannelAgents())) {
             if (channelAgent instanceof LocalChannelAgent) {
@@ -509,8 +634,9 @@ export class DisplayWindowChannelsManager {
             }
             const oldState = channelAgent.getOldStateStr();
             const newState = channelAgent.getStateStr();
+            // channel is disconnected/destroyed
             if (oldState === "CREATED" && newState !== "CREATED") {
-                this.addNewChannelData(channelAgent.getChannelName(), { value: undefined });
+                this.resetChannelData(channelAgent.getChannelName());
             }
         }
     };

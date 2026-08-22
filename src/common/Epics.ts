@@ -304,4 +304,14 @@ export enum PVA_ALARM_STATUS {
 }
 
 
-export type type_InternalChannelValue = string | number | string[] | number[];
+export type type_IaValue = string | number | string[] | number[];
+
+
+// ------------- local channel ---------------------------
+
+export type type_LocalChannel_data = {
+    value: number | string | number[] | string[] ;
+    type?: "number" | "string" | "number[]" | "string[]" | "enum";
+    // for enum, if "strings" is empty or not long enough, we will use "0", "1" ... as enum names
+    strings?: string[];
+} & Record<string, any>;

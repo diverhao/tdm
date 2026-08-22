@@ -2,7 +2,7 @@ import { ChannelAgentsManager } from "./ChannelAgentsManager";
 import { DisplayWindowAgent } from "../windows/DisplayWindow/DisplayWindowAgent";
 import { DisplayOperations } from "./CaChannelAgent";
 import EventEmitter from "events";
-import { type_LocalChannel_data } from "../../common/GlobalVariables";
+import { type_IaValue, type_LocalChannel_data } from "../../common/Epics";
 import { EpicsDate } from "../../common/EpicsTime";
 
 export class LocalChannelAgent {
@@ -22,7 +22,7 @@ export class LocalChannelAgent {
         channelAgentsManager: ChannelAgentsManager,
         channelName: string,
         channelType: "number" | "string" | "number[]" | "string[]" | "enum" = "number",
-        channelValue: number | string | number[] | string[] = 0,
+        channelValue: type_IaValue = 0,
         channelStrings: string[] = []
     ) {
         this._channelAgentsManager = channelAgentsManager;
@@ -50,7 +50,7 @@ export class LocalChannelAgent {
         return this.getDbrData()["value"];
     };
 
-    setValue = (newValue: number | string | number[] | string[] | undefined) => {
+    setValue = (newValue: number | string | number[] | string[]) => {
         this.getDbrData()["value"] = newValue;
     };
 
@@ -254,6 +254,9 @@ export class LocalChannelAgent {
 
     getChannelName = () => {
         return this._channelName;
+    };
+    getReducedChannelName = () => {
+        return this._channelName.split("@")[0];
     };
 
     // -------------------------- display window ------------------

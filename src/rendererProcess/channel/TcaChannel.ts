@@ -4,7 +4,7 @@ import { BaseWidget } from "../widgets/BaseWidget/BaseWidget";
 import { ReadWriteIos, IO_TYPE } from "./ReadWriteIos";
 import { rendererWindowStatus } from "../global/Widgets";
 import * as GlobalMethods from "../../common/GlobalMethods";
-import { type_LocalChannel_data } from "../../common/GlobalVariables";
+import { type_LocalChannel_data } from "../../common/Epics";
 import { Log } from "../../common/Log";
 import { EpicsDate } from "../../common/EpicsTime";
 

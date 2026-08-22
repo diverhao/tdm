@@ -24,6 +24,21 @@ export class DisplayWindowChannel {
         }
     };
 
+    handleIaGetMeta = async (options: IpcDispWinToMainProc["ia-get-meta"]) => {
+        let { channelName } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+        const data = await displayWindowAgent.iaGetMeta(channelName);
+
+        if (data === undefined) {
+            return;
+        } else {
+            Log.debug("ia-get-meta result for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("ia-get-meta-result",
+                data as any
+            );
+        }
+    };
+
     handleTcaGet = async (options: IpcDispWinToMainProc["tca-get"]) => {
         const { channelName, ioTimeout } = options;
         const displayWindowAgent = this.getDisplayWindowAgent();
@@ -37,6 +52,26 @@ export class DisplayWindowChannel {
             displayWindowAgent.sendFromMainProcess("tca-get-result", {
                 channelName: channelName,
                 newDbrData: data as any,
+            });
+        }
+    };
+
+    handleIaGet = async (options: IpcDispWinToMainProc["ia-get"]) => {
+        const { channelName, ioTimeout } = options;
+        const displayWindowAgent = this.getDisplayWindowAgent();
+
+        const data = await displayWindowAgent.iaGet(channelName, ioTimeout);
+
+        if (data === undefined) {
+            return;
+        } else {
+            Log.debug("ia-get result for", channelName, "is", data);
+            displayWindowAgent.sendFromMainProcess("ia-get-result", {
+                channelName: channelName,
+                value: data["value"],
+                enumChoices: (data )["enumChoices"],
+                secondsSinceEpoch: data["secondsSinceEpoch"],
+                nanoSeconds: data["nanoSeconds"],
             });
         }
     };

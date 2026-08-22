@@ -1,6 +1,5 @@
 import * as GlobalMethods from "../../../common/GlobalMethods";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { type_dbrData, type_pva_value } from "../../../common/Epics";
+import { type_dbrData, type_LocalChannel_data, type_pva_value } from "../../../common/Epics";
 import { g_widgets1 } from "../../global/GlobalVariables";
 import { Log } from "../../../common/Log";
 import { DataViewerPlot } from "./DataViewerPlot";

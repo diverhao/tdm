@@ -409,6 +409,8 @@ export class IpcManagerOnDisplayWindow {
         this.ipcRenderer.on("new-tdl", this.handleNewTdl);
         this.ipcRenderer.on("selected-profile-contents", this.handleSelectedProfileContents);
         this.ipcRenderer.on("tca-get-result", this.handleTcaGetResult);
+        this.ipcRenderer.on("ia-get-result", this.handleIaGetResult);
+        this.ipcRenderer.on("ia-get-meta-result", this.handleIaGetMetaResult);
         this.ipcRenderer.on("tca-put-result", this.handleTcaPutResult);
 
         this.ipcRenderer.on("pva-get-result", this.handlePvaGetResult);
@@ -860,6 +862,14 @@ export class IpcManagerOnDisplayWindow {
         // todo: obtaiin CaChannel object from channelName
         caChannel.handleTcaGetResult(newDbrData);
     };
+
+    handleIaGetResult = (data: IpcMainProcToDispWin["ia-get-result"]) => {
+        const { channelName, nanoSeconds, secondsSinceEpoch, enumChoices, value } = data;
+        // todo: obtaiin CaChannel object from channelName
+        iaChannel.handleTcaGetResult(secondsSinceEpoch, nanoSeconds, enumChoices, value);
+    };
+
+    handleIaGetMetaResult = this.handleIaGetResult;
 
     handleTcaGetMetaResult = (data: IpcMainProcToDispWin["tca-get-meta-result"]) => {
         const { channelName, newDbrGrData, serverAddr, dataType, dataCount, accessRight } = data;

@@ -1,7 +1,6 @@
 import { type_options_createDisplayWindow, WindowAgentsManager } from "../../windows/WindowAgentsManager";
 import { CaChannelAgent } from "../../channel/CaChannelAgent";
-import { type_LocalChannel_data } from "../../../common/GlobalVariables";
-import { Channel_DBR_TYPE, type_dbrData, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
+import { Channel_DBR_TYPE, type_dbrData, type_LocalChannel_data, type_pva_value, type_pva_value_pv_request } from "../../../common/Epics";
 import { LocalChannelAgent } from "../../channel/LocalChannelAgent";
 import { WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
@@ -278,8 +277,16 @@ export class DisplayWindowAgent {
         return await this.getDisplayWindowChannelsManager().tcaGet(channelName, ioTimeout);
     };
 
+    iaGet = async (channelName: string, ioTimeout: number): Promise<type_LocalChannel_data | undefined> => {
+        return await this.getDisplayWindowChannelsManager().iaGet(channelName, ioTimeout);
+    };
+
     tcaGetMeta = async (channelName: string): Promise<IpcMainProcToDispWin["tca-get-meta-result"] | type_LocalChannel_data | undefined> => {
         return await this.getDisplayWindowChannelsManager().tcaGetMeta(channelName);
+    };
+
+    iaGetMeta = async (channelName: string): Promise<IpcMainProcToDispWin["ia-get-meta-result"] | undefined> => {
+        return await this.getDisplayWindowChannelsManager().iaGetMeta(channelName) as any;
     };
 
     pvaGet = async (channelName: string, ioTimeout: number) => {
@@ -290,16 +297,16 @@ export class DisplayWindowAgent {
         return await this.getDisplayWindowChannelsManager().pvaGetMeta(channelName);
     };
 
-    tcaPutMeta = (
-        channelName: string,
-        dbrMetaData: {
-            value: number | string | undefined;
-            type: "number" | "string" | "enum";
-            strings: string[];
-        }
-    ): void => {
-        this.getDisplayWindowChannelsManager().tcaPutMeta(channelName, dbrMetaData);
-    };
+    // tcaPutMeta = (
+    //     channelName: string,
+    //     dbrMetaData: {
+    //         value: number | string | undefined;
+    //         type: "number" | "string" | "enum";
+    //         strings: string[];
+    //     }
+    // ): void => {
+    //     this.getDisplayWindowChannelsManager().tcaPutMeta(channelName, dbrMetaData);
+    // };
 
     tcaPut = async (channelName: string, dbrData: type_dbrData | type_LocalChannel_data, ioTimeout: number): Promise<void> => {
         await this.getDisplayWindowChannelsManager().tcaPut(channelName, dbrData, ioTimeout);

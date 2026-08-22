@@ -349,6 +349,7 @@ export class IpcManagerOnMainProcess {
         // ------------------------- channel access ------------------------
         this.ipcMain.on("tca-get", this.handleTcaGet);
         this.ipcMain.on("tca-get-meta", this.handleTcaGetMeta);
+        this.ipcMain.on("ia-get-meta", this.handleIaGetMeta);
         this.ipcMain.on("pva-get", this.handlePvaGet);
         this.ipcMain.on("pva-get-meta", this.handlePvaGetMeta);
         this.ipcMain.on("tca-put", this.handleTcaPut);
@@ -1113,6 +1114,16 @@ export class IpcManagerOnMainProcess {
         await displayWindowAgent.getDisplayWindowChannel().handleTcaGet(data);
     };
 
+    handleIaGet = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["ia-get"]) => {
+        const displayWindowId = eventMeta.windowId;
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${displayWindowId}. Cancel TCA GET for ${data["channelName"]}.`);
+            return;
+        }
+        await displayWindowAgent.getDisplayWindowChannel().handleIaGet(data);
+    };
+
     /**
      * Get the meta data, it is assumed
      */
@@ -1124,6 +1135,16 @@ export class IpcManagerOnMainProcess {
             return;
         }
         await displayWindowAgent.getDisplayWindowChannel().handleTcaGetMeta(data);
+    };
+
+    handleIaGetMeta = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["ia-get-meta"]) => {
+        const displayWindowId = eventMeta["windowId"];
+        const displayWindowAgent = this.getMainProcess().getWindowAgentsManager().getAgent(displayWindowId);
+        if (!(displayWindowAgent instanceof DisplayWindowAgent)) {
+            Log.error(`No such display window ${displayWindowId}. Cancel IA GET META for ${data["channelName"]}.`);
+            return;
+        }
+        await displayWindowAgent.getDisplayWindowChannel().handleIaGetMeta(data);
     };
 
     handlePvaGetMeta = async (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["pva-get-meta"]) => {
@@ -1148,7 +1169,8 @@ export class IpcManagerOnMainProcess {
     };
 
     handleTcaMonitor = (eventMeta: ipc_event_meta, data: IpcDispWinToMainProc["tca-monitor"]) => {
-        const { displayWindowId, channelName } = data;
+        const displayWindowId = eventMeta.windowId;
+        const { channelName } = data;
         const windowAgentsManager = this.getMainProcess().getWindowAgentsManager();
         const displayWindowAgent = windowAgentsManager.getAgent(displayWindowId);
         if (displayWindowAgent instanceof DisplayWindowAgent) {
