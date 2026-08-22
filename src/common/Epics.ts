@@ -302,3 +302,6 @@ export enum PVA_ALARM_STATUS {
     UNDEFINED,
     CLIENT,
 }
+
+
+export type type_InternalChannelValue = string | number | string[] | number[];
